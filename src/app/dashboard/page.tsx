@@ -198,20 +198,17 @@ export default function DashboardPage() {
               {t("navDashboard")}
             </div>
             <h1 className="font-display text-3xl md:text-4xl font-extrabold tracking-tighter text-star-white">
-              {firstName
-                ? (isTR ? `Kariyer kokpitin, ${firstName} 👋` : `Your career cockpit, ${firstName} 👋`)
-                : (isTR ? "Kariyer Kokpiti" : "Career Cockpit")}
+              {firstName ? `Kariyer kokpitin, ${firstName} 👋` : "Kariyer Kokpiti"}
             </h1>
             <p className="text-slate-500 mt-2 max-w-xl leading-relaxed">
-              {isTR
-                ? "Bugün neyi iyileştirmelisin? Analiz bitti demiyoruz — hedefe giden bir sonraki adımı gösteriyoruz."
-                : "What should you improve today? We don't say analysis is done — we show the next step toward your goal."}
+              Bugün neyi iyileştirmelisin? Analiz bitti demiyoruz — hedefe giden bir sonraki adımı
+              gösteriyoruz.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Link href="/forge">
-              <Button variant="primary" className="gap-1">
-                {isTR ? "Yolculuğa devam" : "Continue journey"} <ArrowRight className="w-4 h-4" />
+              <Button variant="primary" className="gap-1 shadow-lg">
+                Yolculuğa devam <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
             <Link href="/resume">
@@ -229,28 +226,19 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                  {isTR ? "Hedef kartı" : "Goal card"}
+                  Hedef kartı
                 </p>
                 <h2 className="font-extrabold tracking-tighter text-xl text-star-white">
-                  {isTR ? "Hedef: " : "Goal: "}
-                  {activeGoal
-                    ? isTR
-                      ? activeGoal.labelTr
-                      : activeGoal.labelEn
-                    : isTR
-                      ? "Henüz seçilmedi"
-                      : "Not set"}
+                  Hedef: {activeGoal ? activeGoal.labelTr : "Henüz seçilmedi"}
                 </h2>
                 <p className="text-sm text-slate-500 mt-1 max-w-lg">
-                  {isTR
-                    ? "Hedefini seç — her girişte “bugün neyi kapatmalıyım?” sorusuna cevap alırsın."
-                    : "Pick a goal — every visit answers “what should I close today?”"}
+                  Hedefini seç — her girişte “bugün neyi kapatmalıyım?” sorusuna cevap alırsın.
                 </p>
               </div>
             </div>
             <label className="block text-sm">
               <span className="text-[11px] font-semibold text-slate-500 block mb-1">
-                {isTR ? "Hedef rol" : "Target role"}
+                Hedef rol
               </span>
               <select
                 value={careerGoalId ?? ""}
@@ -259,7 +247,7 @@ export default function DashboardPage() {
               >
                 {CAREER_GOALS.map((g) => (
                   <option key={g.id} value={g.id}>
-                    {isTR ? g.labelTr : g.labelEn}
+                    {g.labelTr}
                   </option>
                 ))}
               </select>
@@ -269,7 +257,7 @@ export default function DashboardPage() {
           <div className="space-y-2">
             <div className="flex items-end justify-between gap-3">
               <p className="text-sm font-semibold text-star-white">
-                {isTR ? "Gelişim çubuğu" : "Development progress"}
+                Kariyer hedefine yaklaşma
               </p>
               <p className="text-sm font-extrabold tabular-nums text-indigo-600">
                 %{journey.progressPct}
@@ -282,46 +270,24 @@ export default function DashboardPage() {
               />
             </div>
             <p className="text-sm text-slate-500 leading-relaxed">
-              {isTR ? (
+              Kariyer hedefine{" "}
+              <strong className="text-star-white">%{journey.progressPct}</strong> yaklaştın.
+              {journey.readySkills.length > 0 && (
                 <>
-                  Hedefinize ulaşmak için{" "}
-                  <strong className="text-star-white">%{journey.progressPct}</strong> yol katettiniz.
-                  {journey.readySkills.length > 0 && (
-                    <>
-                      {" "}
-                      Şu an{" "}
-                      <strong className="text-star-white">
-                        {journey.readySkills.length} yeteneğiniz ({journey.readySkills.slice(0, 3).join(", ")}
-                        {journey.readySkills.length > 3 ? "…" : ""})
-                      </strong>{" "}
-                      tam
-                      {journey.missingSkills[0]
-                        ? `, ancak “${journey.missingSkills[0]}” yeteneğinizi özgeçmişinize eklemeniz gerekiyor.`
-                        : "."}
-                    </>
-                  )}
-                  {journey.readySkills.length === 0 && (
-                    <> CV yükleyip becerileri görünür kıldıkça bu çubuk dolacak.</>
-                  )}
+                  {" "}
+                  Şu an{" "}
+                  <strong className="text-star-white">
+                    {journey.readySkills.slice(0, 3).join(", ")}
+                    {journey.readySkills.length > 3 ? "…" : ""}
+                  </strong>{" "}
+                  tamam
+                  {journey.missingSkills[0]
+                    ? `; sırada “${journey.missingSkills[0]}” yeteneğini özgeçmişine ekle.`
+                    : "."}
                 </>
-              ) : (
-                <>
-                  You&apos;re{" "}
-                  <strong className="text-star-white">{journey.progressPct}%</strong> of the way to
-                  your goal.
-                  {journey.readySkills.length > 0 && (
-                    <>
-                      {" "}
-                      You already cover{" "}
-                      <strong className="text-star-white">
-                        {journey.readySkills.slice(0, 3).join(", ")}
-                      </strong>
-                      {journey.missingSkills[0]
-                        ? ` — add “${journey.missingSkills[0]}” to your resume next.`
-                        : "."}
-                    </>
-                  )}
-                </>
+              )}
+              {journey.readySkills.length === 0 && (
+                <> CV yükleyip becerileri görünür kıldıkça bu çubuk dolacak.</>
               )}
             </p>
             {journey.missingSkills.length > 0 && (
@@ -375,21 +341,17 @@ export default function DashboardPage() {
               <FileSearch className="w-7 h-7 text-indigo-600" />
             </div>
             <h2 className="font-display text-xl md:text-2xl font-extrabold tracking-tighter text-star-white">
-              Hadi başlayalım!
+              Henüz bir analiz başlatmadınız
             </h2>
             <p className="text-slate-500 max-w-md mx-auto leading-relaxed">
-              Henüz bir özgeçmiş yüklemediniz. İlk analizinizi yapmak ve hedefinize giden yolu
-              görmek için{" "}
-              <Link href="/forge" className="font-semibold text-indigo-600 underline-offset-2 hover:underline">
-                Forge
-              </Link>{" "}
-              sayfasına gidin.
+              Kariyer yolculuğuna başlamak için ilk CV&apos;nizi yükleyin. Puan, eksik yetenekler
+              ve sıradaki adımlar sizi bekliyor.
             </p>
             <Link
               href="/forge"
-              className="inline-flex h-11 items-center gap-2 rounded-2xl px-6 text-sm font-bold text-white bg-indigo-600 shadow-sm transition-colors hover:bg-indigo-700"
+              className="inline-flex h-11 items-center gap-2 rounded-2xl px-6 text-sm font-bold text-white bg-indigo-600 shadow-lg transition-colors hover:bg-indigo-700"
             >
-              Yolculuğa başla <ArrowRight className="w-4 h-4" />
+              İlk CV&apos;mi yükle <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         )}

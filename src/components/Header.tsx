@@ -17,6 +17,7 @@ import { exportCvAsPdf } from "@/lib/forge";
 import { toast } from "sonner";
 import { useTranslation } from "@/lib/forge/i18n";
 import { AiStatusDot } from "@/components/AiStatusDot";
+import { JourneyStepper } from "@/components/JourneyStepper";
 
 const GITHUB_REPO =
   "https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main";
@@ -98,7 +99,7 @@ export function Header() {
       await exportCvAsPdf(cvToExport);
       toast.success(t("exportSuccess"));
     } catch {
-      toast.error("Could not export PDF.");
+      toast.error("PDF dışa aktarılamadı.");
     }
   };
 
@@ -109,7 +110,7 @@ export function Header() {
         initial={{ y: -12, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed top-0 left-0 right-0 z-50 p-3 md:p-4"
+        className="fixed top-0 left-0 right-0 z-50 p-3 md:p-4 pb-0"
       >
         <div className="max-w-6xl mx-auto glass-panel rounded-2xl px-3.5 md:px-5 py-2.5 flex items-center justify-between gap-3">
 
@@ -123,7 +124,9 @@ export function Header() {
             </div>
             <div className="leading-tight">
               <p className="font-display font-bold text-[13px] tracking-tight text-star-white">CareerForge</p>
-              <p className="text-[10px] text-muted-steel hidden sm:block">{t("logoSub")}</p>
+              <p className="text-[10px] text-muted-steel hidden sm:block">
+                Verileriniz cihazınızda · %100 gizli
+              </p>
             </div>
           </Link>
 
@@ -280,6 +283,13 @@ export function Header() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Product journey stepper under nav */}
+        <div className="max-w-6xl mx-auto mt-2 mb-2">
+          <div className="glass-panel rounded-2xl overflow-hidden">
+            <JourneyStepper />
+          </div>
+        </div>
       </motion.header>
 
       {/* ── Mobile Bottom Nav ─────────────────────────────────────────── */}

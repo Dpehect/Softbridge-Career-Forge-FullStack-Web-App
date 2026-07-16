@@ -15,9 +15,9 @@ import {
   Star,
   Cpu,
   PenLine,
-  Briefcase,
   Check,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -31,24 +31,24 @@ const glassCard =
 const STEPS = [
   {
     n: 1,
-    title: "Analiz",
-    body: "CV'ni yükle, ATS puanını gör.",
+    title: "CV Yükle",
+    body: "PDF veya metin olarak özgeçmişinizi ekleyin.",
     href: "/forge",
     icon: FileUp,
   },
   {
     n: 2,
-    title: "Düzenle",
-    body: "Eksik yetenekleri Özgeçmiş Düzenleyici ile tamamla.",
-    href: "/resume",
-    icon: PenLine,
+    title: "Analiz Al",
+    body: "ATS puanını ve eksik yetenekleri anında görün.",
+    href: "/forge",
+    icon: Sparkles,
   },
   {
     n: 3,
-    title: "Başvur",
-    body: "Hedeflediğin iş ilanlarıyla eşleş.",
-    href: "/jobs",
-    icon: Briefcase,
+    title: "İyileştir",
+    body: "Önerilen yetenekleri ekleyin, ilanlara hazır olun.",
+    href: "/resume",
+    icon: PenLine,
   },
 ] as const;
 
@@ -94,7 +94,7 @@ export default function HomePage() {
 
   return (
     <div className="pb-24 overflow-hidden">
-      <section className="relative px-4 md:px-8 pt-12 md:pt-20 pb-8">
+      <section className="relative px-4 md:px-8 pt-10 md:pt-16 pb-8">
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div
             className="absolute -top-24 right-[-5%] w-[600px] h-[600px] rounded-full animate-float"
@@ -105,7 +105,7 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="max-w-6xl mx-auto relative space-y-14">
+        <div className="max-w-6xl mx-auto relative space-y-16 py-8">
           {/* Hero — sonuç odaklı */}
           <motion.div {...fadeUp(0)} className="max-w-3xl space-y-6">
             <motion.div
@@ -113,7 +113,7 @@ export default function HomePage() {
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-indigo-200/60 bg-indigo-50/80 text-xs font-semibold text-indigo-700 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              SoftBridge Solutions · CareerForge
+              SoftBridge Solutions · Kariyer Asistanı
             </motion.div>
 
             <motion.h1
@@ -121,7 +121,7 @@ export default function HomePage() {
               className="font-display text-4xl sm:text-5xl md:text-[3.1rem] font-extrabold tracking-tighter leading-[1.1] text-balance text-star-white"
             >
               CV&apos;nizi yükleyin, hedefinizi seçin ve{" "}
-              <span className="gradient-text">3 adımda yükselişe geçin</span>.
+              <span className="gradient-text">3 adımda yükselişe geçin</span>
             </motion.h1>
 
             <motion.p
@@ -129,15 +129,15 @@ export default function HomePage() {
               className="text-base md:text-lg text-slate-500 max-w-2xl leading-relaxed"
             >
               Sadece analiz etmiyoruz; sizi hedeflediğiniz pozisyona hazırlıyoruz. Analiz bitiş
-              çizgisi değil — kariyer asistanınızın ilk adımı.
+              çizgisi değil — SoftBridge kariyer asistanınızın ilk adımı.
             </motion.p>
 
             <motion.div {...fadeUp(0.2)} className="flex flex-wrap gap-4 pt-1">
               <Link
                 href="/forge"
-                className="inline-flex h-12 items-center gap-2 rounded-2xl px-6 text-sm font-bold text-white bg-indigo-600 shadow-sm transition-colors hover:bg-indigo-700"
+                className="inline-flex h-12 items-center gap-2 rounded-2xl px-6 text-sm font-bold text-white bg-indigo-600 shadow-lg transition-colors hover:bg-indigo-700"
               >
-                Yolculuğa başla <ArrowRight className="w-4 h-4" />
+                CV yükle ve başla <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/dashboard"
@@ -147,42 +147,48 @@ export default function HomePage() {
               </Link>
             </motion.div>
 
-            {/* Gizlilik USP */}
-            <motion.p
+            {/* Güven rozeti */}
+            <motion.div
               {...fadeUp(0.22)}
-              className="flex items-start gap-2 text-xs text-slate-500 max-w-xl leading-relaxed pt-1"
+              className="inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50/90 px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
             >
-              <Lock className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-600" />
-              CareerForge verilerinizi sunuculara göndermez; tüm analizler cihazınızın yerel gücüyle,
-              %100 gizli gerçekleştirilir.
-            </motion.p>
+              <Lock className="w-3.5 h-3.5 shrink-0" />
+              Verileriniz cihazınızda kalır · %100 yerel · %100 gizli
+            </motion.div>
           </motion.div>
 
-          {/* Yol haritası — yatay stepper */}
-          <motion.div {...fadeUp(0.28)} className="space-y-5">
-            <div className="text-center space-y-1">
+          {/* Yol haritası — CV Yükle → Analiz Al → İyileştir */}
+          <motion.div {...fadeUp(0.28)} className="space-y-6 py-8">
+            <div className="text-center space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-widest text-indigo-600">
                 Yol haritası
               </p>
-              <h2 className="font-display text-2xl font-extrabold tracking-tighter text-star-white">
-                3 adımda kariyer yükselişi
+              <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tighter text-star-white">
+                1. CV Yükle → 2. Analiz Al → 3. İyileştir
               </h2>
+              <p className="text-sm text-slate-500 max-w-lg mx-auto">
+                “Şimdi ne yapmalıyım?” sorusu kalmaz — adımlar sizi hedefe götürür.
+              </p>
             </div>
 
             <div className="relative grid md:grid-cols-3 gap-4">
-              {/* connector line (desktop) */}
               <div
                 className="hidden md:block absolute top-10 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-indigo-300 via-indigo-400 to-emerald-400 opacity-60"
                 aria-hidden
               />
-              {STEPS.map((step) => (
+              {STEPS.map((step, idx) => (
                 <Link
                   key={step.n}
                   href={step.href}
                   className={`${glassCard} relative p-6 space-y-3 transition-transform hover:scale-[1.02] group`}
                 >
                   <div className="relative z-10 flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-lg shadow-sm group-hover:bg-indigo-700 transition-colors">
+                    <div
+                      className={cn(
+                        "w-12 h-12 rounded-2xl text-white flex items-center justify-center font-extrabold text-lg shadow-sm",
+                        idx === 0 ? "bg-indigo-600 group-hover:bg-indigo-700" : "bg-indigo-600 group-hover:bg-indigo-700"
+                      )}
+                    >
                       {step.n}
                     </div>
                     <step.icon className="w-5 h-5 text-indigo-600" />
@@ -200,11 +206,11 @@ export default function HomePage() {
           </motion.div>
 
           {/* Değer önerisi */}
-          <motion.div {...fadeUp(0.32)} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <motion.div {...fadeUp(0.32)} className="grid grid-cols-1 md:grid-cols-3 gap-4 py-8">
             {[
               {
                 icon: Lock,
-                title: "Privacy First",
+                title: "Gizlilik Öncelikli",
                 body: "Verileriniz yerel cihazınızda işlenir — sunucuya gitmez.",
                 color: "#7C3AED",
               },
@@ -216,7 +222,7 @@ export default function HomePage() {
               },
               {
                 icon: Cpu,
-                title: "Local Powered",
+                title: "Yerel AI Gücü",
                 body: "İnternetsiz, 7/24 kesintisiz çalışır (Ollama).",
                 color: "#4ADE80",
               },
