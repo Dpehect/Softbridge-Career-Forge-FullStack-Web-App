@@ -4,236 +4,168 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  FileUp,
   Sparkles,
   Target,
   FileText,
-  MessageSquareText,
   Briefcase,
-  Route,
+  ShieldCheck,
+  Mic2,
+  Code2,
 } from "lucide-react";
-import { jobs } from "@/data/jobs";
-import { careerPaths } from "@/data/paths";
-import { JobCard } from "@/components/JobCard";
-import { PathCard } from "@/components/PathCard";
 import { Badge } from "@/components/ui/badge";
-import { StatPill } from "@/components/StatPill";
+
+const GITHUB =
+  "https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main";
 
 const features = [
   {
-    icon: Briefcase,
-    title: "Curated roles",
-    body: "High-signal openings from Softbridge and partner companies — not a spam feed.",
+    icon: FileUp,
+    title: "CV upload & parse",
+    body: "PDF or TXT — clean extraction, structured fields, no garbage text.",
+    href: "/forge",
   },
   {
-    icon: Route,
-    title: "Skill paths",
-    body: "Structured tracks that connect learning to outcomes employers actually hire for.",
+    icon: Sparkles,
+    title: "Deep professional feedback",
+    body: "Strengths, gaps, ATS score, and concrete rewrites you can apply today.",
+    href: "/resume",
+  },
+  {
+    icon: Target,
+    title: "Job match & ideas",
+    body: "Compare to a job ad or get role recommendations from your profile.",
+    href: "/forge",
   },
   {
     icon: FileText,
-    title: "Resume forge",
-    body: "Craft a calm, metrics-led resume and preview it as you edit.",
+    title: "PDF export",
+    body: "Download a clean, professional CV PDF — including photo if you add one.",
+    href: "/resume",
   },
   {
-    icon: MessageSquareText,
-    title: "Career coach",
-    body: "Practical prompts for search, interviews, negotiation, and pivots.",
+    icon: ShieldCheck,
+    title: "ATS checks",
+    body: "See what automated systems struggle with and how to fix structure fast.",
+    href: "/forge",
+  },
+  {
+    icon: Mic2,
+    title: "Interview prep",
+    body: "Role-aware practice questions with example answers and tips.",
+    href: "/forge",
   },
 ];
 
 export default function HomePage() {
-  const featuredJobs = jobs.filter((j) => j.featured).slice(0, 3);
-
   return (
     <div className="pb-20">
-      {/* Hero */}
-      <section className="relative overflow-hidden px-4 md:px-8 pt-10 md:pt-16 pb-16">
+      <section className="relative overflow-hidden px-4 md:px-8 pt-12 md:pt-20 pb-16">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-24 right-[-10%] w-[480px] h-[480px] rounded-full bg-cosmic-teal/10 blur-3xl" />
-          <div className="absolute bottom-0 left-[-10%] w-[360px] h-[360px] rounded-full bg-sunset-coral/10 blur-3xl" />
+          <div className="absolute -top-32 right-[-8%] w-[520px] h-[520px] rounded-full bg-cosmic-teal/10 blur-3xl" />
+          <div className="absolute top-40 left-[-12%] w-[380px] h-[380px] rounded-full bg-sunset-coral/8 blur-3xl" />
         </div>
 
-        <div className="max-w-6xl mx-auto relative grid lg:grid-cols-[1.2fr_0.8fr] gap-10 items-center">
-          <div>
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Badge variant="accent" className="mb-5">
-                SoftBridge Solutions · Career platform
-              </Badge>
-              <h1 className="font-display text-4xl md:text-6xl font-semibold tracking-tight text-balance leading-[1.05]">
-                Your career workspace —{" "}
-                <span className="text-cosmic-teal">clear, calm, effective</span>
-              </h1>
-              <p className="mt-5 text-base md:text-lg text-muted-steel max-w-xl leading-relaxed">
-                Analyze CVs, match roles, improve for ATS, export professional PDFs, and prepare for
-                interviews — all in one SoftBridge CareerForge experience.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  href="/forge"
-                  className="inline-flex h-12 items-center gap-2 rounded-2xl px-6 text-base font-semibold bg-star-white text-midnight-void shadow-[0_12px_32px_rgba(44,24,16,0.12)] hover:bg-cosmic-teal hover:text-midnight-void transition-all duration-300"
-                >
-                  Open Forge <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link
-                  href="/jobs"
-                  className="inline-flex h-12 items-center gap-2 rounded-2xl px-6 text-base font-semibold border border-black/10 hover:border-cosmic-teal/40 hover:text-cosmic-teal transition-colors"
-                >
-                  Browse roles
-                </Link>
-              </div>
-            </motion.div>
-
-            <div className="mt-10 flex flex-wrap gap-3">
-              <StatPill label="Open roles" value={jobs.length} />
-              <StatPill label="Career paths" value={careerPaths.length} />
-              <StatPill label="Partner cos." value="6+" />
-            </div>
-          </div>
-
+        <div className="max-w-6xl mx-auto relative">
           <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.15, duration: 0.55 }}
-            className="glass-panel rounded-3xl p-6 md:p-7 relative"
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55 }}
+            className="max-w-3xl"
           >
-            <div className="flex items-center gap-2 mb-5">
-              <Sparkles className="w-4 h-4 text-cosmic-teal" />
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-steel">
-                Recommended workflow
-              </p>
-            </div>
-            <ul className="space-y-4">
-              {[
-                { step: "01", title: "Upload or build your CV", meta: "Forge · 10 min" },
-                { step: "02", title: "Match against a job ad", meta: "Score & skill gaps" },
-                { step: "03", title: "Export a professional PDF", meta: "Ready to send" },
-                { step: "04", title: "Practice interview answers", meta: "Mock interview" },
-              ].map((item) => (
-                <li
-                  key={item.step}
-                  className="flex gap-3 items-start rounded-2xl bg-abyss-panel/60 border border-black/5 p-3.5"
-                >
-                  <span className="font-mono text-xs text-cosmic-teal mt-0.5">{item.step}</span>
-                  <div>
-                    <p className="font-semibold text-sm">{item.title}</p>
-                    <p className="text-xs text-muted-steel mt-0.5">{item.meta}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <Link
-              href="/dashboard"
-              className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-cosmic-teal hover:gap-2.5 transition-all"
-            >
-              Open dashboard <ArrowRight className="w-4 h-4" />
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="px-4 md:px-8 py-8">
-        <div className="max-w-6xl mx-auto grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {features.map((f, i) => (
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.05 }}
-              className="glass-panel rounded-2xl p-5"
-            >
-              <div className="w-9 h-9 rounded-xl bg-cosmic-teal/10 text-cosmic-teal flex items-center justify-center mb-3">
-                <f.icon className="w-4 h-4" />
-              </div>
-              <h3 className="font-semibold mb-1.5">{f.title}</h3>
-              <p className="text-sm text-muted-steel leading-relaxed">{f.body}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* Featured jobs */}
-      <section className="px-4 md:px-8 py-12">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-end justify-between gap-4 mb-6">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-cosmic-teal mb-2">
-                Featured openings
-              </p>
-              <h2 className="font-display text-2xl md:text-3xl font-semibold">Roles worth your focus</h2>
-            </div>
-            <Link
-              href="/jobs"
-              className="text-sm font-semibold text-cosmic-teal inline-flex items-center gap-1 shrink-0"
-            >
-              View all <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="grid gap-3">
-            {featuredJobs.map((job, i) => (
-              <JobCard key={job.id} job={job} index={i} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Paths preview */}
-      <section className="px-4 md:px-8 py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-end justify-between gap-4 mb-6">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-cosmic-teal mb-2">
-                Skill paths
-              </p>
-              <h2 className="font-display text-2xl md:text-3xl font-semibold flex items-center gap-2">
-                <Target className="w-7 h-7 text-cosmic-teal" />
-                Build toward a specific outcome
-              </h2>
-            </div>
-            <Link
-              href="/paths"
-              className="text-sm font-semibold text-cosmic-teal inline-flex items-center gap-1 shrink-0"
-            >
-              All paths <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {careerPaths.slice(0, 3).map((path, i) => (
-              <PathCard key={path.id} path={path} index={i} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="px-4 md:px-8 pt-8">
-        <div className="max-w-6xl mx-auto glass-panel rounded-3xl p-8 md:p-12 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-cosmic-teal/10 via-transparent to-sunset-coral/10 pointer-events-none" />
-          <div className="relative">
-            <h2 className="font-display text-3xl md:text-4xl font-semibold text-balance">
-              Ready to forge your next chapter?
-            </h2>
-            <p className="mt-3 text-muted-steel max-w-lg mx-auto">
-              Start with a role search or enroll in a path. Your progress saves locally so you can
-              pick up where you left off.
+            <Badge variant="accent" className="mb-5">
+              SoftBridge Solutions · CareerForge
+            </Badge>
+            <h1 className="font-display text-4xl sm:text-5xl md:text-[3.5rem] font-semibold tracking-tight text-balance leading-[1.05]">
+              A professional career workspace for people who want{" "}
+              <span className="text-cosmic-teal">clarity and results</span>
+            </h1>
+            <p className="mt-5 text-base md:text-lg text-muted-steel max-w-2xl leading-relaxed">
+              Hi — I&apos;m Forge from SoftBridge CareerForge (SoftBridge Solutions). Upload or build
+              your CV, get serious feedback, match jobs, export a polished PDF, and prepare for
+              interviews — all private in your browser.
             </p>
-            <div className="mt-7 flex flex-wrap justify-center gap-3">
+            <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/coach"
-                className="inline-flex h-11 items-center rounded-xl px-5 font-semibold bg-cosmic-teal text-midnight-void hover:bg-sunset-coral transition-colors"
+                href="/forge"
+                className="inline-flex h-12 items-center gap-2 rounded-2xl px-6 text-sm font-semibold bg-cosmic-teal text-midnight-void shadow-[0_14px_36px_rgba(217,72,32,0.28)] hover:bg-sunset-coral transition-colors"
               >
-                Talk to the coach
+                Start with Forge <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/resume"
-                className="inline-flex h-11 items-center rounded-xl px-5 font-semibold border border-black/10 hover:border-cosmic-teal/40 transition-colors"
+                className="inline-flex h-12 items-center gap-2 rounded-2xl px-6 text-sm font-semibold border border-black/10 bg-panel-elevated hover:border-cosmic-teal/30 transition-colors"
               >
-                Open resume forge
+                Open Resume workspace
+              </Link>
+              <a
+                href={GITHUB}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-12 items-center gap-2 rounded-2xl px-5 text-sm font-semibold text-muted-steel hover:text-cosmic-teal transition-colors"
+              >
+                <Code2 className="w-4 h-4" /> Open Source on GitHub
+              </a>
+            </div>
+          </motion.div>
+
+          <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {features.map((f, i) => (
+              <motion.div
+                key={f.title}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.08 * i, duration: 0.4 }}
+              >
+                <Link
+                  href={f.href}
+                  className="block h-full glass-panel rounded-2xl p-5 hover:border-cosmic-teal/25 transition-colors group"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-cosmic-teal/10 text-cosmic-teal flex items-center justify-center mb-3">
+                    <f.icon className="w-5 h-5" />
+                  </div>
+                  <h2 className="font-semibold group-hover:text-cosmic-teal transition-colors">
+                    {f.title}
+                  </h2>
+                  <p className="text-sm text-muted-steel mt-1.5 leading-relaxed">{f.body}</p>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="mt-12 glass-panel rounded-3xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-cosmic-teal mb-2">
+                How it works
+              </p>
+              <h2 className="font-display text-2xl font-semibold">Three steps to a stronger CV</h2>
+              <ol className="mt-4 space-y-2 text-sm text-muted-steel">
+                <li>
+                  <span className="font-semibold text-star-white">1.</span> Upload PDF/TXT, paste
+                  text, or build from scratch
+                </li>
+                <li>
+                  <span className="font-semibold text-star-white">2.</span> Review structured data +
+                  professional feedback
+                </li>
+                <li>
+                  <span className="font-semibold text-star-white">3.</span> Export PDF, match jobs, or
+                  practice interviews
+                </li>
+              </ol>
+            </div>
+            <div className="flex flex-col gap-2 shrink-0">
+              <Link
+                href="/dashboard"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold bg-star-white text-midnight-void"
+              >
+                <Briefcase className="w-4 h-4" /> Open dashboard
+              </Link>
+              <Link
+                href="/forge"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold border border-black/10"
+              >
+                Go to Forge
               </Link>
             </div>
           </div>

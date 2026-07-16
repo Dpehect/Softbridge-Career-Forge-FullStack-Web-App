@@ -417,25 +417,35 @@ export default function ForgePage() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <Badge variant="accent" className="mb-3">
-            SoftBridge · Forge AI
+            SoftBridge · Forge
           </Badge>
-          <h1 className="font-display text-3xl md:text-4xl font-semibold flex items-center gap-2">
-            <Anvil className="w-8 h-8 text-cosmic-teal" />
+          <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight flex items-center gap-2.5">
+            <span className="w-10 h-10 rounded-xl bg-cosmic-teal text-midnight-void inline-flex items-center justify-center shadow-[0_10px_24px_rgba(217,72,32,0.28)]">
+              <Anvil className="w-5 h-5" />
+            </span>
             Forge
           </h1>
-          <p className="text-muted-steel mt-2 max-w-2xl leading-relaxed">
-            Hi — I&apos;m Forge from SoftBridge CareerForge (SoftBridge Solutions). Build or upload a
-            CV, match jobs, optimize for ATS, export a polished PDF, and prepare for interviews —
-            private to your browser.
+          <p className="text-muted-steel mt-3 max-w-2xl leading-relaxed">
+            Hi — I&apos;m Forge from SoftBridge CareerForge (SoftBridge Solutions). Upload a CV
+            (PDF/TXT), paste text, or build from scratch — then get structured data, deep feedback,
+            job match, PDF export, and interview prep. Everything stays in your browser.
           </p>
-          <a
-            href="https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main"
-            target="_blank"
-            rel="noreferrer"
-            className="mt-4 inline-flex items-center gap-2 rounded-xl border border-black/10 bg-star-white text-midnight-void px-4 py-2 text-sm font-semibold shadow-[0_6px_20px_rgba(92,46,31,0.08)] hover:bg-cosmic-teal transition-colors"
-          >
-            Open Source on GitHub
-          </a>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <a
+              href="https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-star-white text-midnight-void px-4 py-2 text-sm font-semibold shadow-[0_8px_22px_rgba(28,20,16,0.06)] hover:bg-cosmic-teal transition-colors"
+            >
+              Open Source on GitHub
+            </a>
+            <Button variant="outline" size="sm" onClick={() => setTab("create")}>
+              Build CV from scratch
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onClearCv}>
+              Clear / Reset CV
+            </Button>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-[1fr_1fr] gap-4 mb-6">

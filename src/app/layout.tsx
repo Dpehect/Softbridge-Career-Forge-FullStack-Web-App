@@ -20,16 +20,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://careerforge.softbridgesolutions.com"),
   title: {
-    template: "%s | Softbridge CareerForge",
-    default: "Softbridge CareerForge — Forge your next role",
+    template: "%s | SoftBridge CareerForge",
+    default: "SoftBridge CareerForge — Professional career workspace",
   },
   description:
-    "Professional career platform: CV analysis, job match, ATS optimization, cover letters, and interview prep. Built by Softbridge Solutions.",
+    "Upload or build your CV, get professional feedback, match jobs, export PDF, and prepare for interviews. Built by SoftBridge Solutions.",
   openGraph: {
-    title: "Softbridge CareerForge",
+    title: "SoftBridge CareerForge",
     description:
-      "CV tools, job match, ATS optimization, and career coaching — in one premium workspace.",
-    siteName: "Softbridge CareerForge",
+      "Professional CV tools, job matching, ATS checks, and interview prep — private in your browser.",
+    siteName: "SoftBridge CareerForge",
     locale: "en_US",
     type: "website",
   },
@@ -41,9 +41,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
     >
-      <body className="min-h-full flex flex-col bg-midnight-void text-star-white font-sans mesh-bg">
+      <body className="min-h-full flex flex-col bg-midnight-void text-star-white font-sans mesh-bg selection:bg-cosmic-teal/20">
         <Header />
-        <main className="flex-1 pt-20">{children}</main>
+        <main className="flex-1 pt-[5.25rem] md:pt-24">{children}</main>
         <Footer />
         <Toaster
           theme="light"
