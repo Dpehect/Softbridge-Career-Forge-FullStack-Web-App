@@ -222,7 +222,7 @@ export default function ResumePage() {
                 {[resume.email, resume.location].filter(Boolean).join(" · ")}
               </p>
               {resume.summary && (
-                <p className="mt-5 text-sm leading-relaxed text-[#5c2e1f]/resume.summary}</p>
+                <p className="mt-5 text-sm leading-relaxed text-[#5c2e1f]">{resume.summary}</p>
               )}
               {resume.skills.length > 0 && (
                 <div className="mt-6">
