@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { StatPill } from "@/components/StatPill";
+import { FilePickButton } from "@/components/FilePickButton";
 import { useCareerStore } from "@/store/useCareerStore";
 import {
   parseCV,
@@ -284,48 +285,70 @@ export default function ForgePage() {
 
         <div className="grid lg:grid-cols-[1fr_1fr] gap-4 mb-6">
           <div className="glass-panel rounded-2xl p-4 space-y-2">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted-steel">
                 CV metni
               </p>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setForgeCvText(SAMPLE_CV);
-                  toast.message("Örnek CV yüklendi");
-                }}
-              >
-                Örnek yükle
-              </Button>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <FilePickButton
+                  label="CV dosyası seç"
+                  onText={(text) => {
+                    setForgeCvText(text);
+                    setForgeParsedCv(null);
+                  }}
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setForgeCvText(SAMPLE_CV);
+                    setForgeParsedCv(null);
+                    toast.message("Örnek CV yüklendi");
+                  }}
+                >
+                  Örnek
+                </Button>
+              </div>
             </div>
+            <p className="text-[11px] text-muted-steel">
+              Sürükle-bırak yok — <strong>CV dosyası seç</strong> ile klasörlere tıklayarak gezin (.txt, .md).
+            </p>
             <Textarea
               value={cvText}
               onChange={(e) => setForgeCvText(e.target.value)}
-              placeholder="CV’ni buraya yapıştır…"
+              placeholder="CV’ni buraya yapıştır veya dosya seç…"
               className="min-h-[180px] font-mono text-xs"
             />
           </div>
           <div className="glass-panel rounded-2xl p-4 space-y-2">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted-steel">
                 İş ilanı (JD)
               </p>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setForgeJdText(SAMPLE_JD);
-                  toast.message("Örnek JD yüklendi");
-                }}
-              >
-                Örnek yükle
-              </Button>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <FilePickButton
+                  label="JD dosyası seç"
+                  onText={(text) => setForgeJdText(text)}
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setForgeJdText(SAMPLE_JD);
+                    toast.message("Örnek JD yüklendi");
+                  }}
+                >
+                  Örnek
+                </Button>
+              </div>
             </div>
+            <p className="text-[11px] text-muted-steel">
+              Sistem dosya penceresinde klasörlere tıklayarak ilerle; sürüklemen gerekmez.
+            </p>
             <Textarea
               value={jdText}
               onChange={(e) => setForgeJdText(e.target.value)}
-              placeholder="İş ilanını buraya yapıştır…"
+              placeholder="İş ilanını buraya yapıştır veya dosya seç…"
               className="min-h-[180px] font-mono text-xs"
             />
           </div>
