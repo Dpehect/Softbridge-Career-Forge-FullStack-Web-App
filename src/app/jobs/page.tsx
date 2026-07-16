@@ -7,6 +7,7 @@ import { JobCard } from "@/components/JobCard";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import type { Seniority, WorkMode } from "@/types";
+import { useTranslation } from "@/lib/forge/i18n";
 
 const workModes: Array<WorkMode | "All"> = ["All", "Remote", "Hybrid", "On-site"];
 const seniorities: Array<Seniority | "All"> = [
@@ -23,6 +24,36 @@ export default function JobsPage() {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<(typeof workModes)[number]>("All");
   const [level, setLevel] = useState<(typeof seniorities)[number]>("All");
+  const { t, lang } = useTranslation();
+
+  const getModeLabel = (m: string) => {
+    if (lang === "tr") {
+      switch (m) {
+        case "All": return "Hepsi";
+        case "Remote": return "Uzaktan";
+        case "Hybrid": return "Hibrit";
+        case "On-site": return "Ofiste";
+        default: return m;
+      }
+    }
+    return m;
+  };
+
+  const getSeniorityLabel = (s: string) => {
+    if (lang === "tr") {
+      switch (s) {
+        case "All": return "Hepsi";
+        case "Intern": return "Stajyer";
+        case "Junior": return "Başlangıç";
+        case "Mid": return "Orta Seviye";
+        case "Senior": return "Kıdemli";
+        case "Lead": return "Lider";
+        case "Principal": return "Baş Mühendis";
+        default: return s;
+      }
+    }
+    return s;
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -44,11 +75,13 @@ export default function JobsPage() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <Badge variant="accent" className="mb-3">
-            Job board
+            {t("navJobs")}
           </Badge>
-          <h1 className="font-display text-3xl md:text-4xl font-semibold">Find high-fit roles</h1>
-          <p className="text-muted-steel mt-2 max-w-xl">
-            Search curated openings. Save roles and apply — progress is stored in your browser.
+          <h1 className="font-display text-3xl md:text-4xl font-semibold text-star-white">
+            {lang === "tr" ? "Pozisyonlar & İş Fırsatları" : "Find high-fit roles"}
+          </h1>
+          <p className="text-muted-steel mt-2 max-w-xl leading-relaxed">
+            {t("jobBoardDesc")}
           </p>
         </div>
 
@@ -58,13 +91,13 @@ export default function JobsPage() {
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search title, skill, or location…"
+              placeholder={t("searchPlaceholder")}
               className="pl-10"
             />
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-steel shrink-0">
-              <SlidersHorizontal className="w-3.5 h-3.5" /> Filters
+              <SlidersHorizontal className="w-3.5 h-3.5" /> {lang === "tr" ? "Filtreler" : "Filters"}
             </span>
             <div className="flex flex-wrap gap-1.5">
               {workModes.map((m) => (
@@ -77,7 +110,7 @@ export default function JobsPage() {
                       : "border-black/8 text-muted-steel hover:text-star-white"
                   }`}
                 >
-                  {m}
+                  {getModeLabel(m)}
                 </button>
               ))}
             </div>
@@ -92,7 +125,7 @@ export default function JobsPage() {
                       : "border-black/8 text-muted-steel hover:text-star-white"
                   }`}
                 >
-                  {s}
+                  {getSeniorityLabel(s)}
                 </button>
               ))}
             </div>
@@ -100,7 +133,10 @@ export default function JobsPage() {
         </div>
 
         <p className="text-sm text-muted-steel mb-4">
-          Showing <span className="font-semibold text-star-white">{filtered.length}</span> roles
+          {lang === "tr" 
+            ? <>Arama kriterlerine uyan <span className="font-semibold text-star-white">{filtered.length}</span> ilan listeleniyor</>
+            : <>Showing <span className="font-semibold text-star-white">{filtered.length}</span> roles</>
+          }
         </p>
 
         <div className="grid gap-3">
@@ -109,7 +145,7 @@ export default function JobsPage() {
           ))}
           {filtered.length === 0 && (
             <div className="glass-panel rounded-2xl p-10 text-center text-muted-steel">
-              No roles match those filters. Try a broader search.
+              {lang === "tr" ? "Filtrelere uygun iş ilanı bulunamadı. Aramanızı genişletmeyi deneyin." : "No roles match those filters. Try a broader search."}
             </div>
           )}
         </div>

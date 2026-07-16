@@ -41,6 +41,8 @@ interface CareerState {
   forgeBackups: CvBackup[];
   lang: "tr" | "en";
   setLang: (lang: "tr" | "en") => void;
+  theme: "light" | "dark";
+  setTheme: (theme: "light" | "dark") => void;
   toggleSaveJob: (id: string) => void;
   applyToJob: (id: string) => void;
   enrollPath: (id: string) => void;
@@ -68,6 +70,8 @@ export const useCareerStore = create<CareerState>()(
     (set, get) => ({
       lang: "tr",
       setLang: (lang) => set({ lang }),
+      theme: "dark",
+      setTheme: (theme) => set({ theme }),
       savedJobIds: [],
       appliedJobIds: [],
       enrolledPathIds: ["path-frontend"],

@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Anvil, Code2, Menu, X, FileDown, RotateCcw } from "lucide-react";
+import { Anvil, Code2, Menu, X, FileDown, RotateCcw, Briefcase, GitCompare, MessageSquare, History } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useCareerStore } from "@/store/useCareerStore";
@@ -27,8 +27,19 @@ const links = [
 export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const { resume, resetResume, forgeParsedCv, clearForgeCv } = useCareerStore();
+  const { resume, resetResume, forgeParsedCv, clearForgeCv, theme, setTheme } = useCareerStore();
   const { t, lang, setLang } = useTranslation();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const root = document.documentElement;
+      if (theme === "dark") {
+        root.classList.add("dark");
+      } else {
+        root.classList.remove("dark");
+      }
+    }
+  }, [theme]);
 
   const getNavName = (name: string) => {
     switch (name) {
@@ -39,6 +50,18 @@ export function Header() {
       case "Coach": return t("navCoach");
       case "Dashboard": return t("navDashboard");
       default: return name;
+    }
+  };
+
+  const getNavIcon = (name: string) => {
+    switch (name) {
+      case "Forge": return Anvil;
+      case "Resume": return Code2;
+      case "Jobs": return Briefcase;
+      case "Paths": return GitCompare;
+      case "Coach": return MessageSquare;
+      case "Dashboard": return History;
+      default: return Anvil;
     }
   };
 
@@ -103,179 +126,211 @@ export function Header() {
   };
 
   return (
-    <motion.header
-      initial={{ y: -8, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed top-0 left-0 right-0 z-50 p-3 md:p-4"
-    >
-      <div className="max-w-6xl mx-auto glass-panel rounded-2xl px-3.5 md:px-4 py-2.5 flex items-center justify-between gap-3">
-        <Link href="/" className="flex items-center gap-2.5 group shrink-0" onClick={() => setOpen(false)}>
-          <div className="w-8 h-8 rounded-xl bg-cosmic-teal text-midnight-void flex items-center justify-center shadow-[0_8px_20px_rgba(217,72,32,0.28)]">
-            <Anvil className="w-4 h-4" />
-          </div>
-          <div className="leading-tight">
-            <p className="font-display font-bold text-[13px] tracking-tight">CareerForge</p>
-            <p className="text-[10px] text-muted-steel hidden sm:block">{t("logoSub")}</p>
-          </div>
-        </Link>
-
-        <nav className="hidden lg:flex items-center gap-0.5">
-          {links.map((link) => {
-            const isActive = pathname === link.path || pathname.startsWith(`${link.path}/`);
-            return (
-              <Link
-                key={link.name}
-                href={link.path}
-                className={cn(
-                  "relative px-3 py-1.5 rounded-lg text-[11px] font-semibold tracking-wide transition-colors",
-                  isActive ? "text-midnight-void" : "text-muted-steel hover:text-star-white"
-                )}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="active-nav"
-                    className="absolute inset-0 bg-star-white rounded-lg -z-10 shadow-sm"
-                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                  />
-                )}
-                {getNavName(link.name)}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="flex items-center gap-2">
-          {hasContent && (
-            <div className="hidden sm:inline-flex items-center gap-1.5">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearAll}
-                className="h-9 text-xs text-sunset-coral hover:text-sunset-coral hover:bg-sunset-coral/5 gap-1"
-                title={t("clearCv")}
-              >
-                <RotateCcw className="w-3.5 h-3.5" /> {t("clearCv")}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExport}
-                className="h-9 text-xs gap-1"
-                title={t("exportPdf")}
-              >
-                <FileDown className="w-3.5 h-3.5" /> {t("exportPdf")}
-              </Button>
+    <>
+      <motion.header
+        initial={{ y: -8, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed top-0 left-0 right-0 z-50 p-3 md:p-4"
+      >
+        <div className="max-w-6xl mx-auto glass-panel rounded-2xl px-3.5 md:px-4 py-2.5 flex items-center justify-between gap-3">
+          <Link href="/" className="flex items-center gap-2.5 group shrink-0" onClick={() => setOpen(false)}>
+            <div className="w-8 h-8 rounded-xl bg-cosmic-teal text-midnight-void flex items-center justify-center shadow-[0_8px_20px_rgba(217,72,32,0.28)]">
+              <Anvil className="w-4 h-4" />
             </div>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setLang(lang === "tr" ? "en" : "tr")}
-            className="h-9 px-2 text-xs font-semibold hover:bg-cosmic-teal/10 gap-1 border border-black/5"
-            title={lang === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
-          >
-            🌐 {lang === "tr" ? "EN" : "TR"}
-          </Button>
-          <a
-            href={GITHUB_REPO}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex h-9 items-center gap-1.5 rounded-xl px-2 sm:px-3 text-xs font-semibold border border-black/8 bg-star-white text-midnight-void hover:bg-cosmic-teal transition-colors shadow-sm"
-            title={t("viewGithub")}
-          >
-            <Code2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{t("viewGithub")}</span>
-            <span className="sm:hidden">GitHub</span>
-          </a>
-          <Link
-            href="/forge"
-            className="hidden sm:inline-flex h-9 items-center rounded-xl px-3.5 text-xs font-semibold bg-cosmic-teal text-midnight-void hover:bg-sunset-coral transition-colors shadow-[0_8px_22px_rgba(217,72,32,0.28)]"
-          >
-            {t("openForge")}
+            <div className="leading-tight">
+              <p className="font-display font-bold text-[13px] tracking-tight">CareerForge</p>
+              <p className="text-[10px] text-muted-steel hidden sm:block">{t("logoSub")}</p>
+            </div>
           </Link>
-          <button
-            className="lg:hidden p-2 rounded-xl border border-black/8"
-            onClick={() => setOpen((v) => !v)}
-            aria-label="Menu"
-          >
-            {open ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-          </button>
-        </div>
-      </div>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            className="lg:hidden max-w-6xl mx-auto mt-2 glass-panel rounded-2xl p-2 flex flex-col"
-          >
-            {links.map((link) => (
-              <Link
-                key={link.name}
-                href={link.path}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "px-3 py-2.5 rounded-xl text-sm font-semibold",
-                  pathname.startsWith(link.path)
-                    ? "bg-star-white text-midnight-void"
-                    : "text-muted-steel"
-                )}
-              >
-                {getNavName(link.name)}
-              </Link>
-            ))}
+          <nav className="hidden lg:flex items-center gap-0.5">
+            {links.map((link) => {
+              const isActive = pathname === link.path || pathname.startsWith(`${link.path}/`);
+              return (
+                <Link
+                  key={link.name}
+                  href={link.path}
+                  className={cn(
+                    "relative px-3 py-1.5 rounded-lg text-[11px] font-semibold tracking-wide transition-colors",
+                    isActive ? "text-midnight-void" : "text-muted-steel hover:text-star-white"
+                  )}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="active-nav"
+                      className="absolute inset-0 bg-star-white rounded-lg -z-10 shadow-sm"
+                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                    />
+                  )}
+                  {getNavName(link.name)}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            {hasContent && (
+              <div className="hidden sm:inline-flex items-center gap-1.5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearAll}
+                  className="h-9 text-xs text-sunset-coral hover:text-sunset-coral hover:bg-sunset-coral/5 gap-1"
+                  title={t("clearCv")}
+                >
+                  <RotateCcw className="w-3.5 h-3.5" /> {t("clearCv")}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExport}
+                  className="h-9 text-xs gap-1"
+                  title={t("exportPdf")}
+                >
+                  <FileDown className="w-3.5 h-3.5" /> {t("exportPdf")}
+                </Button>
+              </div>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="h-9 px-2 text-xs font-semibold hover:bg-cosmic-teal/10 gap-1 border border-black/5"
+              title={theme === "dark" ? "Switch to Light Mode" : "Dark Mode'a Geç"}
+            >
+              {theme === "dark" ? "☀️" : "🌙"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLang(lang === "tr" ? "en" : "tr")}
+              className="h-9 px-2 text-xs font-semibold hover:bg-cosmic-teal/10 gap-1 border border-black/5"
+              title={lang === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
+            >
+              🌐 {lang === "tr" ? "EN" : "TR"}
+            </Button>
             <a
               href={GITHUB_REPO}
               target="_blank"
               rel="noreferrer"
-              onClick={() => setOpen(false)}
-              className="mt-1 px-3 py-2.5 rounded-xl text-sm font-semibold border border-black/8 inline-flex items-center gap-2 bg-star-white text-midnight-void"
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl px-2 sm:px-3 text-xs font-semibold border border-black/8 bg-star-white text-midnight-void hover:bg-cosmic-teal transition-colors shadow-sm"
+              title={t("viewGithub")}
             >
-              <Code2 className="w-4 h-4" /> {t("viewGithub")}
+              <Code2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{t("viewGithub")}</span>
+              <span className="sm:hidden">GitHub</span>
             </a>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setLang(lang === "tr" ? "en" : "tr");
-                setOpen(false);
-              }}
-              className="mt-1 w-full text-xs font-semibold justify-center gap-1 bg-star-white text-midnight-void"
+            <Link
+              href="/forge"
+              className="hidden sm:inline-flex h-9 items-center rounded-xl px-3.5 text-xs font-semibold bg-cosmic-teal text-midnight-void hover:bg-sunset-coral transition-colors shadow-[0_8px_22px_rgba(217,72,32,0.28)]"
             >
-              🌐 {lang === "tr" ? "English'e Geç (EN)" : "Türkçe'ye Geç (TR)"}
-            </Button>
-            {hasContent && (
-              <div className="flex gap-2 border-t border-black/5 mt-2 pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    handleClearAll();
-                    setOpen(false);
-                  }}
-                  className="flex-1 text-xs text-sunset-coral hover:bg-sunset-coral/5"
+              {t("openForge")}
+            </Link>
+            <button
+              className="lg:hidden p-2 rounded-xl border border-black/8"
+              onClick={() => setOpen((v) => !v)}
+              aria-label="Menu"
+            >
+              {open ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              className="lg:hidden max-w-6xl mx-auto mt-2 glass-panel rounded-2xl p-2 flex flex-col"
+            >
+              {links.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.path}
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "px-3 py-2.5 rounded-xl text-sm font-semibold",
+                    pathname.startsWith(link.path)
+                      ? "bg-star-white text-midnight-void"
+                      : "text-muted-steel"
+                  )}
                 >
-                  <RotateCcw className="w-3.5 h-3.5 mr-1" /> {t("clearCv")}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    handleExport();
-                    setOpen(false);
-                  }}
-                  className="flex-1 text-xs"
-                >
-                  <FileDown className="w-3.5 h-3.5 mr-1" /> {t("exportPdf")}
-                </Button>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.header>
+                  {getNavName(link.name)}
+                </Link>
+              ))}
+              <a
+                href={GITHUB_REPO}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setOpen(false)}
+                className="mt-1 px-3 py-2.5 rounded-xl text-sm font-semibold border border-black/8 inline-flex items-center gap-2 bg-star-white text-midnight-void"
+              >
+                <Code2 className="w-4 h-4" /> {t("viewGithub")}
+              </a>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setLang(lang === "tr" ? "en" : "tr");
+                  setOpen(false);
+                }}
+                className="mt-1 w-full text-xs font-semibold justify-center gap-1 bg-star-white text-midnight-void"
+              >
+                🌐 {lang === "tr" ? "English'e Geç (EN)" : "Türkçe'ye Geç (TR)"}
+              </Button>
+              {hasContent && (
+                <div className="flex gap-2 border-t border-black/5 mt-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      handleClearAll();
+                      setOpen(false);
+                    }}
+                    className="flex-1 text-xs text-sunset-coral hover:bg-sunset-coral/5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 mr-1" /> {t("clearCv")}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      handleExport();
+                      setOpen(false);
+                    }}
+                    className="flex-1 text-xs"
+                  >
+                    <FileDown className="w-3.5 h-3.5 mr-1" /> {t("exportPdf")}
+                  </Button>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.header>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-panel-elevated/95 backdrop-blur-md border-t border-black/8 py-1 px-2 flex items-center justify-around shadow-[0_-8px_32px_rgba(15,23,42,0.06)] pb-safe-bottom">
+        {links.map((link) => {
+          const isActive = pathname === link.path || pathname.startsWith(`${link.path}/`);
+          const Icon = getNavIcon(link.name);
+          return (
+            <Link
+              key={link.name}
+              href={link.path}
+              className={cn(
+                "flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-colors min-w-[55px] cursor-pointer",
+                isActive ? "text-cosmic-teal" : "text-muted-steel hover:text-star-white"
+              )}
+            >
+              <Icon className="w-5 h-5" />
+              <span className="text-[9px] font-semibold tracking-wide">{getNavName(link.name)}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    </>
   );
 }

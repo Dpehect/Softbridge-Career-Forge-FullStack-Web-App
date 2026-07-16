@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, type ElementType } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Anvil,
@@ -18,34 +18,23 @@ import {
   Save,
   PenLine,
   Briefcase,
-  ExternalLink,
   FileDown,
   Camera,
-  Code2,
+  Plus,
+  ArrowRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { StatPill } from "@/components/StatPill";
+import { Input } from "@/components/ui/input";
 import { FilePickButton } from "@/components/FilePickButton";
-import { CvWizard } from "@/components/CvWizard";
-import { CvFeedbackPanel } from "@/components/CvFeedbackPanel";
 import { useCareerStore } from "@/store/useCareerStore";
 import {
   parseCV,
-  analyzeMatch,
   analyzeAts,
-  optimizeCV,
-  generateCoverLetter,
-  generateInterview,
-  forgeChatbot,
-  CATEGORIES,
   cleanExtractedText,
   looksLikeRawPdf,
-  parsedCvToText,
-  downloadTextFile,
   downloadJsonFile,
-  getJobRecommendations,
   exportCvAsPdf,
   generateCvFeedback,
   simulateAIResponse,
@@ -55,40 +44,13 @@ import {
   type InterviewResult,
   type ChatbotResult,
   type AtsResult,
-  type JobRecommendation,
   type ParsedCV,
 } from "@/lib/forge";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/forge/i18n";
 
-type TabId =
-  | "parse"
-  | "create"
-  | "analyze"
-  | "optimize"
-  | "coverletter"
-  | "ats"
-  | "jobs"
-  | "chatbot"
-  | "interview"
-  | "history";
-
-const READY_MSG = "CV'niz başarıyla yüklendi ve analiz edildi.";
-const READY_NEXT =
-  "Structured view and deep feedback are below. Next: match a job, export PDF, or open job ideas.";
-
-const tabs: { id: TabId; label: string; icon: ElementType }[] = [
-  { id: "parse", label: "CV Parse", icon: FileSearch },
-  { id: "create", label: "Create CV", icon: PenLine },
-  { id: "analyze", label: "Match", icon: GitCompare },
-  { id: "optimize", label: "Optimize", icon: Sparkles },
-  { id: "coverletter", label: "Cover Letter", icon: Mail },
-  { id: "ats", label: "ATS", icon: ShieldCheck },
-  { id: "jobs", label: "Job Ideas", icon: Briefcase },
-  { id: "chatbot", label: "Chatbot", icon: MessageSquare },
-  { id: "interview", label: "Interview", icon: Mic2 },
-  { id: "history", label: "History", icon: History },
-];
+type EditorTabId = "raw" | "form" | "versions";
+type PreviewTabId = "preview" | "feedback" | "match" | "cover" | "interview" | "chat";
 
 export default function ForgePage() {
   const {
@@ -111,25 +73,12 @@ export default function ForgePage() {
     restoreForgeBackup,
     deleteForgeBackup,
   } = useCareerStore();
-  const { t, lang } = useTranslation();
 
-  const getTabLabel = (id: TabId) => {
-    switch (id) {
-      case "parse": return t("tabParse");
-      case "create": return t("tabCreate");
-      case "analyze": return t("tabAnalyze");
-      case "optimize": return t("tabOptimize");
-      case "coverletter": return t("tabCover");
-      case "ats": return t("tabAts");
-      case "jobs": return t("tabJobs");
-      case "chatbot": return t("tabChat");
-      case "interview": return t("tabInterview");
-      case "history": return t("tabHistory");
-      default: return id;
-    }
-  };
+  const { t } = useTranslation();
 
-  const [tab, setTab] = useState<TabId>("parse");
+  const [editorTab, setEditorTab] = useState<EditorTabId>("raw");
+  const [previewTab, setPreviewTab] = useState<PreviewTabId>("preview");
+
   const [optimized, setOptimized] = useState<OptimizedCV | null>(null);
   const [cover, setCover] = useState<CoverLetterResult | null>(null);
   const [interview, setInterview] = useState<InterviewResult | null>(null);
@@ -139,56 +88,19 @@ export default function ForgePage() {
   const [busy, setBusy] = useState(false);
   const [parseBanner, setParseBanner] = useState<string | null>(null);
   const [lastCvFileName, setLastCvFileName] = useState<string | null>(null);
-  const [jobRecs, setJobRecs] = useState<JobRecommendation[]>([]);
-  const [jobNote, setJobNote] = useState("");
 
+  // Sync tab hash routing
   useEffect(() => {
     if (typeof window !== "undefined") {
       const hash = window.location.hash.replace("#", "");
-      if (
-        hash &&
-        [
-          "parse",
-          "create",
-          "analyze",
-          "optimize",
-          "coverletter",
-          "ats",
-          "jobs",
-          "chatbot",
-          "interview",
-          "history",
-        ].includes(hash)
-      ) {
-        setTab(hash as any);
+      if (hash === "history") {
+        setEditorTab("versions");
       }
     }
   }, []);
 
   const cvText = forgeCvText;
   const jdText = forgeJdText;
-
-  const ensureParsed = () => {
-    if (forgeParsedCv) return forgeParsedCv;
-    if (!cvText.trim()) {
-      toast.error("Load or create a CV first.");
-      return null;
-    }
-    try {
-      const cleaned = cleanExtractedText(cvText);
-      if (looksLikeRawPdf(cleaned)) {
-        toast.error("CV text looks like raw PDF. Clear it and paste clean text.");
-        return null;
-      }
-      const parsed = parseCV(cleaned);
-      setForgeParsedCv(parsed);
-      setForgeCvText(cleaned);
-      return parsed;
-    } catch {
-      toast.error("Could not read this CV. Clear and try again.");
-      return null;
-    }
-  };
 
   const run = async (fn: () => Promise<void> | void) => {
     setBusy(true);
@@ -208,9 +120,7 @@ export default function ForgePage() {
     }
     const cleaned = cleanExtractedText(text);
     if (looksLikeRawPdf(cleaned) || looksLikeRawPdf(text)) {
-      toast.error(
-        "This looks like raw PDF code, not readable CV text. Use a text-based PDF, TXT, or paste the text."
-      );
+      toast.error("This looks like raw PDF code. Please paste readable plain text.");
       setForgeParsedCv(null);
       setParseBanner(null);
       return null;
@@ -222,19 +132,15 @@ export default function ForgePage() {
       if (fileName) setLastCvFileName(fileName);
       pushForgeHistory({
         action: "parse",
-        summary: `${parsed.name} — ${parsed.skills.length} skills, ${parsed.experience.length} roles${
-          source === "file" ? " (file)" : ""
-        }`,
+        summary: `${parsed.name} — ${parsed.skills.length} skills`,
         payload: parsed,
       });
-      setParseBanner(`${READY_MSG} ${READY_NEXT}`);
-      toast.success(READY_MSG);
-      setTab("parse");
+      setParseBanner(t("readyMsg"));
+      toast.success(t("readyMsg"));
+      setEditorTab("form");
       return parsed;
     } catch {
-      toast.error(
-        "Could not build a clean CV structure. Paste plain text or try another PDF/TXT file."
-      );
+      toast.error("Could not parse clean structure. Try pasting plain text.");
       setForgeParsedCv(null);
       setParseBanner(null);
       return null;
@@ -242,13 +148,9 @@ export default function ForgePage() {
   };
 
   const handleCvFile = (text: string, fileName: string) => {
-    // Only store cleaned human text — never binary PDF dumps
     const cleaned = cleanExtractedText(text);
     if (!cleaned.trim() || looksLikeRawPdf(cleaned) || looksLikeRawPdf(text)) {
-      toast.error(
-        "This PDF appears to be scanned. Please export as searchable text or paste manually."
-      );
-      // never put garbage into the editor
+      toast.error("This PDF appears to be scanned. Please paste text manually.");
       return;
     }
     setForgeCvText(cleaned);
@@ -263,18 +165,16 @@ export default function ForgePage() {
     setCover(null);
     setInterview(null);
     setAts(null);
-    setJobRecs([]);
-    setJobNote("");
     setParseBanner(null);
     setLastCvFileName(null);
-    toast.message("CV cleared. You can start fresh.");
-    setTab("parse");
+    toast.success(t("clearSuccess"));
+    setEditorTab("raw");
   };
 
   const onBackupCv = () => {
     const bak = saveForgeBackup();
     if (!bak) {
-      toast.error("Nothing to save. Load or create a CV first.");
+      toast.error("No profile content to backup yet.");
       return;
     }
     if (forgeParsedCv) {
@@ -282,990 +182,883 @@ export default function ForgePage() {
         `cv-backup-${bak.id}.json`,
         { label: bak.label, parsed: forgeParsedCv, text: forgeCvText }
       );
-      downloadTextFile(
-        `cv-backup-${bak.id}.txt`,
-        forgeCvText || parsedCvToText(forgeParsedCv)
-      );
-    } else if (forgeCvText.trim()) {
-      downloadTextFile(`cv-backup-${bak.id}.txt`, forgeCvText);
+      toast.success("JSON Backup file downloaded successfully!");
     }
-    pushForgeHistory({
-      action: "backup",
-      summary: bak.label,
-      payload: { id: bak.id, label: bak.label },
-    });
-    toast.success("Backup saved in the app and downloaded to your computer.");
-  };
-
-  const onWizardComplete = (cv: ParsedCV, text: string) => {
-    setForgeCvText(text);
-    setForgeParsedCv(cv);
-    setParseBanner(`${READY_MSG} ${READY_NEXT}`);
-    pushForgeHistory({
-      action: "create",
-      summary: `${cv.name} — built from scratch`,
-      payload: cv,
-    });
-    toast.success(READY_MSG);
-    setTab("parse");
   };
 
   const onExportPdf = async () => {
-    const parsed = ensureParsed();
-    if (!parsed) return;
+    if (!forgeParsedCv) return;
     try {
-      setBusy(true);
-      await exportCvAsPdf(parsed);
-      toast.success("Professional PDF downloaded.");
+      await exportCvAsPdf(forgeParsedCv);
+      toast.success(t("exportSuccess"));
     } catch {
-      toast.error("Could not export PDF. Try again.");
-    } finally {
-      setBusy(false);
+      toast.error("Export failed.");
     }
   };
 
-  const onJobRecs = () => {
-    const parsed = ensureParsed();
-    if (!parsed) return;
-    setBusy(true);
-    setTab("jobs");
-    void getJobRecommendations(parsed)
-      .then(({ items, note }) => {
-        setJobRecs(items);
-        setJobNote(note);
-        pushForgeHistory({
-          action: "jobs",
-          summary: `${items.length} job ideas for ${parsed.title}`,
-          payload: { count: items.length },
-        });
-        toast.success("Job ideas ready — including web searches and board matches.");
-      })
-      .catch(() => toast.error("Could not load job ideas right now."))
-      .finally(() => setBusy(false));
-  };
-
-  const onParse = () =>
-    run(() => {
-      runParse(cvText, "manual");
-    });
+  const onParse = () => run(async () => { runParse(cvText, "manual"); });
 
   const onAnalyze = () =>
     run(async () => {
-      const parsed = ensureParsed();
-      if (!parsed) return;
+      if (!forgeParsedCv) return;
       if (!jdText.trim()) {
-        toast.error("İş ilanı (JD) metnini de yapıştır.");
+        toast.error("Please paste the Job Description (JD) text first.");
         return;
       }
-      const analysis = await simulateAIResponse("match", parsed, { jd: jdText });
+      const analysis = await simulateAIResponse("match", forgeParsedCv, { jd: jdText });
       setForgeAnalysis(analysis);
       pushForgeHistory({
         action: "analyze",
         summary: `Match %${analysis.matchScore} · ATS %${analysis.atsScore}`,
         payload: analysis,
       });
-      toast.success(`Match skoru: %${analysis.matchScore}`);
-      setTab("analyze");
+      toast.success(`Match Score: %${analysis.matchScore}`);
+      setPreviewTab("match");
     });
 
   const onOptimize = () =>
     run(async () => {
-      const parsed = ensureParsed();
-      if (!parsed) return;
-      const result = await simulateAIResponse("optimize", parsed, { jd: jdText });
+      if (!forgeParsedCv) return;
+      const result = await simulateAIResponse("optimize", forgeParsedCv, { jd: jdText });
       setOptimized(result);
       pushForgeHistory({
         action: "optimize",
-        summary: `${result.optimizedSkills.length} skill · ${result.optimizedExperience.length} deneyim optimize`,
+        summary: `${result.optimizedSkills.length} skills optimized`,
         payload: result,
       });
-      toast.success("CV optimize edildi");
-      setTab("optimize");
+      toast.success("CV optimized successfully");
+      setPreviewTab("preview");
     });
 
   const onCover = () =>
     run(async () => {
-      const parsed = ensureParsed();
-      if (!parsed) return;
+      if (!forgeParsedCv) return;
       if (!jdText.trim()) {
-        toast.error("Cover letter için JD gerekli.");
+        toast.error("Please paste the JD text first.");
         return;
       }
-      const result = await simulateAIResponse("coverletter", parsed, { jd: jdText, tone: forgeTone });
+      const result = await simulateAIResponse("coverletter", forgeParsedCv, { jd: jdText, tone: forgeTone });
       setCover(result);
       pushForgeHistory({
         action: "coverletter",
-        summary: `${result.tone} ton · ${result.keyPoints.length} vurgu`,
+        summary: `${result.tone} tone cover letter`,
         payload: result,
       });
-      toast.success("Cover letter hazır");
-      setTab("coverletter");
+      toast.success("Cover letter generated");
+      setPreviewTab("cover");
     });
 
   const onAts = () =>
     run(async () => {
-      const parsed = ensureParsed();
-      if (!parsed) return;
-      // ATS checks are derived from matching metrics with structural checks
+      if (!forgeParsedCv) return;
       await new Promise((r) => setTimeout(r, 600));
-      const result = analyzeAts(parsed, jdText);
+      const result = analyzeAts(forgeParsedCv, jdText);
       setAts(result);
       pushForgeHistory({
         action: "ats",
-        summary: `ATS %${result.atsScore} · kelime örtüşme %${result.keywordCoverage}`,
+        summary: `ATS score: %${result.atsScore}`,
         payload: result,
       });
-      toast.success(`ATS skoru: %${result.atsScore}`);
-      setTab("ats");
+      toast.success(`ATS Score: %${result.atsScore}`);
+      setPreviewTab("feedback");
     });
 
   const onInterview = () =>
     run(async () => {
-      const parsed = ensureParsed() || parseCV(cvText || "Aday\nSoftware Engineer\nReact TypeScript");
+      const parsed = forgeParsedCv || parseCV(cvText || "Aday\nSoftware Engineer\nReact");
       if (!forgeParsedCv && cvText.trim()) setForgeParsedCv(parsed);
       const result = await simulateAIResponse("interview", parsed, { jd: jdText });
       setInterview(result);
       pushForgeHistory({
         action: "interview",
-        summary: `${result.questions.length} soru · ${result.roleHint}`,
+        summary: `${result.questions.length} questions ready`,
         payload: result,
       });
-      toast.success("Mülakat seti hazır");
-      setTab("interview");
+      toast.success("Interview prep ready");
+      setPreviewTab("interview");
     });
 
   const onChat = () =>
     run(async () => {
-      const parsed = ensureParsed();
-      if (!parsed) return;
-      const result = await simulateAIResponse("chat", parsed, { message: chatInput, jd: jdText });
+      if (!forgeParsedCv) return;
+      const result = await simulateAIResponse("chat", forgeParsedCv, { message: chatInput, jd: jdText });
       setChatResult(result);
       pushForgeHistory({
         action: "chatbot",
-        summary: `${result.category}: ${result.response.slice(0, 80)}…`,
+        summary: `${result.category}: ${result.response.slice(0, 45)}…`,
         payload: result,
       });
-      setTab("chatbot");
+      setPreviewTab("chat");
     });
 
-  const copyText = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast.success("Panoya kopyalandı");
-    } catch {
-      toast.error("Kopyalanamadı");
-    }
-  };
-
-  const historyPreview = useMemo(() => forgeHistory.slice(0, 8), [forgeHistory]);
+  // Dynamic values
   const cvFeedback = useMemo(
     () => (forgeParsedCv ? generateCvFeedback(forgeParsedCv, forgeCvText) : null),
     [forgeParsedCv, forgeCvText]
   );
 
+  // Form Editor Actions
+  const updateParsedField = (patch: Partial<ParsedCV>) => {
+    if (forgeParsedCv) {
+      setForgeParsedCv({ ...forgeParsedCv, ...patch });
+    }
+  };
+
+  const updateExperience = (index: number, patch: Partial<any>) => {
+    if (forgeParsedCv) {
+      const updated = [...forgeParsedCv.experience];
+      updated[index] = { ...updated[index], ...patch };
+      updateParsedField({ experience: updated });
+    }
+  };
+
+  const addExperience = () => {
+    if (forgeParsedCv) {
+      const updated = [
+        ...forgeParsedCv.experience,
+        { company: "Company", position: "Role", duration: "2024 - Present", description: ["Key achievement"] },
+      ];
+      updateParsedField({ experience: updated });
+    }
+  };
+
+  const removeExperience = (index: number) => {
+    if (forgeParsedCv) {
+      const updated = forgeParsedCv.experience.filter((_, i) => i !== index);
+      updateParsedField({ experience: updated });
+    }
+  };
+
+  const addSkill = (skill: string) => {
+    if (forgeParsedCv && skill.trim() && !forgeParsedCv.skills.includes(skill.trim())) {
+      updateParsedField({ skills: [...forgeParsedCv.skills, skill.trim()] });
+    }
+  };
+
+  const removeSkill = (skill: string) => {
+    if (forgeParsedCv) {
+      updateParsedField({ skills: forgeParsedCv.skills.filter((s) => s !== skill) });
+    }
+  };
+
   return (
     <div className="px-4 md:px-8 pb-20 pt-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <Badge variant="accent" className="mb-3">
-            SoftBridge · Forge
-          </Badge>
-          <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight flex items-center gap-2.5">
-            <span className="w-10 h-10 rounded-xl bg-cosmic-teal text-midnight-void inline-flex items-center justify-center shadow-[0_10px_24px_rgba(217,72,32,0.28)]">
-              <Anvil className="w-5 h-5" />
-            </span>
-            {t("forgeTitle")}
-          </h1>
-          <p className="text-muted-steel mt-3 max-w-2xl leading-relaxed">
-            {t("forgeDesc")}
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => setTab("create")}>
-              {t("buildScratch")}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={onClearCv}>
-              {t("clearReset")}
-            </Button>
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Workspace Title & Intro */}
+        <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <Badge variant="accent" className="mb-2">SoftBridge · Workspace</Badge>
+            <h1 className="font-display text-3xl font-bold tracking-tight">{t("forgeTitle")}</h1>
+            <p className="text-sm text-muted-steel mt-1 max-w-xl leading-relaxed">{t("forgeDesc")}</p>
           </div>
-        </div>
-
-        {/* Primary CV workspace */}
-        <section className="glass-panel rounded-3xl p-5 md:p-6 mb-6 space-y-4 border border-cosmic-teal/10">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-cosmic-teal">
-                {t("workspaceTitle")}
-              </p>
-              <h2 className="font-display text-xl font-semibold mt-0.5">{t("workspaceSub")}</h2>
-            </div>
+          {forgeParsedCv && (
             <div className="flex flex-wrap gap-2">
-              <FilePickButton
-                label={t("uploadBtn")}
-                variant="accent"
-                size="default"
-                silentSuccess
-                onText={(text, fileName) => handleCvFile(text, fileName)}
-              />
-              <Button variant="outline" onClick={() => setTab("create")}>
-                <PenLine className="w-4 h-4" /> {t("buildScratch")}
+              <Button size="sm" variant="outline" onClick={onExportPdf}>
+                <FileDown className="w-4 h-4 mr-1.5" /> {t("exportPdf")}
               </Button>
-              <Button variant="ghost" onClick={onClearCv}>
-                <RotateCcw className="w-4 h-4" /> {t("clearReset")}
+              <Button size="sm" variant="ghost" className="text-sunset-coral hover:bg-sunset-coral/5" onClick={onClearCv}>
+                <RotateCcw className="w-4 h-4 mr-1.5" /> {t("clearCv")}
               </Button>
-              <Button variant="outline" disabled={busy || !forgeParsedCv} onClick={() => void onExportPdf()}>
-                <FileDown className="w-4 h-4" /> {t("exportPdf")}
-              </Button>
-            </div>
-          </div>
-          <p className="text-sm text-muted-steel">
-            <strong>{t("pasteTitle")}</strong>.
-          </p>
-          <Textarea
-            value={cvText}
-            onChange={(e) => {
-              setForgeCvText(e.target.value);
-              setParseBanner(null);
-            }}
-            placeholder="Paste CV Text here…"
-            className="min-h-[140px] font-mono text-xs"
-          />
-          <div className="flex flex-wrap gap-2">
-            <Button variant="soft" disabled={busy || !cvText.trim()} onClick={onParse}>
-              {t("analyzePasteBtn")}
-            </Button>
-            {lastCvFileName && (
-              <span className="text-xs text-muted-steel self-center">
-                {t("lastFileLabel")} <strong className="text-star-white">{lastCvFileName}</strong>
-              </span>
-            )}
-          </div>
-          {parseBanner && (
-            <div className="rounded-2xl border border-cosmic-teal/25 bg-cosmic-teal/10 px-4 py-3">
-              <p className="text-sm font-semibold">{t("readyMsg")}</p>
-              <p className="text-xs text-muted-steel mt-1">{t("readyNext")}</p>
             </div>
           )}
-        </section>
-
-        <div className="grid lg:grid-cols-[1fr_1fr] gap-4 mb-6">
-          <div className="glass-panel rounded-2xl p-4 space-y-2">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-steel">
-                CV text (full editor)
-              </p>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <FilePickButton
-                  label="Upload PDF or TXT"
-                  silentSuccess
-                  onText={(text, fileName) => handleCvFile(text, fileName)}
-                />
-                <Button size="sm" variant="ghost" onClick={onClearCv}>
-                  <RotateCcw className="w-3.5 h-3.5" /> Clear / Reset CV
-                </Button>
-              </div>
-            </div>
-            <Textarea
-              value={cvText}
-              onChange={(e) => {
-                setForgeCvText(e.target.value);
-                setParseBanner(null);
-              }}
-              placeholder="Paste CV Text here…"
-              className="min-h-[180px] font-mono text-xs"
-            />
-          </div>
-          <div className="glass-panel rounded-2xl p-4 space-y-2">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-steel">
-                Job description
-              </p>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <FilePickButton
-                  label="Choose JD file"
-                  onText={(text) => setForgeJdText(text)}
-                />
-              </div>
-            </div>
-            <p className="text-[11px] text-muted-steel">
-              Paste a job ad or upload a text file for match scoring.
-            </p>
-            <Textarea
-              value={jdText}
-              onChange={(e) => setForgeJdText(e.target.value)}
-              placeholder="Paste the job description here…"
-              className="min-h-[180px] font-mono text-xs"
-            />
-          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-6">
-          <Button variant="accent" disabled={busy} onClick={onParse}>
-            Parse
-          </Button>
-          <Button variant="default" disabled={busy} onClick={onAnalyze}>
-            Compare
-          </Button>
-          <Button variant="outline" disabled={busy} onClick={onOptimize}>
-            Optimize
-          </Button>
-          <Button variant="outline" disabled={busy} onClick={onCover}>
-            Cover letter
-          </Button>
-          <Button variant="outline" disabled={busy} onClick={onAts}>
-            ATS check
-          </Button>
-          <Button variant="outline" disabled={busy} onClick={onJobRecs}>
-            <Briefcase className="w-4 h-4" /> Job ideas
-          </Button>
-          <Button variant="outline" disabled={busy} onClick={onInterview}>
-            Mock interview
-          </Button>
-          <Button variant="soft" disabled={busy} onClick={onBackupCv}>
-            <Save className="w-4 h-4" /> Backup CV
-          </Button>
-          <Button variant="outline" disabled={busy} onClick={() => void onExportPdf()}>
-            <FileDown className="w-4 h-4" /> Export PDF
-          </Button>
-          <Button variant="ghost" disabled={busy} onClick={onClearCv}>
-            <RotateCcw className="w-4 h-4" /> Clear CV
-          </Button>
-          <Button variant="ghost" disabled={busy} onClick={() => setTab("create")}>
-            <PenLine className="w-4 h-4" /> Build CV from Scratch
-          </Button>
-        </div>
-
-        <div className="flex flex-wrap gap-1.5 mb-4">
-          {tabs.map((t) => {
-            const Icon = t.icon;
-            return (
+        {/* Dynamic Split-View Workspace Grid */}
+        <div className="grid lg:grid-cols-[42%_58%] gap-6 items-start">
+          
+          {/* Left panel: Editors */}
+          <div className="flex flex-col gap-4">
+            
+            {/* Editor Tabs Navigation */}
+            <div className="flex gap-1.5 p-1 rounded-xl bg-panel-elevated/70 border border-black/5">
               <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
+                onClick={() => setEditorTab("raw")}
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer",
-                  tab === t.id
-                    ? "bg-star-white text-midnight-void border-transparent"
-                    : "border-black/8 text-muted-steel hover:text-star-white"
+                  "flex-1 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
+                  editorTab === "raw" ? "bg-star-white text-midnight-void" : "text-muted-steel hover:text-star-white"
                 )}
               >
-                <Icon className="w-3.5 h-3.5" />
-                {getTabLabel(t.id)}
+                📝 Raw Text / Import
               </button>
-            );
-          })}
-        </div>
+              <button
+                onClick={() => setEditorTab("form")}
+                disabled={!forgeParsedCv}
+                className={cn(
+                  "flex-1 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50",
+                  editorTab === "form" ? "bg-star-white text-midnight-void" : "text-muted-steel hover:text-star-white"
+                )}
+              >
+                ✍️ Structured Form
+              </button>
+              <button
+                onClick={() => setEditorTab("versions")}
+                className={cn(
+                  "flex-1 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
+                  editorTab === "versions" ? "bg-star-white text-midnight-void" : "text-muted-steel hover:text-star-white"
+                )}
+              >
+                📂 Backups ({forgeBackups.length})
+              </button>
+            </div>
 
-        <div className="glass-panel rounded-3xl p-5 md:p-7 min-h-[320px]">
-          {tab === "parse" && (
-            <div className="space-y-5">
-              <div>
-                <h2 className="font-semibold text-lg">Structured CV & analysis</h2>
-                <p className="text-sm text-muted-steel mt-1">
-                  Results from upload, paste, or builder. Clean fields only — saved to Past Analyses.
-                </p>
-              </div>
-
-              {!forgeParsedCv ? (
-                <p className="text-sm text-muted-steel">
-                  No CV loaded yet. Use <strong>Upload PDF or TXT</strong>, paste text above, or{" "}
-                  <strong>Build CV from Scratch</strong>.
-                </p>
-              ) : (
-                <>
-                  <div className="flex flex-wrap items-center gap-2 justify-between">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="accent">Structured CV</Badge>
-                      <span className="text-xs text-muted-steel">Ready for jobs & export</span>
-                    </div>
-                    <Button size="sm" variant="outline" onClick={() => void onExportPdf()}>
-                      <FileDown className="w-4 h-4" /> Export PDF
-                    </Button>
+            {/* Editor Content Area */}
+            <div className="glass-panel rounded-3xl p-5 border border-cosmic-teal/10 min-h-[460px]">
+              
+              {/* Tab 1: Raw Text & File Pickers */}
+              {editorTab === "raw" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm">{t("workspaceSub")}</h3>
+                    <FilePickButton
+                      label={t("uploadBtn")}
+                      variant="accent"
+                      size="sm"
+                      silentSuccess
+                      onText={(text, fileName) => handleCvFile(text, fileName)}
+                    />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-16 h-16 rounded-xl border border-black/8 bg-abyss-panel overflow-hidden flex items-center justify-center shrink-0 relative">
-                      {forgeParsedCv.photoDataUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={forgeParsedCv.photoDataUrl}
-                          alt="Profile"
-                          className="w-full h-full object-cover"
+                  <p className="text-xs text-muted-steel leading-relaxed">{t("pasteTitle")}</p>
+                  <Textarea
+                    value={cvText}
+                    onChange={(e) => {
+                      setForgeCvText(e.target.value);
+                      setParseBanner(null);
+                    }}
+                    placeholder="Paste CV text here (e.g. John Doe, Software Engineer, React)..."
+                    className="min-h-[220px] font-mono text-xs leading-relaxed"
+                  />
+                  <Button variant="soft" className="w-full" disabled={busy || !cvText.trim()} onClick={onParse}>
+                    {busy ? "Parsing CV..." : t("analyzePasteBtn")}
+                  </Button>
+                  {lastCvFileName && (
+                    <p className="text-xs text-muted-steel">
+                      {t("lastFileLabel")} <strong className="text-star-white">{lastCvFileName}</strong>
+                    </p>
+                  )}
+                  {parseBanner && (
+                    <div className="rounded-xl bg-cosmic-teal/10 border border-cosmic-teal/20 p-3 text-xs">
+                      <p className="font-semibold text-cosmic-teal">{parseBanner}</p>
+                      <p className="mt-0.5 text-muted-steel">Switch to **Structured Form** tab to edit fields directly!</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Tab 2: Form Editor */}
+              {editorTab === "form" && forgeParsedCv && (
+                <div className="space-y-4 max-h-[550px] overflow-y-auto pr-1">
+                  
+                  {/* Photo & Basics */}
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-cosmic-teal">{t("personalInfo")}</h4>
+                    <div className="flex gap-3 items-center">
+                      <div className="w-12 h-12 rounded-full bg-abyss-panel overflow-hidden border flex items-center justify-center shrink-0 relative group">
+                        {forgeParsedCv.photoDataUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={forgeParsedCv.photoDataUrl} alt="Preview" className="w-full h-full object-cover" />
+                        ) : (
+                          <Camera className="w-4 h-4 text-muted-steel" />
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = () => updateParsedField({ photoDataUrl: reader.result as string });
+                              reader.readAsDataURL(file);
+                            }
+                          }}
                         />
-                      ) : (
-                        <Camera className="w-6 h-6 text-muted-steel" />
-                      )}
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <Input
+                          placeholder="Full Name"
+                          value={forgeParsedCv.name}
+                          onChange={(e) => updateParsedField({ name: e.target.value })}
+                        />
+                        <Input
+                          placeholder="Professional Title"
+                          value={forgeParsedCv.title || ""}
+                          onChange={(e) => updateParsedField({ title: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        placeholder="Email"
+                        value={forgeParsedCv.email || ""}
+                        onChange={(e) => updateParsedField({ email: e.target.value })}
+                      />
+                      <Input
+                        placeholder="Location"
+                        value={forgeParsedCv.location || ""}
+                        onChange={(e) => updateParsedField({ location: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Summary */}
+                  <div className="space-y-1.5">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-cosmic-teal">{t("summary")}</h4>
+                    <Textarea
+                      placeholder="Summary..."
+                      value={forgeParsedCv.summary || ""}
+                      onChange={(e) => updateParsedField({ summary: e.target.value })}
+                      className="text-xs min-h-[70px]"
+                    />
+                  </div>
+
+                  {/* Skills tags */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-cosmic-teal">{t("skills")}</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {forgeParsedCv.skills.map((s) => (
+                        <Badge
+                          key={s}
+                          variant="soft"
+                          className="gap-1 cursor-pointer hover:bg-sunset-coral/10 hover:text-sunset-coral"
+                          onClick={() => removeSkill(s)}
+                        >
+                          {s} ✕
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        id="new-skill-input"
+                        placeholder="Add skill..."
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            addSkill((e.target as HTMLInputElement).value);
+                            (e.target as HTMLInputElement).value = "";
+                          }
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const input = document.getElementById("new-skill-input") as HTMLInputElement;
+                          if (input) {
+                            addSkill(input.value);
+                            input.value = "";
+                          }
+                        }}
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Experience List */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-cosmic-teal">{t("experience")}</h4>
+                      <Button size="sm" variant="outline" onClick={addExperience}>
+                        + Add Role
+                      </Button>
+                    </div>
+                    <div className="space-y-3 border-t border-black/5 pt-2">
+                      {forgeParsedCv.experience.map((exp, idx) => (
+                        <div key={idx} className="p-3 rounded-xl bg-panel-elevated/75 border border-black/5 space-y-2 relative group">
+                          <button
+                            onClick={() => removeExperience(idx)}
+                            className="absolute top-2 right-2 text-xs text-sunset-coral opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            Remove
+                          </button>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input
+                              placeholder="Company"
+                              value={exp.company}
+                              onChange={(e) => updateExperience(idx, { company: e.target.value })}
+                            />
+                            <Input
+                              placeholder="Position"
+                              value={exp.position}
+                              onChange={(e) => updateExperience(idx, { position: e.target.value })}
+                            />
+                          </div>
+                          <Input
+                            placeholder="Duration (e.g. 2022 - 2024)"
+                            value={exp.duration}
+                            onChange={(e) => updateExperience(idx, { duration: e.target.value })}
+                          />
+                          <Textarea
+                            placeholder="Highlights (one per line)..."
+                            value={exp.description.join("\n")}
+                            onChange={(e) => updateExperience(idx, { description: e.target.value.split("\n") })}
+                            className="text-xs min-h-[60px] font-mono"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* Tab 3: Backups & Versions */}
+              {editorTab === "versions" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm">Backup files</h3>
+                    <div className="flex gap-2">
                       <input
                         type="file"
-                        id="forge-photo-upload"
-                        accept="image/*"
+                        id="json-import-editor"
+                        accept=".json"
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
                             const reader = new FileReader();
                             reader.onload = () => {
-                              setForgeParsedCv({
-                                ...forgeParsedCv,
-                                photoDataUrl: reader.result as string
-                              });
+                              try {
+                                const parsedData = JSON.parse(reader.result as string);
+                                if (parsedData && parsedData.parsed) {
+                                  setForgeParsedCv(parsedData.parsed);
+                                  if (parsedData.text) setForgeCvText(parsedData.text);
+                                  toast.success("Backup imported successfully!");
+                                  setEditorTab("form");
+                                } else {
+                                  toast.error("Invalid backup file.");
+                                }
+                              } catch {
+                                toast.error("Could not parse file.");
+                              }
                             };
-                            reader.readAsDataURL(file);
+                            reader.readAsText(file);
                           }
                         }}
                       />
+                      <Button size="sm" variant="outline" onClick={() => document.getElementById("json-import-editor")?.click()}>
+                        Import JSON
+                      </Button>
+                      <Button size="sm" variant="accent" onClick={onBackupCv}>
+                        Create Backup
+                      </Button>
                     </div>
-                    <div className="flex flex-col gap-1">
+                  </div>
+
+                  {/* Render Backups */}
+                  {forgeBackups.length === 0 ? (
+                    <p className="text-xs text-muted-steel">No backups created in this session. Click **Create Backup** to download your current status as a backup file.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {forgeBackups.map((bak) => (
+                        <li key={bak.id} className="p-3 rounded-xl border border-black/5 bg-panel-elevated/50 flex justify-between items-center text-xs">
+                          <div>
+                            <p className="font-semibold">{bak.label}</p>
+                            <p className="text-[10px] text-muted-steel">{new Date(bak.createdAt).toLocaleString()}</p>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                restoreForgeBackup(bak.id);
+                                toast.success("Backup profile loaded.");
+                                setEditorTab("form");
+                              }}
+                            >
+                              Restore
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => deleteForgeBackup(bak.id)}>
+                              ✕
+                            </Button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+            </div>
+          </div>
+
+          {/* Right panel: Live Preview & AI Tools */}
+          <div className="flex flex-col gap-4">
+            
+            {/* Tool tab links */}
+            <div className="flex flex-wrap gap-1 p-1 rounded-xl bg-panel-elevated/70 border border-black/5">
+              {(
+                [
+                  ["preview", "👁️ Live Preview"],
+                  ["feedback", "🎯 ATS & feedback"],
+                  ["match", "🤝 Match JD"],
+                  ["cover", "✉️ Cover letter"],
+                  ["interview", "🗣️ Interview Prep"],
+                  ["chat", "💬 Coach Chat"],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  onClick={() => setPreviewTab(id)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors",
+                    previewTab === id ? "bg-cosmic-teal text-midnight-void" : "text-muted-steel hover:text-star-white"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Tool Output Window */}
+            <div className="glass-panel rounded-3xl p-6 border border-cosmic-teal/10 min-h-[460px]">
+              
+              {/* Tab 1: Live CV Preview */}
+              {previewTab === "preview" && (
+                <div>
+                  {!forgeParsedCv ? (
+                    <div className="text-center py-10">
+                      <FileSearch className="w-8 h-8 mx-auto text-muted-steel mb-3" />
+                      <p className="text-sm text-muted-steel">{t("noCvLoaded")}</p>
+                    </div>
+                  ) : (
+                    <div className="bg-white text-slate-800 p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm max-w-full font-sans leading-relaxed text-left">
+                      <div className="flex justify-between items-center border-b border-slate-200 pb-4 mb-4">
+                        <div>
+                          <h2 className="text-2xl font-bold text-slate-900 leading-tight">{forgeParsedCv.name}</h2>
+                          <p className="text-sm font-semibold text-sky-600 mt-0.5">{forgeParsedCv.title || "Software Professional"}</p>
+                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 mt-2">
+                            {forgeParsedCv.email && <span>✉ {forgeParsedCv.email}</span>}
+                            {forgeParsedCv.phone && <span>📞 {forgeParsedCv.phone}</span>}
+                            {forgeParsedCv.location && <span>📍 {forgeParsedCv.location}</span>}
+                          </div>
+                        </div>
+                        {forgeParsedCv.photoDataUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={forgeParsedCv.photoDataUrl}
+                            alt="Avatar"
+                            className="w-16 h-16 rounded-full object-cover border-2 border-slate-100 shadow-sm"
+                          />
+                        )}
+                      </div>
+
+                      {forgeParsedCv.summary && (
+                        <div className="mb-4">
+                          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 border-sky-500 pl-2 mb-2">Summary</h3>
+                          <p className="text-xs text-slate-600 text-justify">{forgeParsedCv.summary}</p>
+                        </div>
+                      )}
+
+                      {forgeParsedCv.experience && forgeParsedCv.experience.length > 0 && (
+                        <div className="mb-4">
+                          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 border-sky-500 pl-2 mb-2.5">Experience</h3>
+                          <div className="space-y-3">
+                            {forgeParsedCv.experience.map((exp, idx) => (
+                              <div key={idx} className="text-xs">
+                                <div className="flex justify-between font-semibold text-slate-800">
+                                  <span>{exp.position}</span>
+                                  <span className="text-slate-400 font-normal">{exp.duration}</span>
+                                </div>
+                                <p className="text-sky-600 font-medium my-0.5">{exp.company}</p>
+                                {exp.description && exp.description.length > 0 && (
+                                  <ul className="list-disc list-inside pl-2 space-y-0.5 text-slate-500">
+                                    {exp.description.map((b, bIdx) => (
+                                      <li key={bIdx}>{b}</li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {forgeParsedCv.skills && forgeParsedCv.skills.length > 0 && (
+                        <div className="mb-4">
+                          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 border-sky-500 pl-2 mb-2">Skills</h3>
+                          <div className="flex flex-wrap gap-1">
+                            {forgeParsedCv.skills.map((s, idx) => (
+                              <span key={idx} className="bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] font-medium">{s}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {forgeParsedCv.education && forgeParsedCv.education.length > 0 && (
+                        <div>
+                          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 border-sky-500 pl-2 mb-2">Education</h3>
+                          <div className="space-y-2">
+                            {forgeParsedCv.education.map((edu, idx) => (
+                              <div key={idx} className="text-xs">
+                                <div className="flex justify-between font-semibold text-slate-800">
+                                  <span>{edu.school}</span>
+                                  <span className="text-slate-400 font-normal">{edu.year}</span>
+                                </div>
+                                <p className="text-slate-500">{edu.degree}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Tab 2: Feedback & ATS Check */}
+              {previewTab === "feedback" && (
+                <div className="space-y-5">
+                  <div className="flex items-center justify-between border-b border-black/5 pb-3">
+                    <div>
+                      <h2 className="font-semibold text-base">ATS Analysis & Feedback</h2>
+                      <p className="text-xs text-muted-steel">Structural reviews and format parsing tests.</p>
+                    </div>
+                    <Button size="sm" variant="accent" disabled={busy || !forgeParsedCv} onClick={onAts}>
+                      {busy ? "Analyzing..." : "Run ATS Scan"}
+                    </Button>
+                  </div>
+
+                  {ats ? (
+                    <div className="space-y-4">
+                      {/* ATS Score display */}
+                      <div className="flex gap-4 items-center bg-panel-elevated/55 p-4 rounded-2xl border border-black/5">
+                        <div className="w-16 h-16 rounded-full border-4 border-cosmic-teal flex items-center justify-center font-bold text-lg text-cosmic-teal">
+                          {ats.atsScore}%
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold">ATS Compatibility Rating</p>
+                          <p className="text-xs text-muted-steel mt-0.5">Estimated parser rate based on single-column layouts and metadata density.</p>
+                        </div>
+                      </div>
+
+                      {/* Issues & Fixes */}
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <p className="text-xs font-bold uppercase text-sunset-coral">Identified Issues</p>
+                          <ul className="space-y-1.5 text-xs text-muted-steel">
+                            {ats.issues.map((issue, i) => <li key={i}>• {issue}</li>)}
+                          </ul>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs font-bold uppercase text-cosmic-teal">Recommended Fixes</p>
+                          <ul className="space-y-1.5 text-xs text-muted-steel">
+                            {ats.fixes.map((fix, i) => <li key={i}>• {fix}</li>)}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  ) : cvFeedback ? (
+                    <div className="space-y-4">
+                      {/* Overall feedback fallback */}
+                      <div className="bg-panel-elevated/55 p-4 rounded-2xl border border-black/5">
+                        <p className="text-sm font-semibold mb-1">Feedback Summary</p>
+                        <p className="text-xs text-muted-steel leading-relaxed">{cvFeedback.summaryLine}</p>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <p className="text-xs font-bold uppercase text-cosmic-teal">Strengths</p>
+                          <ul className="space-y-1 text-xs text-muted-steel">
+                            {cvFeedback.strengths.map((s, i) => <li key={i}>• {s}</li>)}
+                          </ul>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs font-bold uppercase text-sunset-coral">Key Improvements</p>
+                          <ul className="space-y-1 text-xs text-muted-steel">
+                            {cvFeedback.improvements.map((imp, i) => <li key={i}>• {imp}</li>)}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-steel">Please parse or edit your CV to view structural recommendations.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Tab 3: Match JD */}
+              {previewTab === "match" && (
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="font-semibold text-sm">Match Job Description (JD)</h2>
+                    <p className="text-xs text-muted-steel mt-0.5">Compare your CV skills against a target job ad.</p>
+                  </div>
+                  <Textarea
+                    placeholder="Paste job description details here..."
+                    value={jdText}
+                    onChange={(e) => setForgeJdText(e.target.value)}
+                    className="text-xs min-h-[90px]"
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="accent" disabled={busy || !forgeParsedCv} onClick={onAnalyze}>
+                      {busy ? "Matching..." : "Check Match Score"}
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={busy || !forgeParsedCv} onClick={onOptimize}>
+                      Optimize for JD
+                    </Button>
+                  </div>
+
+                  {forgeAnalysis && (
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-center gap-4 bg-panel-elevated/50 p-4 rounded-xl border border-black/5">
+                        <div className="w-16 h-16 rounded-full border-4 border-cosmic-teal flex items-center justify-center font-bold text-base text-cosmic-teal">
+                          {forgeAnalysis.matchScore}%
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold">Job Match Compatibility</p>
+                          <p className="text-xs text-muted-steel">Calculated keyword match rate compared to requirements.</p>
+                        </div>
+                      </div>
+
+                      {/* Matching vs Missing */}
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div className="space-y-1">
+                          <p className="font-semibold text-cosmic-teal">Matched Skills ({forgeAnalysis.matchedSkills.length})</p>
+                          <p className="text-muted-steel">{forgeAnalysis.matchedSkills.join(", ") || "None yet."}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="font-semibold text-sunset-coral">Missing Skills ({forgeAnalysis.missingSkills.length})</p>
+                          <p className="text-muted-steel">{forgeAnalysis.missingSkills.join(", ") || "None detected."}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Tab 4: Cover Letter */}
+              {previewTab === "cover" && (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/5 pb-2">
+                    <div>
+                      <h2 className="font-semibold text-sm">Cover Letter Generator</h2>
+                      <p className="text-xs text-muted-steel">Generates customized application letter.</p>
+                    </div>
+                    <div className="flex gap-1.5">
+                      {(["Profesyonel", "Girişimci", "Teknik"] as CoverLetterTone[]).map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => setForgeTone(t)}
+                          className={cn(
+                            "px-2 py-1 rounded text-[10px] font-semibold border transition-colors cursor-pointer",
+                            forgeTone === t ? "bg-star-white text-midnight-void border-transparent" : "border-black/5 text-muted-steel"
+                          )}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button size="sm" variant="accent" className="w-full" disabled={busy || !forgeParsedCv} onClick={onCover}>
+                    {busy ? "Drafting Cover Letter..." : "Generate Cover Letter"}
+                  </Button>
+
+                  {cover && (
+                    <div className="space-y-3">
+                      <Textarea
+                        value={cover.coverLetter}
+                        readOnly
+                        className="min-h-[180px] font-sans text-xs leading-relaxed"
+                      />
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => document.getElementById("forge-photo-upload")?.click()}
+                        onClick={() => {
+                          navigator.clipboard.writeText(cover.coverLetter);
+                          toast.success("Copied to clipboard!");
+                        }}
                       >
-                        <Camera className="w-3 h-3 mr-1" /> Photo
+                        <Copy className="w-3.5 h-3.5 mr-1" /> Copy Letter
                       </Button>
-                      {forgeParsedCv.photoDataUrl && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-sunset-coral"
-                          onClick={() => setForgeParsedCv({ ...forgeParsedCv, photoDataUrl: null })}
-                        >
-                          Remove
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <StatPill label="Name" value={forgeParsedCv.name} />
-                    <StatPill label="Title" value={forgeParsedCv.title} />
-                    <StatPill label="Skills" value={forgeParsedCv.skills.length} />
-                    <StatPill label="Roles" value={forgeParsedCv.experience.length} />
-                  </div>
-                  <div className="grid md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase text-muted-steel mb-1">Contact</p>
-                      <p>{forgeParsedCv.email || "—"}</p>
-                      <p className="text-muted-steel">{forgeParsedCv.phone || "No phone"}</p>
-                      <p className="text-muted-steel">{forgeParsedCv.location || "No location"}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold uppercase text-muted-steel mb-1">Summary</p>
-                      <p className="text-ink-soft leading-relaxed">
-                        {forgeParsedCv.summary || "No summary detected"}
-                      </p>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase text-muted-steel mb-2">Skills</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {forgeParsedCv.skills.map((s) => (
-                        <Badge key={s} variant="soft">
-                          {s}
-                        </Badge>
-                      ))}
-                      {forgeParsedCv.skills.length === 0 && (
-                        <span className="text-sm text-muted-steel">No skills detected</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <p className="text-[10px] font-bold uppercase text-muted-steel">Experience</p>
-                    {forgeParsedCv.experience.length === 0 && (
-                      <p className="text-sm text-muted-steel">No experience blocks detected</p>
-                    )}
-                    {forgeParsedCv.experience.map((e, i) => (
-                      <div key={i} className="rounded-xl border border-black/5 p-3 bg-panel-elevated/50">
-                        <p className="font-semibold text-sm">
-                          {e.position} · {e.company}
-                        </p>
-                        <p className="text-xs text-muted-steel mb-2">{e.duration}</p>
-                        <ul className="space-y-1">
-                          {e.description.map((d) => (
-                            <li key={d} className="text-sm text-ink-soft">
-                              • {d}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                  {cvFeedback && <CvFeedbackPanel feedback={cvFeedback} />}
-                  {forgeParsedCv.education.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-bold uppercase text-muted-steel mb-2">Education</p>
-                      <ul className="space-y-1 text-sm">
-                        {forgeParsedCv.education.map((edu, i) => (
-                          <li key={i}>
-                            {edu.school} — {edu.degree} ({edu.year})
-                          </li>
-                        ))}
-                      </ul>
                     </div>
                   )}
-                  <p className="text-xs text-cosmic-teal">
-                    Sonuç burada ve geçmişte saklanmıştır. Sonraki adım: iş ilanı yapıştır →{" "}
-                    <strong>Karşılaştır</strong> veya <strong>Optimize et</strong>.
-                  </p>
-                </>
-              )}
-            </div>
-          )}
-
-          {tab === "create" && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-black/5 pb-2">
-                <h2 className="font-semibold text-lg">Build CV from Scratch</h2>
-                <Button size="sm" variant="ghost" onClick={() => setTab("parse")}>
-                  ✕ Back to workspace
-                </Button>
-              </div>
-              <CvWizard onComplete={onWizardComplete} />
-            </div>
-          )}
-
-          {tab === "jobs" && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-lg">Job recommendations</h2>
-              <p className="text-sm text-muted-steel">
-                Based on your CV: CareerForge roles, live remote listings when available, and ready
-                web searches (LinkedIn / Indeed / RemoteOK).
-              </p>
-              <Button variant="accent" disabled={busy} onClick={onJobRecs}>
-                {busy ? "Searching…" : "Refresh job ideas"}
-              </Button>
-              {jobNote && <p className="text-xs text-cosmic-teal">{jobNote}</p>}
-              {jobRecs.length === 0 ? (
-                <p className="text-sm text-muted-steel">
-                  Load a CV first, then click <strong>Job ideas</strong>.
-                </p>
-              ) : (
-                <ul className="space-y-3">
-                  {jobRecs.map((j) => (
-                    <li
-                      key={j.id}
-                      className="rounded-2xl border border-black/8 bg-panel-elevated/50 p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between"
-                    >
-                      <div>
-                        <div className="flex flex-wrap gap-1.5 mb-1">
-                          <Badge variant="accent">%{j.matchScore}</Badge>
-                          <Badge variant="soft">{j.source}</Badge>
-                        </div>
-                        <p className="font-semibold">{j.title}</p>
-                        <p className="text-sm text-muted-steel">
-                          {j.company} · {j.location}
-                        </p>
-                        <p className="text-xs text-ink-soft mt-1">{j.reason}</p>
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {j.tags.slice(0, 4).map((t) => (
-                            <Badge key={t}>{t}</Badge>
-                          ))}
-                        </div>
-                      </div>
-                      <a
-                        href={j.url}
-                        target={j.url.startsWith("http") ? "_blank" : undefined}
-                        rel={j.url.startsWith("http") ? "noreferrer" : undefined}
-                        className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl px-4 text-sm font-semibold bg-star-white text-midnight-void shrink-0"
-                      >
-                        Open <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-
-          {tab === "analyze" && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-lg">Job ad × CV match</h2>
-              {!forgeAnalysis ? (
-                <p className="text-sm text-muted-steel">CV + JD ile <strong>Karşılaştır</strong> çalıştır.</p>
-              ) : (
-                <>
-                  <div className="flex flex-wrap gap-2">
-                    <StatPill label="Match" value={`%${forgeAnalysis.matchScore}`} />
-                    <StatPill label="ATS" value={`%${forgeAnalysis.atsScore}`} />
-                    <StatPill label="Eşleşen" value={forgeAnalysis.matchedSkills.length} />
-                    <StatPill label="Eksik" value={forgeAnalysis.missingSkills.length} />
-                  </div>
-                  <Section title="Güçlü yönler" items={forgeAnalysis.strengths} />
-                  <Section title="Boşluklar" items={forgeAnalysis.gaps} />
-                  <Section title="Öneriler" items={forgeAnalysis.suggestions} />
-                  <div>
-                    <p className="text-[10px] font-bold uppercase text-muted-steel mb-2">
-                      Eşleşen beceriler
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {forgeAnalysis.matchedSkills.map((s) => (
-                        <Badge key={s} variant="accent">
-                          {s}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase text-muted-steel mb-2">
-                      Eksik beceriler
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {forgeAnalysis.missingSkills.map((s) => (
-                        <Badge key={s}>{s}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <p className="text-xs text-cosmic-teal">
-                    Sonraki adım: Optimize et veya Cover letter üret.
-                  </p>
-                </>
-              )}
-            </div>
-          )}
-
-          {tab === "optimize" && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-lg">ATS dostu optimizasyon</h2>
-              {!optimized ? (
-                <p className="text-sm text-muted-steel">
-                  Parse sonrası <strong>Optimize et</strong>’e bas. JD varsa daha isabetli olur.
-                </p>
-              ) : (
-                <>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase text-muted-steel mb-1">Özet</p>
-                    <p className="text-sm leading-relaxed">{optimized.optimizedSummary}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {optimized.optimizedSkills.map((s) => (
-                      <Badge key={s} variant="soft">
-                        {s}
-                      </Badge>
-                    ))}
-                  </div>
-                  {optimized.optimizedExperience.map((e, i) => (
-                    <div key={i} className="rounded-xl border border-black/5 p-3">
-                      <p className="font-semibold text-sm">
-                        {e.position} · {e.company}{" "}
-                        <span className="text-muted-steel font-normal">({e.duration})</span>
-                      </p>
-                      <ul className="mt-2 space-y-1">
-                        {e.description.map((d) => (
-                          <li key={d} className="text-sm">
-                            • {d}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                  <Section title="Genel öneriler" items={optimized.generalSuggestions} />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      copyText(
-                        [
-                          optimized.optimizedSummary,
-                          "",
-                          optimized.optimizedSkills.join(", "),
-                          "",
-                          ...optimized.optimizedExperience.flatMap((e) => [
-                            `${e.position} | ${e.company} | ${e.duration}`,
-                            ...e.description.map((d) => `- ${d}`),
-                            "",
-                          ]),
-                        ].join("\n")
-                      )
-                    }
-                  >
-                    <Copy className="w-4 h-4" /> Optimize metni kopyala
-                  </Button>
-                </>
-              )}
-            </div>
-          )}
-
-          {tab === "coverletter" && (
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2 justify-between">
-                <h2 className="font-semibold text-lg">Cover letter</h2>
-                <div className="flex gap-1.5">
-                  {(["Profesyonel", "Girişimci", "Teknik"] as CoverLetterTone[]).map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setForgeTone(t)}
-                      className={cn(
-                        "px-3 py-1 rounded-lg text-xs font-semibold border cursor-pointer",
-                        forgeTone === t
-                          ? "bg-cosmic-teal/15 text-cosmic-teal border-cosmic-teal/25"
-                          : "border-black/8 text-muted-steel"
-                      )}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {!cover ? (
-                <p className="text-sm text-muted-steel">
-                  Ton seç → CV + JD ile <strong>Cover letter</strong> üret.
-                </p>
-              ) : (
-                <>
-                  <div className="flex flex-wrap gap-1.5">
-                    {cover.keyPoints.map((k) => (
-                      <Badge key={k} variant="accent">
-                        {k}
-                      </Badge>
-                    ))}
-                  </div>
-                  <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans bg-panel-elevated/60 border border-black/5 rounded-2xl p-4">
-                    {cover.coverLetter}
-                  </pre>
-                  <Button size="sm" variant="outline" onClick={() => copyText(cover.coverLetter)}>
-                    <Copy className="w-4 h-4" /> Kopyala
-                  </Button>
-                </>
-              )}
-            </div>
-          )}
-
-          {tab === "ats" && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-lg">ATS uyumluluk</h2>
-              {!ats ? (
-                <p className="text-sm text-muted-steel">
-                  <strong>ATS kontrol</strong> ile skor ve iyileştirme listesi al.
-                </p>
-              ) : (
-                <>
-                  <div className="flex flex-wrap gap-2">
-                    <StatPill label="ATS skoru" value={`%${ats.atsScore}`} />
-                    <StatPill label="Kelime örtüşme" value={`%${ats.keywordCoverage}`} />
-                  </div>
-                  <Section title="Sorunlar" items={ats.issues} />
-                  <Section title="Düzeltmeler" items={ats.fixes} />
-                  <p className="text-xs text-cosmic-teal">
-                    Sonraki adım: Optimize çıktısını Resume forge’a taşı.
-                  </p>
-                </>
-              )}
-            </div>
-          )}
-
-          {tab === "chatbot" && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-lg">Kısıtlı chatbot</h2>
-              <p className="text-sm text-muted-steel">
-                Sadece hazır kategoriler. Serbest sohbet yok — net ve uygulanabilir cevap.
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {CATEGORIES.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setChatInput(c)}
-                    className="px-2.5 py-1 rounded-lg text-[11px] border border-black/8 text-muted-steel hover:text-cosmic-teal hover:border-cosmic-teal/30 cursor-pointer"
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-              <Textarea
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Örn: Deneyim Güçlendirme — maddelerimi metrikli yaz"
-                className="min-h-[80px]"
-              />
-              <Button variant="accent" disabled={busy || !chatInput.trim()} onClick={onChat}>
-                Forge’a sor
-              </Button>
-              {chatResult && (
-                <div className="rounded-2xl border border-black/5 bg-abyss-panel/50 p-4 space-y-3">
-                  <Badge variant="accent">{chatResult.category}</Badge>
-                  <p className="text-sm leading-relaxed">{chatResult.response}</p>
-                  <Section title="Uygulanabilir ipuçları" items={chatResult.actionableTips} />
-                  <p className="text-xs text-cosmic-teal">Sonraki adım: {chatResult.nextStep}</p>
                 </div>
               )}
-            </div>
-          )}
 
-          {tab === "interview" && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-lg">Mock interview</h2>
-              {!interview ? (
-                <p className="text-sm text-muted-steel">
-                  CV (ve isteğe bağlı JD) ile <strong>Mock interview</strong> üret.
-                </p>
-              ) : (
-                <>
-                  <p className="text-sm text-muted-steel">Rol ipucu: {interview.roleHint}</p>
-                  <Section title="İpuçları" items={interview.tips} />
-                  <div className="space-y-3">
-                    {interview.questions.map((q, i) => (
-                      <div key={i} className="rounded-xl border border-black/5 p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge>{q.type}</Badge>
-                          <span className="text-[10px] font-mono text-muted-steel">
-                            {String(i + 1).padStart(2, "0")}
-                          </span>
-                        </div>
-                        <p className="font-semibold text-sm mb-2">{q.question}</p>
-                        <p className="text-sm text-ink-soft leading-relaxed">
-                          <span className="text-cosmic-teal font-semibold">Örnek: </span>
-                          {q.exampleAnswer}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {tab === "history" && (
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-semibold text-lg">Past analyses</h2>
-                  {forgeHistory.length > 0 && (
-                    <Button size="sm" variant="ghost" onClick={clearForgeHistory}>
-                      <Trash2 className="w-4 h-4" /> Clear history
+              {/* Tab 5: Interview Prep */}
+              {previewTab === "interview" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-black/5 pb-2">
+                    <div>
+                      <h2 className="font-semibold text-sm">Interview Simulator</h2>
+                      <p className="text-xs text-muted-steel">Role-aware questions and response advice.</p>
+                    </div>
+                    <Button size="sm" variant="accent" disabled={busy} onClick={onInterview}>
+                      {busy ? "Generating..." : "Generate Questions"}
                     </Button>
+                  </div>
+
+                  {interview ? (
+                    <div className="space-y-4 max-h-[360px] overflow-y-auto pr-1">
+                      {interview.questions.map((q, idx) => (
+                        <div key={idx} className="p-3 rounded-xl border border-black/5 bg-panel-elevated/50 space-y-1.5 text-xs">
+                          <p className="font-bold text-cosmic-teal">Q: {q.question}</p>
+                          <p className="text-[10px] uppercase text-muted-steel font-semibold">Category: {q.type}</p>
+                          <p className="text-muted-steel leading-relaxed bg-black/5 p-2 rounded">
+                            <strong className="text-star-white">Coach Tip:</strong> {q.exampleAnswer}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-steel">Click **Generate Questions** to simulate practice runs.</p>
                   )}
                 </div>
-                {historyPreview.length === 0 ? (
-                  <p className="text-sm text-muted-steel">No history yet. Run a tool first.</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {historyPreview.map((h) => (
-                      <li
-                        key={h.id}
-                        className="rounded-xl border border-black/5 px-3 py-3 flex flex-col sm:flex-row sm:items-center gap-2 justify-between"
-                      >
-                        <div>
-                          <Badge variant="soft" className="mb-1">
-                            {h.action}
-                          </Badge>
-                          <p className="text-sm">{h.summary}</p>
-                        </div>
-                        <p className="text-[11px] text-muted-steel shrink-0">
-                          {new Date(h.createdAt).toLocaleString()}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+              )}
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">CV backups</h3>
-                  <div className="flex gap-2">
-                    <input
-                      type="file"
-                      id="json-backup-upload-history"
-                      accept=".json"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = () => {
-                            try {
-                              const parsedData = JSON.parse(reader.result as string);
-                              if (parsedData && parsedData.parsed && typeof parsedData.text === "string") {
-                                setForgeParsedCv(parsedData.parsed);
-                                setForgeCvText(parsedData.text);
-                                toast.success("JSON backup imported successfully!");
-                                setTab("parse");
-                              } else {
-                                toast.error("Invalid backup file format.");
-                              }
-                            } catch {
-                              toast.error("Could not parse JSON backup file.");
-                            }
-                          };
-                          reader.readAsText(file);
+              {/* Tab 6: Chat Coach */}
+              {previewTab === "chat" && (
+                <div className="space-y-3 flex flex-col min-h-[380px] justify-between">
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                    <div className="p-3 rounded-xl bg-cosmic-teal/5 border border-cosmic-teal/10 text-xs leading-relaxed">
+                      <p className="font-bold text-cosmic-teal">Career Coach:</p>
+                      <p className="mt-1">Hi there! Ask me any career strategy advice, mülakat prep questions, or CV phrasing modifications.</p>
+                    </div>
+                    {chatResult && (
+                      <div className="space-y-3">
+                        <div className="p-3 rounded-xl bg-panel-elevated border text-xs leading-relaxed self-end">
+                          <p className="font-semibold">You:</p>
+                          <p className="mt-0.5 text-muted-steel">{chatInput}</p>
+                        </div>
+                        <div className="p-3 rounded-xl bg-cosmic-teal/5 border border-cosmic-teal/10 text-xs leading-relaxed">
+                          <p className="font-bold text-cosmic-teal">Career Coach ({chatResult.category}):</p>
+                          <p className="mt-1">{chatResult.response}</p>
+                          {chatResult.actionableTips && (
+                            <ul className="mt-2 space-y-1 text-[11px] text-muted-steel list-disc pl-3">
+                              {chatResult.actionableTips.map((tip, i) => <li key={i}>{tip}</li>)}
+                            </ul>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 border-t border-black/5 pt-3">
+                    <Input
+                      placeholder="Ask the coach (e.g., 'mülakat prep', 'ATS tips')..."
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && chatInput.trim()) {
+                          onChat();
                         }
                       }}
                     />
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => document.getElementById("json-backup-upload-history")?.click()}
-                    >
-                      Import Backup
-                    </Button>
-                    <Button size="sm" variant="accent" onClick={onBackupCv}>
-                      Create Backup
+                    <Button size="sm" disabled={busy || !chatInput.trim()} onClick={onChat}>
+                      {busy ? "Replying..." : "Ask"}
                     </Button>
                   </div>
                 </div>
-                {forgeBackups.length === 0 ? (
-                  <p className="text-sm text-muted-steel">
-                    No backups yet. Use <strong>Backup CV</strong> to save one.
-                  </p>
-                ) : (
-                  <ul className="space-y-2">
-                    {forgeBackups.map((b) => (
-                      <li
-                        key={b.id}
-                        className="rounded-xl border border-black/5 px-3 py-3 flex flex-col sm:flex-row sm:items-center gap-2 justify-between"
-                      >
-                        <div>
-                          <p className="text-sm font-semibold">{b.label}</p>
-                          <p className="text-[11px] text-muted-steel">
-                            {new Date(b.createdAt).toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              if (restoreForgeBackup(b.id)) {
-                                setParseBanner(READY_MSG);
-                                toast.success("Backup restored.");
-                                setTab("parse");
-                              }
-                            }}
-                          >
-                            Restore
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => deleteForgeBackup(b.id)}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <p className="text-xs text-muted-steel">
-                History and backups stay in your browser (localStorage) — not sent to a server.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+              )}
 
-function Section({ title, items }: { title: string; items: string[] }) {
-  return (
-    <div>
-      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-steel mb-2">{title}</p>
-      <ul className="space-y-1.5">
-        {items.map((item) => (
-          <li key={item} className="text-sm text-ink-soft flex gap-2">
-            <span className="text-cosmic-teal">•</span>
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
     </div>
   );
 }
