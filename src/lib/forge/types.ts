@@ -5,7 +5,10 @@ export type ForgeAction =
   | "coverletter"
   | "interview"
   | "chatbot"
-  | "ats";
+  | "ats"
+  | "create"
+  | "backup"
+  | "jobs";
 
 export type CoverLetterTone = "Profesyonel" | "Girişimci" | "Teknik";
 
@@ -41,6 +44,14 @@ export interface ParsedCV {
   skills: string[];
   education: ParsedEducation[];
   rawLength: number;
+}
+
+export interface CvBackup {
+  id: string;
+  label: string;
+  createdAt: string;
+  cvText: string;
+  parsed: ParsedCV | null;
 }
 
 export interface MatchAnalysis {

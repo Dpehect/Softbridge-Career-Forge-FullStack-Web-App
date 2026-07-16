@@ -5,6 +5,7 @@ import { persist } from "zustand/middleware";
 import type { CoachMessage, ResumeProfile } from "@/types";
 import type {
   CoverLetterTone,
+  CvBackup,
   ForgeHistoryItem,
   MatchAnalysis,
   ParsedCV,
@@ -65,6 +66,7 @@ interface CareerState {
   forgeAnalysis: MatchAnalysis | null;
   forgeTone: CoverLetterTone;
   forgeHistory: ForgeHistoryItem[];
+  forgeBackups: CvBackup[];
   toggleSaveJob: (id: string) => void;
   applyToJob: (id: string) => void;
   enrollPath: (id: string) => void;
@@ -80,6 +82,10 @@ interface CareerState {
   setForgeTone: (tone: CoverLetterTone) => void;
   pushForgeHistory: (item: Omit<ForgeHistoryItem, "id" | "createdAt">) => void;
   clearForgeHistory: () => void;
+  clearForgeCv: () => void;
+  saveForgeBackup: (label?: string) => CvBackup | null;
+  restoreForgeBackup: (id: string) => boolean;
+  deleteForgeBackup: (id: string) => void;
 }
 
 export const useCareerStore = create<CareerState>()(
@@ -105,6 +111,7 @@ export const useCareerStore = create<CareerState>()(
       forgeAnalysis: null,
       forgeTone: "Profesyonel",
       forgeHistory: [],
+      forgeBackups: [],
       toggleSaveJob: (id) => {
         const { savedJobIds } = get();
         set({
@@ -176,6 +183,36 @@ export const useCareerStore = create<CareerState>()(
           ].slice(0, 30),
         }),
       clearForgeHistory: () => set({ forgeHistory: [] }),
+      clearForgeCv: () =>
+        set({
+          forgeCvText: "",
+          forgeParsedCv: null,
+          forgeAnalysis: null,
+        }),
+      saveForgeBackup: (label) => {
+        const { forgeCvText, forgeParsedCv, forgeBackups } = get();
+        if (!forgeCvText.trim() && !forgeParsedCv) return null;
+        const backup: CvBackup = {
+          id: `bak-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          label: label?.trim() || `Backup ${new Date().toLocaleString()}`,
+          createdAt: new Date().toISOString(),
+          cvText: forgeCvText,
+          parsed: forgeParsedCv,
+        };
+        set({ forgeBackups: [backup, ...forgeBackups].slice(0, 20) });
+        return backup;
+      },
+      restoreForgeBackup: (id) => {
+        const bak = get().forgeBackups.find((b) => b.id === id);
+        if (!bak) return false;
+        set({
+          forgeCvText: bak.cvText,
+          forgeParsedCv: bak.parsed,
+        });
+        return true;
+      },
+      deleteForgeBackup: (id) =>
+        set({ forgeBackups: get().forgeBackups.filter((b) => b.id !== id) }),
     }),
     { name: "softbridge-careerforge" }
   )

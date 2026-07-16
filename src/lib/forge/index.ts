@@ -11,3 +11,16 @@ export {
   cleanExtractedText,
   looksLikeRawPdf,
 } from "./extractFileText";
+export {
+  parsedCvToText,
+  buildCvFromDraft,
+  emptyCvDraft,
+  downloadTextFile,
+  downloadJsonFile,
+} from "./cvFormat";
+export {
+  getJobRecommendations,
+  recommendLocalJobs,
+  buildWebSearchLinks,
+  type JobRecommendation,
+} from "./jobRecommendations";
