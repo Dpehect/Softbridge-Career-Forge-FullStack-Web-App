@@ -39,20 +39,22 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased h-full dark`}
     >
       <body className="min-h-full flex flex-col bg-midnight-void text-star-white font-sans mesh-bg selection:bg-cosmic-teal/20">
         <Header />
         <main className="flex-1 pt-[5.25rem] md:pt-24 pb-16 lg:pb-0">{children}</main>
         <Footer />
         <Toaster
-          theme="light"
+          theme="dark"
           position="bottom-right"
           toastOptions={{
-            className: "border border-black/5 bg-panel-elevated text-star-white",
+            className: "border border-cosmic-teal/10 bg-panel-elevated text-star-white",
+            style: { background: "#1A1A2E", color: "#F5F0FF", borderColor: "rgba(124,58,237,0.15)" },
           }}
         />
       </body>
     </html>
   );
 }
+

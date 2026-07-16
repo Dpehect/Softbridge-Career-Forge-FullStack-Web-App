@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Anvil, Code2, Menu, X, FileDown, RotateCcw, Briefcase, GitCompare, MessageSquare, History } from "lucide-react";
+import {
+  Anvil, Code2, Menu, X, FileDown, RotateCcw,
+  Briefcase, GitCompare, MessageSquare, History,
+  Sun, Moon, User, Zap,
+} from "lucide-react";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -16,12 +21,11 @@ const GITHUB_REPO =
   "https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main";
 
 const links = [
-  { name: "Forge", path: "/forge" },
-  { name: "Resume", path: "/resume" },
-  { name: "Jobs", path: "/jobs" },
-  { name: "Paths", path: "/paths" },
-  { name: "Coach", path: "/coach" },
-  { name: "Dashboard", path: "/dashboard" },
+  { name: "Forge",     path: "/forge",     icon: Anvil },
+  { name: "Jobs",      path: "/jobs",      icon: Briefcase },
+  { name: "Paths",     path: "/paths",     icon: GitCompare },
+  { name: "Coach",     path: "/coach",     icon: MessageSquare },
+  { name: "Dashboard", path: "/dashboard", icon: History },
 ];
 
 export function Header() {
@@ -32,48 +36,24 @@ export function Header() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const root = document.documentElement;
-      if (theme === "dark") {
-        root.classList.add("dark");
-      } else {
-        root.classList.remove("dark");
-      }
+      document.documentElement.classList.toggle("dark", theme === "dark");
     }
   }, [theme]);
 
   const getNavName = (name: string) => {
     switch (name) {
-      case "Forge": return t("navForge");
-      case "Resume": return t("navResume");
-      case "Jobs": return t("navJobs");
-      case "Paths": return t("navPaths");
-      case "Coach": return t("navCoach");
+      case "Forge":     return t("navForge");
+      case "Jobs":      return t("navJobs");
+      case "Paths":     return t("navPaths");
+      case "Coach":     return t("navCoach");
       case "Dashboard": return t("navDashboard");
       default: return name;
     }
   };
 
-  const getNavIcon = (name: string) => {
-    switch (name) {
-      case "Forge": return Anvil;
-      case "Resume": return Code2;
-      case "Jobs": return Briefcase;
-      case "Paths": return GitCompare;
-      case "Coach": return MessageSquare;
-      case "Dashboard": return History;
-      default: return Anvil;
-    }
-  };
-
   const hasContent =
     Boolean(forgeParsedCv) ||
-    Boolean(
-      resume.fullName ||
-        resume.headline ||
-        resume.summary ||
-        resume.skills.length > 0 ||
-        resume.experience.length > 0
-    );
+    Boolean(resume.fullName || resume.headline || resume.summary || resume.skills.length > 0 || resume.experience.length > 0);
 
   const handleClearAll = () => {
     if (window.confirm(t("clearConfirm"))) {
@@ -85,38 +65,34 @@ export function Header() {
 
   const handleExport = async () => {
     let cvToExport = forgeParsedCv;
-    if (!cvToExport) {
-      if (resume.fullName || resume.headline || resume.summary) {
-        cvToExport = {
-          name: resume.fullName || "Candidate",
-          title: resume.headline || "Professional",
-          email: resume.email,
-          phone: null,
-          location: resume.location || null,
-          summary: resume.summary || null,
-          skills: resume.skills,
-          experience: resume.experience.map((e) => ({
-            company: e.company,
-            position: e.role,
-            duration: [e.start, e.end].filter(Boolean).join(" – ") || "—",
-            description: e.highlights,
-          })),
-          education: resume.education.map((e) => ({
-            school: e.school,
-            degree: e.degree,
-            year: e.year,
-          })),
-          rawLength: 0,
-          photoDataUrl: resume.photoDataUrl || null,
-        };
-      }
+    if (!cvToExport && (resume.fullName || resume.headline || resume.summary)) {
+      cvToExport = {
+        name: resume.fullName || "Candidate",
+        title: resume.headline || "Professional",
+        email: resume.email,
+        phone: null,
+        location: resume.location || null,
+        summary: resume.summary || null,
+        skills: resume.skills,
+        experience: resume.experience.map((e) => ({
+          company: e.company,
+          position: e.role,
+          duration: [e.start, e.end].filter(Boolean).join(" – ") || "—",
+          description: e.highlights,
+        })),
+        education: resume.education.map((e) => ({
+          school: e.school,
+          degree: e.degree,
+          year: e.year,
+        })),
+        rawLength: 0,
+        photoDataUrl: resume.photoDataUrl || null,
+      };
     }
-
     if (!cvToExport) {
-      toast.error("Please load, build or paste a CV first before exporting.");
+      toast.error(lang === "tr" ? "Önce bir CV yükleyin." : "Please load a CV first.");
       return;
     }
-
     try {
       await exportCvAsPdf(cvToExport);
       toast.success(t("exportSuccess"));
@@ -127,23 +103,30 @@ export function Header() {
 
   return (
     <>
+      {/* ── Top Navbar ────────────────────────────────────────────────── */}
       <motion.header
-        initial={{ y: -8, opacity: 0 }}
+        initial={{ y: -12, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="fixed top-0 left-0 right-0 z-50 p-3 md:p-4"
       >
-        <div className="max-w-6xl mx-auto glass-panel rounded-2xl px-3.5 md:px-4 py-2.5 flex items-center justify-between gap-3">
+        <div className="max-w-6xl mx-auto glass-panel rounded-2xl px-3.5 md:px-5 py-2.5 flex items-center justify-between gap-3">
+
+          {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group shrink-0" onClick={() => setOpen(false)}>
-            <div className="w-8 h-8 rounded-xl bg-cosmic-teal text-midnight-void flex items-center justify-center shadow-[0_8px_20px_rgba(217,72,32,0.28)]">
-              <Anvil className="w-4 h-4" />
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center shadow-lg transition-all group-hover:scale-105"
+              style={{ background: "linear-gradient(135deg, #7C3AED, #F472B6)", boxShadow: "0 8px 20px rgba(124,58,237,0.4)" }}
+            >
+              <Zap className="w-4 h-4 text-white" />
             </div>
             <div className="leading-tight">
-              <p className="font-display font-bold text-[13px] tracking-tight">CareerForge</p>
+              <p className="font-display font-bold text-[13px] tracking-tight text-star-white">CareerForge</p>
               <p className="text-[10px] text-muted-steel hidden sm:block">{t("logoSub")}</p>
             </div>
           </Link>
 
+          {/* Desktop nav */}
           <nav className="hidden lg:flex items-center gap-0.5">
             {links.map((link) => {
               const isActive = pathname === link.path || pathname.startsWith(`${link.path}/`);
@@ -152,14 +135,17 @@ export function Header() {
                   key={link.name}
                   href={link.path}
                   className={cn(
-                    "relative px-3 py-1.5 rounded-lg text-[11px] font-semibold tracking-wide transition-colors",
-                    isActive ? "text-midnight-void" : "text-muted-steel hover:text-star-white"
+                    "relative px-3 py-1.5 rounded-xl text-[11px] font-semibold tracking-wide transition-all duration-200",
+                    isActive
+                      ? "text-white"
+                      : "text-muted-steel hover:text-star-white hover:bg-cosmic-teal/8"
                   )}
                 >
                   {isActive && (
                     <motion.div
-                      layoutId="active-nav"
-                      className="absolute inset-0 bg-star-white rounded-lg -z-10 shadow-sm"
+                      layoutId="active-nav-pill"
+                      className="absolute inset-0 rounded-xl -z-10"
+                      style={{ background: "linear-gradient(135deg, #6D28D9, #9333EA)" }}
                       transition={{ type: "spring", stiffness: 380, damping: 32 }}
                     />
                   )}
@@ -169,66 +155,79 @@ export function Header() {
             })}
           </nav>
 
-          <div className="flex items-center gap-2">
+          {/* Right controls */}
+          <div className="flex items-center gap-1.5">
+            {/* Export / Clear — only when CV loaded */}
             {hasContent && (
               <div className="hidden sm:inline-flex items-center gap-1.5">
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant="ghost" size="sm"
                   onClick={handleClearAll}
-                  className="h-9 text-xs text-sunset-coral hover:text-sunset-coral hover:bg-sunset-coral/5 gap-1"
-                  title={t("clearCv")}
+                  className="h-8 text-xs text-sunset-coral hover:bg-sunset-coral/8 gap-1 px-2"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" /> {t("clearCv")}
+                  <RotateCcw className="w-3 h-3" />
+                  <span className="hidden md:inline">{t("clearCv")}</span>
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant="ghost" size="sm"
                   onClick={handleExport}
-                  className="h-9 text-xs gap-1"
-                  title={t("exportPdf")}
+                  className="h-8 text-xs gap-1 px-2 text-star-white border border-cosmic-teal/20 hover:bg-cosmic-teal/8"
                 >
-                  <FileDown className="w-3.5 h-3.5" /> {t("exportPdf")}
+                  <FileDown className="w-3 h-3" />
+                  <span className="hidden md:inline">{t("exportPdf")}</span>
                 </Button>
               </div>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
+
+            {/* Dark/Light toggle */}
+            <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="h-9 px-2 text-xs font-semibold hover:bg-cosmic-teal/10 gap-1 border border-black/5"
-              title={theme === "dark" ? "Switch to Light Mode" : "Dark Mode'a Geç"}
+              className="h-8 w-8 rounded-xl border border-border-color flex items-center justify-center text-muted-steel hover:text-star-white hover:bg-cosmic-teal/8 hover:border-cosmic-teal/30 transition-all cursor-pointer"
+              title={theme === "dark" ? "Light mode" : "Dark mode"}
             >
-              {theme === "dark" ? "☀️" : "🌙"}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
+              {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+            </button>
+
+            {/* Language toggle */}
+            <button
               onClick={() => setLang(lang === "tr" ? "en" : "tr")}
-              className="h-9 px-2 text-xs font-semibold hover:bg-cosmic-teal/10 gap-1 border border-black/5"
-              title={lang === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
+              className="h-8 px-2.5 rounded-xl border border-border-color text-[10px] font-bold text-muted-steel hover:text-star-white hover:bg-cosmic-teal/8 hover:border-cosmic-teal/30 transition-all cursor-pointer"
+              title={lang === "tr" ? "Switch to EN" : "TR'ye geç"}
             >
-              🌐 {lang === "tr" ? "EN" : "TR"}
-            </Button>
+              {lang === "tr" ? "EN" : "TR"}
+            </button>
+
+            {/* GitHub */}
             <a
               href={GITHUB_REPO}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex h-9 items-center gap-1.5 rounded-xl px-2 sm:px-3 text-xs font-semibold border border-black/8 bg-star-white text-midnight-void hover:bg-cosmic-teal transition-colors shadow-sm"
-              title={t("viewGithub")}
+              className="h-8 w-8 rounded-xl border border-border-color flex items-center justify-center text-muted-steel hover:text-star-white hover:bg-cosmic-teal/8 hover:border-cosmic-teal/30 transition-all"
+              title="GitHub"
             >
               <Code2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{t("viewGithub")}</span>
-              <span className="sm:hidden">GitHub</span>
             </a>
+
+            {/* User avatar (placeholder) */}
+            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-cosmic-teal to-sunset-coral flex items-center justify-center text-white shadow-sm">
+              <User className="w-3.5 h-3.5" />
+            </div>
+
+            {/* CTA */}
             <Link
               href="/forge"
-              className="hidden sm:inline-flex h-9 items-center rounded-xl px-3.5 text-xs font-semibold bg-cosmic-teal text-midnight-void hover:bg-sunset-coral transition-colors shadow-[0_8px_22px_rgba(217,72,32,0.28)]"
+              className="hidden sm:inline-flex h-8 items-center rounded-xl px-3.5 text-[11px] font-bold text-white transition-all hover:scale-105 hover:shadow-lg"
+              style={{
+                background: "linear-gradient(135deg, #6D28D9, #9333EA, #F472B6)",
+                boxShadow: "0 4px 16px rgba(109,40,217,0.35)",
+              }}
             >
               {t("openForge")}
             </Link>
+
+            {/* Mobile menu toggle */}
             <button
-              className="lg:hidden p-2 rounded-xl border border-black/8"
+              className="lg:hidden h-8 w-8 rounded-xl border border-border-color flex items-center justify-center text-muted-steel cursor-pointer"
               onClick={() => setOpen((v) => !v)}
               aria-label="Menu"
             >
@@ -237,72 +236,59 @@ export function Header() {
           </div>
         </div>
 
+        {/* Mobile dropdown */}
         <AnimatePresence>
           {open && (
             <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              className="lg:hidden max-w-6xl mx-auto mt-2 glass-panel rounded-2xl p-2 flex flex-col"
+              initial={{ opacity: 0, y: -8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.98 }}
+              transition={{ duration: 0.18 }}
+              className="lg:hidden max-w-6xl mx-auto mt-2 glass-panel rounded-2xl p-2 flex flex-col gap-0.5"
             >
-              {links.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.path}
-                  onClick={() => setOpen(false)}
-                  className={cn(
-                    "px-3 py-2.5 rounded-xl text-sm font-semibold",
-                    pathname.startsWith(link.path)
-                      ? "bg-star-white text-midnight-void"
-                      : "text-muted-steel"
-                  )}
+              {links.map((link) => {
+                const isActive = pathname.startsWith(link.path);
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.name}
+                    href={link.path}
+                    onClick={() => setOpen(false)}
+                    className={cn(
+                      "px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2.5 transition-all",
+                      isActive
+                        ? "text-white"
+                        : "text-muted-steel hover:text-star-white hover:bg-cosmic-teal/5"
+                    )}
+                    style={isActive ? { background: "linear-gradient(135deg, #6D28D9, #9333EA)" } : {}}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {getNavName(link.name)}
+                  </Link>
+                );
+              })}
+              <div className="border-t border-border-color mt-1 pt-2 flex gap-2">
+                <button
+                  onClick={() => { setLang(lang === "tr" ? "en" : "tr"); setOpen(false); }}
+                  className="flex-1 py-2 rounded-xl text-xs font-bold border border-border-color text-muted-steel hover:text-star-white transition-colors cursor-pointer"
                 >
-                  {getNavName(link.name)}
-                </Link>
-              ))}
-              <a
-                href={GITHUB_REPO}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => setOpen(false)}
-                className="mt-1 px-3 py-2.5 rounded-xl text-sm font-semibold border border-black/8 inline-flex items-center gap-2 bg-star-white text-midnight-void"
-              >
-                <Code2 className="w-4 h-4" /> {t("viewGithub")}
-              </a>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setLang(lang === "tr" ? "en" : "tr");
-                  setOpen(false);
-                }}
-                className="mt-1 w-full text-xs font-semibold justify-center gap-1 bg-star-white text-midnight-void"
-              >
-                🌐 {lang === "tr" ? "English'e Geç (EN)" : "Türkçe'ye Geç (TR)"}
-              </Button>
+                  {lang === "tr" ? "EN" : "TR"}
+                </button>
+                <button
+                  onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); setOpen(false); }}
+                  className="flex-1 py-2 rounded-xl text-xs font-bold border border-border-color text-muted-steel hover:text-star-white transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                  {theme === "dark" ? "Light" : "Dark"}
+                </button>
+              </div>
               {hasContent && (
-                <div className="flex gap-2 border-t border-black/5 mt-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      handleClearAll();
-                      setOpen(false);
-                    }}
-                    className="flex-1 text-xs text-sunset-coral hover:bg-sunset-coral/5"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 mr-1" /> {t("clearCv")}
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => { handleExport(); setOpen(false); }} className="flex-1 text-xs text-star-white">
+                    <FileDown className="w-3.5 h-3.5 mr-1" /> PDF
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      handleExport();
-                      setOpen(false);
-                    }}
-                    className="flex-1 text-xs"
-                  >
-                    <FileDown className="w-3.5 h-3.5 mr-1" /> {t("exportPdf")}
+                  <Button variant="ghost" size="sm" onClick={() => { handleClearAll(); setOpen(false); }} className="flex-1 text-xs text-sunset-coral">
+                    <RotateCcw className="w-3.5 h-3.5 mr-1" /> {t("clearCv")}
                   </Button>
                 </div>
               )}
@@ -311,22 +297,28 @@ export function Header() {
         </AnimatePresence>
       </motion.header>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-panel-elevated/95 backdrop-blur-md border-t border-black/8 py-1 px-2 flex items-center justify-around shadow-[0_-8px_32px_rgba(15,23,42,0.06)] pb-safe-bottom">
+      {/* ── Mobile Bottom Nav ─────────────────────────────────────────── */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass-panel border-t border-border-color py-2 px-3 flex items-center justify-around">
         {links.map((link) => {
           const isActive = pathname === link.path || pathname.startsWith(`${link.path}/`);
-          const Icon = getNavIcon(link.name);
+          const Icon = link.icon;
           return (
             <Link
               key={link.name}
               href={link.path}
-              className={cn(
-                "flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-colors min-w-[55px] cursor-pointer",
-                isActive ? "text-cosmic-teal" : "text-muted-steel hover:text-star-white"
-              )}
+              className="flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-all min-w-[52px] relative"
             >
-              <Icon className="w-5 h-5" />
-              <span className="text-[9px] font-semibold tracking-wide">{getNavName(link.name)}</span>
+              {isActive && (
+                <motion.div
+                  layoutId="bottom-nav-dot"
+                  className="absolute -top-1 w-5 h-0.5 rounded-full"
+                  style={{ background: "linear-gradient(90deg, #7C3AED, #F472B6)" }}
+                />
+              )}
+              <Icon className={cn("w-5 h-5 transition-colors", isActive ? "text-cosmic-teal" : "text-muted-steel")} />
+              <span className={cn("text-[9px] font-semibold tracking-wide", isActive ? "text-cosmic-teal" : "text-muted-steel")}>
+                {getNavName(link.name)}
+              </span>
             </Link>
           );
         })}
