@@ -71,10 +71,10 @@ export function Header() {
             href={GITHUB_REPO}
             target="_blank"
             rel="noreferrer"
-            className="hidden md:inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold border border-black/8 hover:border-cosmic-teal/35 hover:text-cosmic-teal transition-colors"
+            className="hidden md:inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold border border-black/8 bg-star-white text-midnight-void hover:bg-cosmic-teal transition-colors shadow-sm"
           >
             <Code2 className="w-3.5 h-3.5" />
-            GitHub
+            View Source on GitHub
           </a>
           <Link
             href="/forge"
@@ -122,7 +122,7 @@ export function Header() {
               onClick={() => setOpen(false)}
               className="mt-1 px-3 py-2.5 rounded-xl text-sm font-semibold border border-black/8 inline-flex items-center gap-2"
             >
-              <Code2 className="w-4 h-4" /> Open Source on GitHub
+              <Code2 className="w-4 h-4" /> View Source on GitHub
             </a>
           </motion.div>
         )}

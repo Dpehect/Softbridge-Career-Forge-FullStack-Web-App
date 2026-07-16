@@ -104,7 +104,7 @@ export default function HomePage() {
                 rel="noreferrer"
                 className="inline-flex h-12 items-center gap-2 rounded-2xl px-5 text-sm font-semibold text-muted-steel hover:text-cosmic-teal transition-colors"
               >
-                <Code2 className="w-4 h-4" /> Open Source on GitHub
+                <Code2 className="w-4 h-4" /> View Source on GitHub
               </a>
             </div>
           </motion.div>

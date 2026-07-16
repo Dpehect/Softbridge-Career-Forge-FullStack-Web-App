@@ -69,8 +69,9 @@ type TabId =
   | "interview"
   | "history";
 
-const READY_MSG =
-  "CV'niz hazır. Şimdi iş ilanı yapıştırabilir, optimize edebilir veya iş önerileri alabilirsiniz.";
+const READY_MSG = "CV'niz başarıyla yüklendi ve analiz edildi.";
+const READY_NEXT =
+  "Structured view and deep feedback are below. Next: match a job, export PDF, or open job ideas.";
 
 const tabs: { id: TabId; label: string; icon: ElementType }[] = [
   { id: "parse", label: "CV Parse", icon: FileSearch },
@@ -181,7 +182,7 @@ export default function ForgePage() {
         }`,
         payload: parsed,
       });
-      setParseBanner(READY_MSG);
+      setParseBanner(`${READY_MSG} ${READY_NEXT}`);
       toast.success(READY_MSG);
       setTab("parse");
       return parsed;
@@ -253,7 +254,7 @@ export default function ForgePage() {
   const onWizardComplete = (cv: ParsedCV, text: string) => {
     setForgeCvText(text);
     setForgeParsedCv(cv);
-    setParseBanner(READY_MSG);
+    setParseBanner(`${READY_MSG} ${READY_NEXT}`);
     pushForgeHistory({
       action: "create",
       summary: `${cv.name} — built from scratch`,
@@ -437,10 +438,10 @@ export default function ForgePage() {
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-star-white text-midnight-void px-4 py-2 text-sm font-semibold shadow-[0_8px_22px_rgba(28,20,16,0.06)] hover:bg-cosmic-teal transition-colors"
             >
-              Open Source on GitHub
+              View Source on GitHub
             </a>
             <Button variant="outline" size="sm" onClick={() => setTab("create")}>
-              Build CV from scratch
+              Build CV from Scratch
             </Button>
             <Button variant="ghost" size="sm" onClick={onClearCv}>
               Clear / Reset CV
@@ -448,21 +449,74 @@ export default function ForgePage() {
           </div>
         </div>
 
+        {/* Primary CV workspace */}
+        <section className="glass-panel rounded-3xl p-5 md:p-6 mb-6 space-y-4 border border-cosmic-teal/10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-cosmic-teal">
+                CV workspace
+              </p>
+              <h2 className="font-display text-xl font-semibold mt-0.5">Upload, paste, or build</h2>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <FilePickButton
+                label="Upload PDF or TXT"
+                variant="accent"
+                size="default"
+                silentSuccess
+                onText={(text, fileName) => handleCvFile(text, fileName)}
+              />
+              <Button variant="outline" onClick={() => setTab("create")}>
+                <PenLine className="w-4 h-4" /> Build CV from Scratch
+              </Button>
+              <Button variant="ghost" onClick={onClearCv}>
+                <RotateCcw className="w-4 h-4" /> Clear / Reset CV
+              </Button>
+              <Button variant="outline" disabled={busy || !forgeParsedCv} onClick={() => void onExportPdf()}>
+                <FileDown className="w-4 h-4" /> Export PDF
+              </Button>
+            </div>
+          </div>
+          <p className="text-sm text-muted-steel">
+            <strong>Paste CV Text</strong> below, or use <strong>Upload PDF or TXT</strong>. Clean
+            text only — scanned PDFs need a searchable export or manual paste.
+          </p>
+          <Textarea
+            value={cvText}
+            onChange={(e) => {
+              setForgeCvText(e.target.value);
+              setParseBanner(null);
+            }}
+            placeholder="Paste CV Text here…"
+            className="min-h-[140px] font-mono text-xs"
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button variant="soft" disabled={busy || !cvText.trim()} onClick={onParse}>
+              Analyze pasted text
+            </Button>
+            {lastCvFileName && (
+              <span className="text-xs text-muted-steel self-center">
+                Last file: <strong className="text-star-white">{lastCvFileName}</strong>
+              </span>
+            )}
+          </div>
+          {parseBanner && (
+            <div className="rounded-2xl border border-cosmic-teal/25 bg-cosmic-teal/10 px-4 py-3">
+              <p className="text-sm font-semibold">{READY_MSG}</p>
+              <p className="text-xs text-muted-steel mt-1">{READY_NEXT}</p>
+            </div>
+          )}
+        </section>
+
         <div className="grid lg:grid-cols-[1fr_1fr] gap-4 mb-6">
           <div className="glass-panel rounded-2xl p-4 space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted-steel">
-                CV metni
+                CV text (full editor)
               </p>
               <div className="flex flex-wrap items-center gap-1.5">
                 <FilePickButton
-                  label="Choose CV from computer"
-                  silentSuccess
-                  onText={(text, fileName) => handleCvFile(text, fileName)}
-                />
-                <FilePickButton
-                  label="Browse folders"
-                  variant="ghost"
+                  label="Upload PDF or TXT"
                   silentSuccess
                   onText={(text, fileName) => handleCvFile(text, fileName)}
                 />
@@ -471,17 +525,13 @@ export default function ForgePage() {
                 </Button>
               </div>
             </div>
-            <p className="text-[11px] text-muted-steel">
-              Paste text or choose a <strong>PDF/TXT</strong> file. No sample CVs. Scanned PDFs need a
-              searchable export or manual paste.
-            </p>
             <Textarea
               value={cvText}
               onChange={(e) => {
                 setForgeCvText(e.target.value);
                 setParseBanner(null);
               }}
-              placeholder="Paste your CV text here…"
+              placeholder="Paste CV Text here…"
               className="min-h-[180px] font-mono text-xs"
             />
           </div>
@@ -570,73 +620,16 @@ export default function ForgePage() {
           {tab === "parse" && (
             <div className="space-y-5">
               <div>
-                <h2 className="font-semibold text-lg">Structured CV</h2>
+                <h2 className="font-semibold text-lg">Structured CV & analysis</h2>
                 <p className="text-sm text-muted-steel mt-1">
-                  Paste text or pick a PDF/TXT file. Clean text only — no raw PDF code. Results show
-                  below and go to Past Analyses.
+                  Results from upload, paste, or builder. Clean fields only — saved to Past Analyses.
                 </p>
               </div>
-
-              <div className="rounded-2xl border border-black/8 bg-panel-elevated/40 p-4 space-y-3">
-                <div className="flex flex-wrap gap-2">
-                  <FilePickButton
-                    label="Choose CV from computer"
-                    variant="accent"
-                    size="default"
-                    silentSuccess
-                    onText={(text, fileName) => handleCvFile(text, fileName)}
-                  />
-                  <FilePickButton
-                    label="Browse folders"
-                    variant="outline"
-                    size="default"
-                    silentSuccess
-                    onText={(text, fileName) => handleCvFile(text, fileName)}
-                  />
-                  <Button variant="soft" disabled={busy || !cvText.trim()} onClick={onParse}>
-                    Parse text
-                  </Button>
-                  <Button variant="outline" size="default" onClick={onBackupCv}>
-                    <Save className="w-4 h-4" /> Backup
-                  </Button>
-                  <Button variant="ghost" size="default" onClick={onClearCv}>
-                    <RotateCcw className="w-4 h-4" /> Clear
-                  </Button>
-                </div>
-                <p className="text-[11px] text-muted-steel">
-                  Formats: <strong>PDF</strong>, <strong>TXT</strong> (MD ok). Click to open the system
-                  file window — browse folders by clicking. Auto-parse after pick.
-                </p>
-                <Textarea
-                  value={cvText}
-                  onChange={(e) => {
-                    setForgeCvText(e.target.value);
-                    setParseBanner(null);
-                  }}
-                  placeholder="Paste CV text here… or choose a file above."
-                  className="min-h-[140px] font-mono text-xs"
-                />
-                {lastCvFileName && (
-                  <p className="text-xs text-muted-steel">
-                    Last file:{" "}
-                    <span className="font-semibold text-star-white">{lastCvFileName}</span>
-                  </p>
-                )}
-              </div>
-
-              {parseBanner && (
-                <div className="rounded-2xl border border-cosmic-teal/25 bg-cosmic-teal/10 px-4 py-3 space-y-1">
-                  <p className="text-sm font-semibold text-star-white">{parseBanner}</p>
-                  <p className="text-xs text-muted-steel">
-                    Next: paste a job description to compare, or run Optimize.
-                  </p>
-                </div>
-              )}
 
               {!forgeParsedCv ? (
                 <p className="text-sm text-muted-steel">
-                  Henüz parse yok. Metin yapıştırıp <strong>Metni Parse Et</strong> de veya{" "}
-                  <strong>Bilgisayardan CV Seç</strong> ile dosya yükle.
+                  No CV loaded yet. Use <strong>Upload PDF or TXT</strong>, paste text above, or{" "}
+                  <strong>Build CV from Scratch</strong>.
                 </p>
               ) : (
                 <>

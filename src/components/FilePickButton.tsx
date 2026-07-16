@@ -55,11 +55,11 @@ export function FilePickButton({
       const code = err instanceof Error ? err.message : "";
       if (code === "PDF_SCANNED") {
         toast.error(
-          "This PDF appears to be a scanned document. Please export it as searchable text or paste the content manually."
+          "This PDF appears to be scanned. Please export as searchable text or paste manually."
         );
       } else if (code === "PDF_NO_TEXT") {
         toast.error(
-          "Could not extract text from this PDF. Try another export, use TXT, or paste the content manually."
+          "This PDF appears to be scanned. Please export as searchable text or paste manually."
         );
       } else if (code === "UNSUPPORTED") {
         toast.error("Supported formats: PDF and TXT (also MD).");

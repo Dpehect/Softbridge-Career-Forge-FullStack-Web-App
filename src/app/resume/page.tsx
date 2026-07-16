@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Download, Plus, Trash2, RotateCcw, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -20,8 +21,7 @@ import {
 } from "@/lib/forge";
 import type { ResumeProfile } from "@/types";
 
-const READY_MSG =
-  "CV'niz hazır. Şimdi iş ilanı yapıştırabilir, optimize edebilir veya iş önerileri alabilirsiniz.";
+const READY_MSG = "CV'niz başarıyla yüklendi ve analiz edildi.";
 
 function parsedToResume(cv: ParsedCV): ResumeProfile {
   return {
@@ -201,41 +201,37 @@ export default function ResumePage() {
         <div className="glass-panel rounded-2xl p-5 mb-6 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <FilePickButton
-              label="Choose CV from computer"
+              label="Upload PDF or TXT"
               variant="accent"
               size="default"
               silentSuccess
               onText={(text, name) => onFileText(text, name)}
             />
-            <FilePickButton
-              label="Browse folders"
-              variant="outline"
-              size="default"
-              silentSuccess
-              onText={(text, name) => onFileText(text, name)}
-            />
+            <Link href="/forge">
+              <Button variant="outline">Build CV from Scratch</Button>
+            </Link>
             <Button variant="soft" onClick={onParsePaste} disabled={!pasteText.trim()}>
-              Parse pasted text
+              Analyze pasted text
             </Button>
             <Button variant="ghost" onClick={onClear}>
               <RotateCcw className="w-4 h-4" /> Clear / Reset CV
             </Button>
           </div>
           <p className="text-[11px] text-muted-steel">
-            PDF &amp; TXT supported. Click to open the system file window and browse folders. Scanned
-            PDFs need a searchable export or manual paste.
+            <strong>Paste CV Text</strong> below, or upload PDF/TXT. Clean extraction only. Scanned
+            PDFs: export as searchable text or paste manually.
           </p>
           <Textarea
             value={pasteText}
             onChange={(e) => setPasteText(e.target.value)}
-            placeholder="Or paste your CV text here…"
+            placeholder="Paste CV Text here…"
             className="min-h-[110px] font-mono text-xs"
           />
           {banner && (
             <div className="rounded-xl border border-cosmic-teal/25 bg-cosmic-teal/10 px-4 py-3">
-              <p className="text-sm font-semibold">{banner}</p>
+              <p className="text-sm font-semibold">{READY_MSG}</p>
               <p className="text-xs text-muted-steel mt-1">
-                Structured fields are below. Scroll for professional feedback.
+                Structured fields and deep feedback are below.
               </p>
             </div>
           )}

@@ -30,7 +30,7 @@ export function Footer() {
               className="mt-5 inline-flex items-center gap-2 rounded-xl bg-star-white text-midnight-void px-4 py-2.5 text-sm font-semibold shadow-[0_10px_28px_rgba(28,20,16,0.08)] hover:bg-cosmic-teal transition-colors"
             >
               <Code2 className="w-4 h-4" />
-              Open Source on GitHub
+              View Source on GitHub
             </a>
           </div>
           <div>
@@ -91,7 +91,7 @@ export function Footer() {
             className="inline-flex items-center gap-1.5 font-semibold text-cosmic-teal hover:underline"
           >
             <Code2 className="w-3.5 h-3.5" />
-            Open Source on GitHub
+            View Source on GitHub
           </a>
         </div>
       </div>

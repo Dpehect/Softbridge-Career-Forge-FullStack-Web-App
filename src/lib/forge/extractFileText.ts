@@ -193,7 +193,14 @@ function cleanLines(parts: string[]): string {
 }
 
 export function cleanExtractedText(text: string): string {
-  const parts = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  // Strip common PDF binary / header residue before line cleaning
+  let t = text
+    .replace(/%PDF-[\d.]+/gi, " ")
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, " ")
+    .replace(/\/(Type|Font|Encoding|BaseFont|Length|Filter|FlateDecode|Subtype|Pages|Page|MediaBox|Resources|Contents|Parent|Kids|Count|XObject|ProcSet|ExtGState|DecodeParms)\b[^\n]*/gi, " ")
+    .replace(/\b(endobj|endstream|startxref|xref|trailer|obj)\b/gi, " ")
+    .replace(/[^\S\n]{2,}/g, " ");
+  const parts = t.split(/\n+/).map((l) => l.trim()).filter(Boolean);
   return cleanLines(parts);
 }
 
