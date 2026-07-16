@@ -60,7 +60,22 @@ const SKILL_LEXICON = [
 ];
 
 function normalize(text: string) {
-  return text.replace(/\r\n/g, "\n").trim();
+  return text
+    .replace(/\r\n/g, "\n")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, " ")
+    .replace(/%PDF[\s\S]{0,200}/g, " ")
+    .trim();
+}
+
+/** Reject raw PDF dumps before structuring. */
+export function assertCleanCvText(text: string) {
+  const t = text.trim();
+  if (!t) throw new Error("EMPTY_CV");
+  if (/%PDF-?\d/.test(t.slice(0, 200))) throw new Error("RAW_PDF");
+  if (/\/FlateDecode|endstream|startxref/.test(t.slice(0, 3000))) {
+    const letters = (t.slice(0, 1500).match(/\p{L}/gu) ?? []).length;
+    if (letters < 80) throw new Error("RAW_PDF");
+  }
 }
 
 function extractEmail(text: string) {
@@ -176,16 +191,28 @@ function extractEducation(text: string): ParsedEducation[] {
 }
 
 function extractName(text: string) {
-  const first = text.split("\n").map((l) => l.trim()).find((l) => l && !l.includes("@") && l.length < 60);
-  if (!first) return "Aday";
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  const first = lines.find(
+    (l) =>
+      l &&
+      !l.includes("@") &&
+      l.length < 60 &&
+      !/%PDF|endobj|\/Type|Font/i.test(l) &&
+      /^[\p{L}\s.'-]+$/u.test(l.replace(/\d/g, "").trim() || "x")
+  );
+  if (!first) return "Candidate";
   if (/^(cv|özgeçmiş|resume|curriculum)/i.test(first)) {
-    const second = text
-      .split("\n")
-      .map((l) => l.trim())
-      .find((l, i) => i > 0 && l && !l.includes("@") && l.length < 60);
-    return second || "Aday";
+    const second = lines.find(
+      (l, i) =>
+        i > 0 &&
+        l &&
+        !l.includes("@") &&
+        l.length < 60 &&
+        !/%PDF|endobj/i.test(l)
+    );
+    return (second || "Candidate").replace(/[^\p{L}\s.'-]/gu, "").trim() || "Candidate";
   }
-  return first.replace(/[^a-zA-ZçğıöşüÇĞİÖŞÜ\s.'-]/g, "").trim() || "Aday";
+  return first.replace(/[^\p{L}\s.'-]/gu, "").trim() || "Candidate";
 }
 
 function extractTitle(text: string, skills: string[]) {
@@ -215,7 +242,9 @@ function extractLocation(text: string) {
 }
 
 export function parseCV(raw: string): ParsedCV {
+  assertCleanCvText(raw);
   const text = normalize(raw);
+  assertCleanCvText(text);
   const skills = extractSkills(text);
   return {
     name: extractName(text),

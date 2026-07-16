@@ -30,6 +30,8 @@ import {
   generateInterview,
   forgeChatbot,
   CATEGORIES,
+  cleanExtractedText,
+  looksLikeRawPdf,
   type CoverLetterTone,
   type OptimizedCV,
   type CoverLetterResult,
@@ -151,32 +153,58 @@ export default function ForgePage() {
 
   const runParse = (text: string, source: "manual" | "file" = "manual", fileName?: string) => {
     if (!text.trim()) {
-      toast.error("Önce CV metnini yapıştır veya bilgisayardan CV seç.");
+      toast.error("Paste your CV text or choose a PDF/TXT file first.");
       return null;
     }
-    const parsed = parseCV(text);
-    setForgeParsedCv(parsed);
-    if (fileName) setLastCvFileName(fileName);
-    pushForgeHistory({
-      action: "parse",
-      summary: `${parsed.name} — ${parsed.skills.length} beceri, ${parsed.experience.length} deneyim${
-        source === "file" ? " (dosya)" : ""
-      }`,
-      payload: parsed,
-    });
-    const successMsg =
-      "CV'niz başarıyla yüklendi ve parse edildi. Şimdi iş ilanı yapıştırabilir veya doğrudan optimizasyon yapabilirsiniz.";
-    setParseBanner(successMsg);
-    toast.success(successMsg);
-    toast.message("Sonuç burada ve geçmişte saklanmıştır");
-    setTab("parse");
-    return parsed;
+    const cleaned = cleanExtractedText(text);
+    if (looksLikeRawPdf(cleaned) || looksLikeRawPdf(text)) {
+      toast.error(
+        "This looks like raw PDF code, not readable CV text. Use a text-based PDF, TXT, or paste the text."
+      );
+      setForgeParsedCv(null);
+      setParseBanner(null);
+      return null;
+    }
+    try {
+      const parsed = parseCV(cleaned);
+      setForgeCvText(cleaned);
+      setForgeParsedCv(parsed);
+      if (fileName) setLastCvFileName(fileName);
+      pushForgeHistory({
+        action: "parse",
+        summary: `${parsed.name} — ${parsed.skills.length} skills, ${parsed.experience.length} roles${
+          source === "file" ? " (file)" : ""
+        }`,
+        payload: parsed,
+      });
+      const successMsg =
+        "CV'niz başarıyla parse edildi ve yapılandırıldı. Sonuç burada ve geçmiş analizlerde saklandı.";
+      setParseBanner(successMsg);
+      toast.success(successMsg);
+      setTab("parse");
+      return parsed;
+    } catch {
+      toast.error(
+        "Could not build a clean CV structure. Paste plain text or try another PDF/TXT file."
+      );
+      setForgeParsedCv(null);
+      setParseBanner(null);
+      return null;
+    }
   };
 
   const handleCvFile = (text: string, fileName: string) => {
-    setForgeCvText(text);
+    // Only store cleaned human text — never binary PDF dumps
+    const cleaned = cleanExtractedText(text);
+    if (!cleaned.trim() || looksLikeRawPdf(cleaned)) {
+      toast.error(
+        "Could not extract clean text from this file. Paste the CV text instead."
+      );
+      return;
+    }
+    setForgeCvText(cleaned);
     run(() => {
-      runParse(text, "file", fileName);
+      runParse(cleaned, "file", fileName);
     });
   };
 
@@ -303,9 +331,18 @@ export default function ForgePage() {
             Forge
           </h1>
           <p className="text-muted-steel mt-2 max-w-2xl">
-            CV parse, JD match, ATS optimizasyonu, cover letter, kısıtlı chatbot ve mock interview —
-            hepsi tarayıcıda, local ve gizli. Ben SoftBridge Solutions’ın kariyer asistanıyım.
+            Hi — I&apos;m Forge from SoftBridge CareerForge (SoftBridge Solutions). Paste a CV or choose
+            PDF/TXT, compare to a job, improve for ATS, write a cover letter, or practice interviews.
+            Everything stays local in your browser.
           </p>
+          <a
+            href="https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main"
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex items-center gap-2 rounded-xl border border-black/10 bg-star-white text-midnight-void px-4 py-2 text-sm font-semibold shadow-[0_6px_20px_rgba(92,46,31,0.08)] hover:bg-cosmic-teal transition-colors"
+          >
+            Open Source on GitHub
+          </a>
         </div>
 
         <div className="grid lg:grid-cols-[1fr_1fr] gap-4 mb-6">
@@ -490,8 +527,8 @@ export default function ForgePage() {
               {parseBanner && (
                 <div className="rounded-2xl border border-cosmic-teal/25 bg-cosmic-teal/10 px-4 py-3 space-y-1">
                   <p className="text-sm font-semibold text-star-white">{parseBanner}</p>
-                  <p className="text-xs text-cosmic-teal font-medium">
-                    Sonuç burada ve geçmişte saklanmıştır.
+                  <p className="text-xs text-muted-steel">
+                    Next: paste a job description to compare, or run Optimize.
                   </p>
                 </div>
               )}

@@ -9,10 +9,8 @@ import { extractTextFromFile } from "@/lib/forge/extractFileText";
 
 type Props = {
   label?: string;
-  /** Default: text + PDF, click-to-browse OS picker */
   accept?: string;
   onText: (text: string, fileName: string, meta: { kind: "text" | "pdf" }) => void;
-  /** If true, skip default success toast (caller shows its own). */
   silentSuccess?: boolean;
   className?: string;
   size?: "default" | "sm" | "lg" | "icon";
@@ -20,11 +18,11 @@ type Props = {
 };
 
 /**
- * Opens the OS file dialog on click (browse folders by clicking).
- * No drag-and-drop — click only. Supports TXT/MD and best-effort PDF text extract.
+ * Click-only OS file dialog (browse folders by clicking). PDF/TXT supported.
+ * Never passes raw PDF binary garbage to the parent.
  */
 export function FilePickButton({
-  label = "Dosya seç",
+  label = "Choose file",
   accept = ".txt,.md,.markdown,.csv,.json,.log,.rtf,.pdf,text/plain,application/pdf",
   onText,
   silentSuccess = false,
@@ -48,27 +46,23 @@ export function FilePickButton({
     setLoading(true);
     try {
       const { text, kind } = await extractTextFromFile(file);
-      if (!text.trim()) {
-        toast.error(
-          kind === "pdf"
-            ? "PDF’den metin çıkarılamadı (taranmış görüntü olabilir). Metni kopyalayıp yapıştır."
-            : "Dosya boş görünüyor."
-        );
-        return;
-      }
-      if (kind === "pdf" && text.replace(/\s/g, "").length < 60) {
-        toast.message("PDF metni zayıf çıktı; gerekirse elle düzeltip Parse et.");
-      }
       setFileName(file.name);
       onText(text, file.name, { kind });
       if (!silentSuccess) {
-        toast.success(`${file.name} yüklendi`);
+        toast.success(`${file.name} loaded with clean text`);
       }
     } catch (err) {
-      if (err instanceof Error && err.message === "UNSUPPORTED") {
-        toast.error("Desteklenen formatlar: PDF, TXT, MD.");
+      const code = err instanceof Error ? err.message : "";
+      if (code === "PDF_NO_TEXT") {
+        toast.error(
+          "Could not read clean text from this PDF (it may be a scan/image). Export as TXT or paste the text."
+        );
+      } else if (code === "UNSUPPORTED") {
+        toast.error("Supported formats: PDF and TXT (also MD).");
+      } else if (code === "EMPTY") {
+        toast.error("File looks empty.");
       } else {
-        toast.error("Dosya okunamadı.");
+        toast.error("Could not read the file.");
       }
     } finally {
       setLoading(false);
@@ -86,7 +80,7 @@ export function FilePickButton({
       />
       <Button type="button" size={size} variant={variant} onClick={openPicker} disabled={loading}>
         <FolderOpen className="w-4 h-4" />
-        {loading ? "Okunuyor…" : label}
+        {loading ? "Reading…" : label}
       </Button>
       {fileName && (
         <span className="text-[11px] text-muted-steel max-w-[140px] truncate" title={fileName}>

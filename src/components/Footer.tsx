@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { Anvil } from "lucide-react";
+import { Anvil, Code2 } from "lucide-react";
+
+const GITHUB_REPO =
+  "https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main";
 
 export function Footer() {
   return (
@@ -16,6 +19,15 @@ export function Footer() {
             Forge your next role with curated jobs, skill paths, resume tools, and a practical career
             coach — built by Softbridge Solutions.
           </p>
+          <a
+            href={GITHUB_REPO}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex items-center gap-2 rounded-xl border border-cosmic-teal/30 bg-cosmic-teal/10 px-4 py-2.5 text-sm font-semibold text-cosmic-teal hover:bg-cosmic-teal hover:text-midnight-void transition-colors"
+          >
+            <Code2 className="w-4 h-4" />
+            Open Source on GitHub
+          </a>
         </div>
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-steel mb-3">
@@ -72,8 +84,17 @@ export function Footer() {
           </ul>
         </div>
       </div>
-      <div className="border-t border-black/5 py-4 text-center text-[11px] text-muted-steel">
-        © {new Date().getFullYear()} Softbridge Solutions · CareerForge
+      <div className="border-t border-black/5 py-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-[11px] text-muted-steel">
+        <span>© {new Date().getFullYear()} Softbridge Solutions · CareerForge</span>
+        <a
+          href={GITHUB_REPO}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 font-semibold text-cosmic-teal hover:underline"
+        >
+          <Code2 className="w-3.5 h-3.5" />
+          Open Source on GitHub
+        </a>
       </div>
     </footer>
   );

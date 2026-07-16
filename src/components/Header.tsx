@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Anvil, Menu, X } from "lucide-react";
+import { Anvil, Code2, Menu, X } from "lucide-react";
+
+const GITHUB_REPO =
+  "https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -63,6 +66,15 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <a
+            href={GITHUB_REPO}
+            target="_blank"
+            rel="noreferrer"
+            className="hidden md:inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold border border-black/10 text-star-white hover:border-cosmic-teal/40 hover:text-cosmic-teal transition-colors"
+          >
+            <Code2 className="w-3.5 h-3.5" />
+            Open Source on GitHub
+          </a>
           <Link
             href="/forge"
             className="hidden sm:inline-flex h-8 items-center rounded-lg px-3 text-xs font-semibold bg-cosmic-teal text-midnight-void shadow-[0_8px_24px_rgba(232,93,59,0.25)] hover:bg-sunset-coral transition-colors"
@@ -102,6 +114,16 @@ export function Header() {
                 {link.name}
               </Link>
             ))}
+            <a
+              href={GITHUB_REPO}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setOpen(false)}
+              className="px-3 py-2.5 rounded-xl text-sm font-semibold border border-black/8 text-star-white text-center inline-flex items-center justify-center gap-2"
+            >
+              <Code2 className="w-4 h-4" />
+              Open Source on GitHub
+            </a>
             <Link
               href="/jobs"
               onClick={() => setOpen(false)}
