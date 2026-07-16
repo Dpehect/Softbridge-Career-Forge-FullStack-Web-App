@@ -3,6 +3,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CoachMessage, ResumeProfile } from "@/types";
+import type {
+  CoverLetterTone,
+  ForgeHistoryItem,
+  MatchAnalysis,
+  ParsedCV,
+} from "@/lib/forge/types";
 
 const defaultResume: ResumeProfile = {
   fullName: "Alex Rivera",
@@ -53,6 +59,12 @@ interface CareerState {
   completedModuleIds: string[];
   resume: ResumeProfile;
   coachMessages: CoachMessage[];
+  forgeCvText: string;
+  forgeJdText: string;
+  forgeParsedCv: ParsedCV | null;
+  forgeAnalysis: MatchAnalysis | null;
+  forgeTone: CoverLetterTone;
+  forgeHistory: ForgeHistoryItem[];
   toggleSaveJob: (id: string) => void;
   applyToJob: (id: string) => void;
   enrollPath: (id: string) => void;
@@ -61,6 +73,13 @@ interface CareerState {
   setResume: (resume: ResumeProfile) => void;
   addCoachMessage: (message: Omit<CoachMessage, "id" | "createdAt">) => void;
   clearCoach: () => void;
+  setForgeCvText: (text: string) => void;
+  setForgeJdText: (text: string) => void;
+  setForgeParsedCv: (cv: ParsedCV | null) => void;
+  setForgeAnalysis: (analysis: MatchAnalysis | null) => void;
+  setForgeTone: (tone: CoverLetterTone) => void;
+  pushForgeHistory: (item: Omit<ForgeHistoryItem, "id" | "createdAt">) => void;
+  clearForgeHistory: () => void;
 }
 
 export const useCareerStore = create<CareerState>()(
@@ -76,10 +95,16 @@ export const useCareerStore = create<CareerState>()(
           id: "welcome",
           role: "assistant",
           content:
-            "Welcome to CareerForge Coach. Tell me your target role, timeline, and what feels stuck — I’ll map a practical next step.",
+            "Merhaba, ben Forge. Hedef rolünü, zaman çizelgeni ve takıldığın noktayı yaz — somut bir sonraki adım çıkaralım.",
           createdAt: new Date().toISOString(),
         },
       ],
+      forgeCvText: "",
+      forgeJdText: "",
+      forgeParsedCv: null,
+      forgeAnalysis: null,
+      forgeTone: "Profesyonel",
+      forgeHistory: [],
       toggleSaveJob: (id) => {
         const { savedJobIds } = get();
         set({
@@ -129,11 +154,28 @@ export const useCareerStore = create<CareerState>()(
               id: "welcome",
               role: "assistant",
               content:
-                "Session reset. What’s the career outcome you want in the next 90 days?",
+                "Oturum sıfırlandı. Önümüzdeki 90 günde neyi başarmak istiyorsun?",
               createdAt: new Date().toISOString(),
             },
           ],
         }),
+      setForgeCvText: (text) => set({ forgeCvText: text }),
+      setForgeJdText: (text) => set({ forgeJdText: text }),
+      setForgeParsedCv: (cv) => set({ forgeParsedCv: cv }),
+      setForgeAnalysis: (analysis) => set({ forgeAnalysis: analysis }),
+      setForgeTone: (tone) => set({ forgeTone: tone }),
+      pushForgeHistory: (item) =>
+        set({
+          forgeHistory: [
+            {
+              ...item,
+              id: `forge-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              createdAt: new Date().toISOString(),
+            },
+            ...get().forgeHistory,
+          ].slice(0, 30),
+        }),
+      clearForgeHistory: () => set({ forgeHistory: [] }),
     }),
     { name: "softbridge-careerforge" }
   )

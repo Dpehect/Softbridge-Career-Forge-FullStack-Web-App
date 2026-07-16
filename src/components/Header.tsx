@@ -8,6 +8,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const links = [
+  { name: "Forge", path: "/forge" },
   { name: "Jobs", path: "/jobs" },
   { name: "Paths", path: "/paths" },
   { name: "Resume", path: "/resume" },
@@ -63,10 +64,10 @@ export function Header() {
 
         <div className="flex items-center gap-2">
           <Link
-            href="/jobs"
+            href="/forge"
             className="hidden sm:inline-flex h-8 items-center rounded-lg px-3 text-xs font-semibold bg-cosmic-teal text-midnight-void shadow-[0_8px_24px_rgba(232,93,59,0.25)] hover:bg-sunset-coral transition-colors"
           >
-            Find roles
+            Open Forge AI
           </Link>
           <button
             className="md:hidden p-2 rounded-xl border border-black/8 text-star-white"

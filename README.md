@@ -30,10 +30,11 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Product surfaces
 
 - **/** — Marketing landing
+- **/forge** — Forge AI: CV parse, JD match, optimize, cover letter, ATS, chatbot, mock interview, history
 - **/jobs** — Searchable job board
 - **/paths** — Skill / career paths with module tracking
 - **/resume** — Live resume editor + preview
-- **/coach** — Heuristic career coach (demo)
+- **/coach** — Career coach (demo)
 - **/dashboard** — Saved jobs, applications, path progress
 
-Progress is persisted in the browser via Zustand + `localStorage`.
+Progress and Forge history are persisted in the browser via Zustand + `localStorage` (local & private).

@@ -23,6 +23,11 @@ export function Footer() {
           </p>
           <ul className="space-y-2 text-sm">
             <li>
+              <Link href="/forge" className="hover:text-cosmic-teal transition-colors">
+                Forge AI
+              </Link>
+            </li>
+            <li>
               <Link href="/jobs" className="hover:text-cosmic-teal transition-colors">
                 Job board
               </Link>

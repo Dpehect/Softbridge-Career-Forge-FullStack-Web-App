@@ -73,16 +73,16 @@ export default function HomePage() {
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
-                  href="/jobs"
+                  href="/forge"
                   className="inline-flex h-12 items-center gap-2 rounded-2xl px-6 text-base font-semibold bg-star-white text-midnight-void shadow-[0_8px_24px_rgba(92,46,31,0.12)] hover:bg-cosmic-teal transition-colors"
                 >
-                  Browse roles <ArrowRight className="w-4 h-4" />
+                  Open Forge AI <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
-                  href="/paths"
+                  href="/jobs"
                   className="inline-flex h-12 items-center gap-2 rounded-2xl px-6 text-base font-semibold border border-black/10 hover:border-cosmic-teal/40 hover:text-cosmic-teal transition-colors"
                 >
-                  Explore paths
+                  Browse roles
                 </Link>
               </div>
             </motion.div>
