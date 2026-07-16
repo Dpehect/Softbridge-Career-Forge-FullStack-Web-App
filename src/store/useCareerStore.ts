@@ -39,6 +39,8 @@ interface CareerState {
   forgeTone: CoverLetterTone;
   forgeHistory: ForgeHistoryItem[];
   forgeBackups: CvBackup[];
+  lang: "tr" | "en";
+  setLang: (lang: "tr" | "en") => void;
   toggleSaveJob: (id: string) => void;
   applyToJob: (id: string) => void;
   enrollPath: (id: string) => void;
@@ -64,6 +66,8 @@ interface CareerState {
 export const useCareerStore = create<CareerState>()(
   persist(
     (set, get) => ({
+      lang: "tr",
+      setLang: (lang) => set({ lang }),
       savedJobIds: [],
       appliedJobIds: [],
       enrolledPathIds: ["path-frontend"],

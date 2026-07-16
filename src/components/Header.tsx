@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useCareerStore } from "@/store/useCareerStore";
 import { exportCvAsPdf } from "@/lib/forge";
 import { toast } from "sonner";
+import { useTranslation } from "@/lib/forge/i18n";
 
 const GITHUB_REPO =
   "https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main";
@@ -27,6 +28,19 @@ export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { resume, resetResume, forgeParsedCv, clearForgeCv } = useCareerStore();
+  const { t, lang, setLang } = useTranslation();
+
+  const getNavName = (name: string) => {
+    switch (name) {
+      case "Forge": return t("navForge");
+      case "Resume": return t("navResume");
+      case "Jobs": return t("navJobs");
+      case "Paths": return t("navPaths");
+      case "Coach": return t("navCoach");
+      case "Dashboard": return t("navDashboard");
+      default: return name;
+    }
+  };
 
   const hasContent =
     Boolean(forgeParsedCv) ||
@@ -39,10 +53,10 @@ export function Header() {
     );
 
   const handleClearAll = () => {
-    if (window.confirm("Are you sure you want to clear your current CV and reset?")) {
+    if (window.confirm(t("clearConfirm"))) {
       resetResume();
       clearForgeCv();
-      toast.success("CV cleared. You can start fresh.");
+      toast.success(t("clearSuccess"));
     }
   };
 
@@ -82,7 +96,7 @@ export function Header() {
 
     try {
       await exportCvAsPdf(cvToExport);
-      toast.success("Professional PDF exported!");
+      toast.success(t("exportSuccess"));
     } catch {
       toast.error("Could not export PDF.");
     }
@@ -102,7 +116,7 @@ export function Header() {
           </div>
           <div className="leading-tight">
             <p className="font-display font-bold text-[13px] tracking-tight">CareerForge</p>
-            <p className="text-[10px] text-muted-steel hidden sm:block">by SoftBridge</p>
+            <p className="text-[10px] text-muted-steel hidden sm:block">{t("logoSub")}</p>
           </div>
         </Link>
 
@@ -125,7 +139,7 @@ export function Header() {
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
                   />
                 )}
-                {link.name}
+                {getNavName(link.name)}
               </Link>
             );
           })}
@@ -139,37 +153,46 @@ export function Header() {
                 size="sm"
                 onClick={handleClearAll}
                 className="h-9 text-xs text-sunset-coral hover:text-sunset-coral hover:bg-sunset-coral/5 gap-1"
-                title="Clear current CV"
+                title={t("clearCv")}
               >
-                <RotateCcw className="w-3.5 h-3.5" /> Clear CV
+                <RotateCcw className="w-3.5 h-3.5" /> {t("clearCv")}
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleExport}
                 className="h-9 text-xs gap-1"
-                title="Export PDF"
+                title={t("exportPdf")}
               >
-                <FileDown className="w-3.5 h-3.5" /> Export PDF
+                <FileDown className="w-3.5 h-3.5" /> {t("exportPdf")}
               </Button>
             </div>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLang(lang === "tr" ? "en" : "tr")}
+            className="h-9 px-2 text-xs font-semibold hover:bg-cosmic-teal/10 gap-1 border border-black/5"
+            title={lang === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
+          >
+            🌐 {lang === "tr" ? "EN" : "TR"}
+          </Button>
           <a
             href={GITHUB_REPO}
             target="_blank"
             rel="noreferrer"
             className="inline-flex h-9 items-center gap-1.5 rounded-xl px-2 sm:px-3 text-xs font-semibold border border-black/8 bg-star-white text-midnight-void hover:bg-cosmic-teal transition-colors shadow-sm"
-            title="View Source on GitHub"
+            title={t("viewGithub")}
           >
             <Code2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">View Source on GitHub</span>
+            <span className="hidden sm:inline">{t("viewGithub")}</span>
             <span className="sm:hidden">GitHub</span>
           </a>
           <Link
             href="/forge"
             className="hidden sm:inline-flex h-9 items-center rounded-xl px-3.5 text-xs font-semibold bg-cosmic-teal text-midnight-void hover:bg-sunset-coral transition-colors shadow-[0_8px_22px_rgba(217,72,32,0.28)]"
           >
-            Open Forge
+            {t("openForge")}
           </Link>
           <button
             className="lg:hidden p-2 rounded-xl border border-black/8"
@@ -201,7 +224,7 @@ export function Header() {
                     : "text-muted-steel"
                 )}
               >
-                {link.name}
+                {getNavName(link.name)}
               </Link>
             ))}
             <a
@@ -211,8 +234,19 @@ export function Header() {
               onClick={() => setOpen(false)}
               className="mt-1 px-3 py-2.5 rounded-xl text-sm font-semibold border border-black/8 inline-flex items-center gap-2 bg-star-white text-midnight-void"
             >
-              <Code2 className="w-4 h-4" /> View Source on GitHub
+              <Code2 className="w-4 h-4" /> {t("viewGithub")}
             </a>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setLang(lang === "tr" ? "en" : "tr");
+                setOpen(false);
+              }}
+              className="mt-1 w-full text-xs font-semibold justify-center gap-1 bg-star-white text-midnight-void"
+            >
+              🌐 {lang === "tr" ? "English'e Geç (EN)" : "Türkçe'ye Geç (TR)"}
+            </Button>
             {hasContent && (
               <div className="flex gap-2 border-t border-black/5 mt-2 pt-2">
                 <Button
@@ -224,7 +258,7 @@ export function Header() {
                   }}
                   className="flex-1 text-xs text-sunset-coral hover:bg-sunset-coral/5"
                 >
-                  <RotateCcw className="w-3.5 h-3.5 mr-1" /> Clear CV
+                  <RotateCcw className="w-3.5 h-3.5 mr-1" /> {t("clearCv")}
                 </Button>
                 <Button
                   variant="ghost"
@@ -235,7 +269,7 @@ export function Header() {
                   }}
                   className="flex-1 text-xs"
                 >
-                  <FileDown className="w-3.5 h-3.5 mr-1" /> Export PDF
+                  <FileDown className="w-3.5 h-3.5 mr-1" /> {t("exportPdf")}
                 </Button>
               </div>
             )}

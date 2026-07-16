@@ -48,6 +48,7 @@ import {
   getJobRecommendations,
   exportCvAsPdf,
   generateCvFeedback,
+  simulateAIResponse,
   type CoverLetterTone,
   type OptimizedCV,
   type CoverLetterResult,
@@ -58,6 +59,7 @@ import {
   type ParsedCV,
 } from "@/lib/forge";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/forge/i18n";
 
 type TabId =
   | "parse"
@@ -109,6 +111,23 @@ export default function ForgePage() {
     restoreForgeBackup,
     deleteForgeBackup,
   } = useCareerStore();
+  const { t, lang } = useTranslation();
+
+  const getTabLabel = (id: TabId) => {
+    switch (id) {
+      case "parse": return t("tabParse");
+      case "create": return t("tabCreate");
+      case "analyze": return t("tabAnalyze");
+      case "optimize": return t("tabOptimize");
+      case "coverletter": return t("tabCover");
+      case "ats": return t("tabAts");
+      case "jobs": return t("tabJobs");
+      case "chatbot": return t("tabChat");
+      case "interview": return t("tabInterview");
+      case "history": return t("tabHistory");
+      default: return id;
+    }
+  };
 
   const [tab, setTab] = useState<TabId>("parse");
   const [optimized, setOptimized] = useState<OptimizedCV | null>(null);
@@ -171,11 +190,12 @@ export default function ForgePage() {
     }
   };
 
-  const run = async (fn: () => void) => {
+  const run = async (fn: () => Promise<void> | void) => {
     setBusy(true);
-    await new Promise((r) => setTimeout(r, 350));
     try {
-      fn();
+      await fn();
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred");
     } finally {
       setBusy(false);
     }
@@ -330,14 +350,14 @@ export default function ForgePage() {
     });
 
   const onAnalyze = () =>
-    run(() => {
+    run(async () => {
       const parsed = ensureParsed();
       if (!parsed) return;
       if (!jdText.trim()) {
         toast.error("İş ilanı (JD) metnini de yapıştır.");
         return;
       }
-      const analysis = analyzeMatch(parsed, jdText);
+      const analysis = await simulateAIResponse("match", parsed, { jd: jdText });
       setForgeAnalysis(analysis);
       pushForgeHistory({
         action: "analyze",
@@ -349,10 +369,10 @@ export default function ForgePage() {
     });
 
   const onOptimize = () =>
-    run(() => {
+    run(async () => {
       const parsed = ensureParsed();
       if (!parsed) return;
-      const result = optimizeCV(parsed, forgeAnalysis, jdText);
+      const result = await simulateAIResponse("optimize", parsed, { jd: jdText });
       setOptimized(result);
       pushForgeHistory({
         action: "optimize",
@@ -364,14 +384,14 @@ export default function ForgePage() {
     });
 
   const onCover = () =>
-    run(() => {
+    run(async () => {
       const parsed = ensureParsed();
       if (!parsed) return;
       if (!jdText.trim()) {
         toast.error("Cover letter için JD gerekli.");
         return;
       }
-      const result = generateCoverLetter(parsed, jdText, forgeTone, forgeAnalysis);
+      const result = await simulateAIResponse("coverletter", parsed, { jd: jdText, tone: forgeTone });
       setCover(result);
       pushForgeHistory({
         action: "coverletter",
@@ -383,9 +403,11 @@ export default function ForgePage() {
     });
 
   const onAts = () =>
-    run(() => {
+    run(async () => {
       const parsed = ensureParsed();
       if (!parsed) return;
+      // ATS checks are derived from matching metrics with structural checks
+      await new Promise((r) => setTimeout(r, 600));
       const result = analyzeAts(parsed, jdText);
       setAts(result);
       pushForgeHistory({
@@ -398,10 +420,10 @@ export default function ForgePage() {
     });
 
   const onInterview = () =>
-    run(() => {
+    run(async () => {
       const parsed = ensureParsed() || parseCV(cvText || "Aday\nSoftware Engineer\nReact TypeScript");
       if (!forgeParsedCv && cvText.trim()) setForgeParsedCv(parsed);
-      const result = generateInterview(parsed, jdText);
+      const result = await simulateAIResponse("interview", parsed, { jd: jdText });
       setInterview(result);
       pushForgeHistory({
         action: "interview",
@@ -413,8 +435,10 @@ export default function ForgePage() {
     });
 
   const onChat = () =>
-    run(() => {
-      const result = forgeChatbot(chatInput, forgeParsedCv, forgeAnalysis);
+    run(async () => {
+      const parsed = ensureParsed();
+      if (!parsed) return;
+      const result = await simulateAIResponse("chat", parsed, { message: chatInput, jd: jdText });
       setChatResult(result);
       pushForgeHistory({
         action: "chatbot",
@@ -450,19 +474,17 @@ export default function ForgePage() {
             <span className="w-10 h-10 rounded-xl bg-cosmic-teal text-midnight-void inline-flex items-center justify-center shadow-[0_10px_24px_rgba(217,72,32,0.28)]">
               <Anvil className="w-5 h-5" />
             </span>
-            Forge
+            {t("forgeTitle")}
           </h1>
           <p className="text-muted-steel mt-3 max-w-2xl leading-relaxed">
-            Hi — I&apos;m Forge from SoftBridge CareerForge (SoftBridge Solutions). Upload a CV
-            (PDF/TXT), paste text, or build from scratch — then get structured data, deep feedback,
-            job match, PDF export, and interview prep. Everything stays in your browser.
+            {t("forgeDesc")}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={() => setTab("create")}>
-              Build CV from Scratch
+              {t("buildScratch")}
             </Button>
             <Button variant="ghost" size="sm" onClick={onClearCv}>
-              Clear / Reset CV
+              {t("clearReset")}
             </Button>
           </div>
         </div>
@@ -472,32 +494,31 @@ export default function ForgePage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-cosmic-teal">
-                CV workspace
+                {t("workspaceTitle")}
               </p>
-              <h2 className="font-display text-xl font-semibold mt-0.5">Upload, paste, or build</h2>
+              <h2 className="font-display text-xl font-semibold mt-0.5">{t("workspaceSub")}</h2>
             </div>
             <div className="flex flex-wrap gap-2">
               <FilePickButton
-                label="Upload PDF or TXT"
+                label={t("uploadBtn")}
                 variant="accent"
                 size="default"
                 silentSuccess
                 onText={(text, fileName) => handleCvFile(text, fileName)}
               />
               <Button variant="outline" onClick={() => setTab("create")}>
-                <PenLine className="w-4 h-4" /> Build CV from Scratch
+                <PenLine className="w-4 h-4" /> {t("buildScratch")}
               </Button>
               <Button variant="ghost" onClick={onClearCv}>
-                <RotateCcw className="w-4 h-4" /> Clear / Reset CV
+                <RotateCcw className="w-4 h-4" /> {t("clearReset")}
               </Button>
               <Button variant="outline" disabled={busy || !forgeParsedCv} onClick={() => void onExportPdf()}>
-                <FileDown className="w-4 h-4" /> Export PDF
+                <FileDown className="w-4 h-4" /> {t("exportPdf")}
               </Button>
             </div>
           </div>
           <p className="text-sm text-muted-steel">
-            <strong>Paste CV Text</strong> below, or use <strong>Upload PDF or TXT</strong>. Clean
-            text only — scanned PDFs need a searchable export or manual paste.
+            <strong>{t("pasteTitle")}</strong>.
           </p>
           <Textarea
             value={cvText}
@@ -510,18 +531,18 @@ export default function ForgePage() {
           />
           <div className="flex flex-wrap gap-2">
             <Button variant="soft" disabled={busy || !cvText.trim()} onClick={onParse}>
-              Analyze pasted text
+              {t("analyzePasteBtn")}
             </Button>
             {lastCvFileName && (
               <span className="text-xs text-muted-steel self-center">
-                Last file: <strong className="text-star-white">{lastCvFileName}</strong>
+                {t("lastFileLabel")} <strong className="text-star-white">{lastCvFileName}</strong>
               </span>
             )}
           </div>
           {parseBanner && (
             <div className="rounded-2xl border border-cosmic-teal/25 bg-cosmic-teal/10 px-4 py-3">
-              <p className="text-sm font-semibold">{READY_MSG}</p>
-              <p className="text-xs text-muted-steel mt-1">{READY_NEXT}</p>
+              <p className="text-sm font-semibold">{t("readyMsg")}</p>
+              <p className="text-xs text-muted-steel mt-1">{t("readyNext")}</p>
             </div>
           )}
         </section>
@@ -628,7 +649,7 @@ export default function ForgePage() {
                 )}
               >
                 <Icon className="w-3.5 h-3.5" />
-                {t.label}
+                {getTabLabel(t.id)}
               </button>
             );
           })}
@@ -1135,7 +1156,49 @@ export default function ForgePage() {
               </div>
 
               <div className="space-y-3">
-                <h3 className="font-semibold">CV backups</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold">CV backups</h3>
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      id="json-backup-upload-history"
+                      accept=".json"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            try {
+                              const parsedData = JSON.parse(reader.result as string);
+                              if (parsedData && parsedData.parsed && typeof parsedData.text === "string") {
+                                setForgeParsedCv(parsedData.parsed);
+                                setForgeCvText(parsedData.text);
+                                toast.success("JSON backup imported successfully!");
+                                setTab("parse");
+                              } else {
+                                toast.error("Invalid backup file format.");
+                              }
+                            } catch {
+                              toast.error("Could not parse JSON backup file.");
+                            }
+                          };
+                          reader.readAsText(file);
+                        }
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => document.getElementById("json-backup-upload-history")?.click()}
+                    >
+                      Import Backup
+                    </Button>
+                    <Button size="sm" variant="accent" onClick={onBackupCv}>
+                      Create Backup
+                    </Button>
+                  </div>
+                </div>
                 {forgeBackups.length === 0 ? (
                   <p className="text-sm text-muted-steel">
                     No backups yet. Use <strong>Backup CV</strong> to save one.
