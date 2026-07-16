@@ -198,14 +198,6 @@ export default function ResumePage() {
             <Button variant="ghost" onClick={onClear}>
               <RotateCcw className="w-4 h-4" /> Clear / Reset CV
             </Button>
-            <a
-              href="https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-semibold border border-black/8 bg-star-white text-midnight-void hover:bg-cosmic-teal transition-colors shadow-sm"
-            >
-              <Code2 className="w-3.5 h-3.5" /> View Source on GitHub
-            </a>
           </div>
         </div>
 

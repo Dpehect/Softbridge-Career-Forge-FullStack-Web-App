@@ -458,14 +458,6 @@ export default function ForgePage() {
             job match, PDF export, and interview prep. Everything stays in your browser.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <a
-              href="https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-star-white text-midnight-void px-4 py-2 text-sm font-semibold shadow-[0_8px_22px_rgba(28,20,16,0.06)] hover:bg-cosmic-teal transition-colors"
-            >
-              View Source on GitHub
-            </a>
             <Button variant="outline" size="sm" onClick={() => setTab("create")}>
               Build CV from Scratch
             </Button>
@@ -501,14 +493,6 @@ export default function ForgePage() {
               <Button variant="outline" disabled={busy || !forgeParsedCv} onClick={() => void onExportPdf()}>
                 <FileDown className="w-4 h-4" /> Export PDF
               </Button>
-              <a
-                href="https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-semibold border border-black/8 bg-star-white text-midnight-void hover:bg-cosmic-teal transition-colors shadow-sm"
-              >
-                <Code2 className="w-3.5 h-3.5" /> View Source on GitHub
-              </a>
             </div>
           </div>
           <p className="text-sm text-muted-steel">

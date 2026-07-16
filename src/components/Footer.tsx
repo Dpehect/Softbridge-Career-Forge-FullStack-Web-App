@@ -23,15 +23,6 @@ export function Footer() {
               CV analysis, job matching, ATS optimization, PDF export, and interview prep — private
               in your browser.
             </p>
-            <a
-              href={GITHUB_REPO}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-star-white text-midnight-void px-4 py-2.5 text-sm font-semibold shadow-[0_10px_28px_rgba(28,20,16,0.08)] hover:bg-cosmic-teal transition-colors"
-            >
-              <Code2 className="w-4 h-4" />
-              View Source on GitHub
-            </a>
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-muted-steel mb-3">
@@ -69,30 +60,11 @@ export function Footer() {
                   SoftBridge Solutions
                 </a>
               </li>
-              <li>
-                <a
-                  href={GITHUB_REPO}
-                  className="hover:text-cosmic-teal transition-colors font-semibold"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  GitHub repository
-                </a>
-              </li>
             </ul>
           </div>
         </div>
         <div className="mt-10 pt-5 border-t border-black/5 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-muted-steel">
           <span>© {new Date().getFullYear()} SoftBridge Solutions · CareerForge</span>
-          <a
-            href={GITHUB_REPO}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 font-semibold text-cosmic-teal hover:underline"
-          >
-            <Code2 className="w-3.5 h-3.5" />
-            View Source on GitHub
-          </a>
         </div>
       </div>
     </footer>
