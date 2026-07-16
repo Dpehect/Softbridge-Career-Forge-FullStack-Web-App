@@ -50,7 +50,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           position="bottom-right"
           toastOptions={{
             className: "border border-cosmic-teal/10 bg-panel-elevated text-star-white",
-            style: { background: "#1A1A2E", color: "#F5F0FF", borderColor: "rgba(124,58,237,0.15)" },
+            style: { background: "#110720", color: "#F5EEFF", borderColor: "rgba(192,132,252,0.15)" },
           }}
         />
       </body>
