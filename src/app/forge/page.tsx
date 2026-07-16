@@ -147,17 +147,30 @@ export default function ForgePage() {
     }
   };
 
+  const runParse = (text: string, source: "manual" | "file" = "manual") => {
+    if (!text.trim()) {
+      toast.error("Önce CV metnini yapıştır veya dosya seç.");
+      return null;
+    }
+    const parsed = parseCV(text);
+    setForgeParsedCv(parsed);
+    pushForgeHistory({
+      action: "parse",
+      summary: `${parsed.name} — ${parsed.skills.length} beceri, ${parsed.experience.length} deneyim${
+        source === "file" ? " (dosya)" : ""
+      }`,
+      payload: parsed,
+    });
+    toast.success(
+      "CV'niz başarıyla parse edildi. Şimdi iş ilanı yapıştırabilir veya doğrudan optimizasyon yapabilirsiniz."
+    );
+    setTab("parse");
+    return parsed;
+  };
+
   const onParse = () =>
     run(() => {
-      const parsed = parseCV(cvText);
-      setForgeParsedCv(parsed);
-      pushForgeHistory({
-        action: "parse",
-        summary: `${parsed.name} — ${parsed.skills.length} beceri, ${parsed.experience.length} deneyim`,
-        payload: parsed,
-      });
-      toast.success("CV yapılandırıldı");
-      setTab("parse");
+      runParse(cvText, "manual");
     });
 
   const onAnalyze = () =>
@@ -292,9 +305,12 @@ export default function ForgePage() {
               <div className="flex flex-wrap items-center gap-1.5">
                 <FilePickButton
                   label="CV dosyası seç"
+                  silentSuccess
                   onText={(text) => {
                     setForgeCvText(text);
-                    setForgeParsedCv(null);
+                    run(() => {
+                      runParse(text, "file");
+                    });
                   }}
                 />
                 <Button
@@ -302,8 +318,9 @@ export default function ForgePage() {
                   variant="ghost"
                   onClick={() => {
                     setForgeCvText(SAMPLE_CV);
-                    setForgeParsedCv(null);
-                    toast.message("Örnek CV yüklendi");
+                    run(() => {
+                      runParse(SAMPLE_CV, "manual");
+                    });
                   }}
                 >
                   Örnek
@@ -311,7 +328,8 @@ export default function ForgePage() {
               </div>
             </div>
             <p className="text-[11px] text-muted-steel">
-              Sürükle-bırak yok — <strong>CV dosyası seç</strong> ile klasörlere tıklayarak gezin (.txt, .md).
+              Sürükle-bırak yok — <strong>CV dosyası seç</strong> ile klasörlere tıklayarak gezin
+              (PDF, TXT, MD). Dosya seçilince metin çıkarılır, parse edilir ve geçmişe kaydedilir.
             </p>
             <Textarea
               value={cvText}

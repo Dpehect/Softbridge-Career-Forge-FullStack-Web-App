@@ -5,3 +5,4 @@ export { optimizeCV } from "./optimize";
 export { generateCoverLetter } from "./coverLetter";
 export { generateInterview } from "./interview";
 export { forgeChatbot, CATEGORIES } from "./chatbot";
+export { extractTextFromFile, extractTextFromPdfBytes } from "./extractFileText";
