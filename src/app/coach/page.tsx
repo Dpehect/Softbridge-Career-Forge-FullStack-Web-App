@@ -52,8 +52,8 @@ export default function CoachPage() {
               Practical next steps
             </h1>
             <p className="text-muted-steel mt-2 text-sm max-w-lg">
-              A demo coach with domain heuristics for search, interviews, skills, and negotiation.
-              Not a substitute for a human mentor — but useful for momentum.
+              Practical guidance for search, interviews, skills, and negotiation. Clear next steps
+              you can use today — not a replacement for a human mentor.
             </p>
           </div>
           <Button variant="ghost" size="sm" onClick={clearCoach} className="shrink-0">

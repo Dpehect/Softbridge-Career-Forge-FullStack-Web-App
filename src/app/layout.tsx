@@ -24,11 +24,11 @@ export const metadata: Metadata = {
     default: "Softbridge CareerForge — Forge your next role",
   },
   description:
-    "Curated jobs, skill paths, resume tools, and a practical career coach. Built by Softbridge Solutions.",
+    "Professional career platform: CV analysis, job match, ATS optimization, cover letters, and interview prep. Built by Softbridge Solutions.",
   openGraph: {
     title: "Softbridge CareerForge",
     description:
-      "Curated jobs, skill paths, resume tools, and a practical career coach.",
+      "CV tools, job match, ATS optimization, and career coaching — in one premium workspace.",
     siteName: "Softbridge CareerForge",
     locale: "en_US",
     type: "website",

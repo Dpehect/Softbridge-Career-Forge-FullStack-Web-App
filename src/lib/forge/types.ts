@@ -44,6 +44,8 @@ export interface ParsedCV {
   skills: string[];
   education: ParsedEducation[];
   rawLength: number;
+  /** Optional profile photo as data URL (jpeg/png) */
+  photoDataUrl?: string | null;
 }
 
 export interface CvBackup {

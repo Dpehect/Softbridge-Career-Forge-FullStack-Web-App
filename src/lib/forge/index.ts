@@ -25,3 +25,4 @@ export {
   buildWebSearchLinks,
   type JobRecommendation,
 } from "./jobRecommendations";
+export { exportCvAsPdf } from "./exportPdf";

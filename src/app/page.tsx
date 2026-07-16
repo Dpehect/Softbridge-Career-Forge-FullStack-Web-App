@@ -61,22 +61,22 @@ export default function HomePage() {
               transition={{ duration: 0.5 }}
             >
               <Badge variant="accent" className="mb-5">
-                Softbridge Solutions · Career product
+                SoftBridge Solutions · Career platform
               </Badge>
               <h1 className="font-display text-4xl md:text-6xl font-semibold tracking-tight text-balance leading-[1.05]">
-                Forge the career you can actually{" "}
-                <span className="text-cosmic-teal">stand behind</span>
+                Your career workspace —{" "}
+                <span className="text-cosmic-teal">clear, calm, effective</span>
               </h1>
               <p className="mt-5 text-base md:text-lg text-muted-steel max-w-xl leading-relaxed">
-                CareerForge combines curated jobs, skill paths, resume tools, and coaching into one
-                warm, premium workspace — so your next move feels intentional, not frantic.
+                Analyze CVs, match roles, improve for ATS, export professional PDFs, and prepare for
+                interviews — all in one SoftBridge CareerForge experience.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href="/forge"
-                  className="inline-flex h-12 items-center gap-2 rounded-2xl px-6 text-base font-semibold bg-star-white text-midnight-void shadow-[0_8px_24px_rgba(92,46,31,0.12)] hover:bg-cosmic-teal transition-colors"
+                  className="inline-flex h-12 items-center gap-2 rounded-2xl px-6 text-base font-semibold bg-star-white text-midnight-void shadow-[0_12px_32px_rgba(44,24,16,0.12)] hover:bg-cosmic-teal hover:text-midnight-void transition-all duration-300"
                 >
-                  Open Forge AI <ArrowRight className="w-4 h-4" />
+                  Open Forge <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
                   href="/jobs"
@@ -103,15 +103,15 @@ export default function HomePage() {
             <div className="flex items-center gap-2 mb-5">
               <Sparkles className="w-4 h-4 text-cosmic-teal" />
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted-steel">
-                This week’s forge plan
+                Recommended workflow
               </p>
             </div>
             <ul className="space-y-4">
               {[
-                { step: "01", title: "Target 3 high-fit roles", meta: "Jobs · 45 min" },
-                { step: "02", title: "Finish path module", meta: "Frontend Craft · 2 hrs" },
-                { step: "03", title: "Rewrite 2 resume bullets", meta: "Resume forge · 20 min" },
-                { step: "04", title: "Mock behavioral with coach", meta: "Coach · 15 min" },
+                { step: "01", title: "Upload or build your CV", meta: "Forge · 10 min" },
+                { step: "02", title: "Match against a job ad", meta: "Score & skill gaps" },
+                { step: "03", title: "Export a professional PDF", meta: "Ready to send" },
+                { step: "04", title: "Practice interview answers", meta: "Mock interview" },
               ].map((item) => (
                 <li
                   key={item.step}

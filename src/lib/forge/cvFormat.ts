@@ -53,6 +53,7 @@ export function buildCvFromDraft(draft: {
   location: string;
   summary: string;
   skills: string;
+  photoDataUrl?: string | null;
   experience: Array<{
     company: string;
     position: string;
@@ -97,6 +98,7 @@ export function buildCvFromDraft(draft: {
     skills,
     education,
     rawLength: 0,
+    photoDataUrl: draft.photoDataUrl || null,
   };
   cv.rawLength = parsedCvToText(cv).length;
   return cv;

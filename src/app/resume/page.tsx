@@ -35,7 +35,31 @@ export default function ResumePage() {
           </div>
           <Button
             variant="outline"
-            onClick={() => toast.message("Export is demo-only — copy from the preview for now.")}
+            onClick={async () => {
+              const { exportCvAsPdf } = await import("@/lib/forge");
+              await exportCvAsPdf({
+                name: resume.fullName,
+                title: resume.headline,
+                email: resume.email,
+                phone: null,
+                location: resume.location,
+                summary: resume.summary,
+                experience: resume.experience.map((e) => ({
+                  company: e.company,
+                  position: e.role,
+                  duration: `${e.start} – ${e.end}`,
+                  description: e.highlights,
+                })),
+                skills: resume.skills,
+                education: resume.education.map((e) => ({
+                  school: e.school,
+                  degree: e.degree,
+                  year: e.year,
+                })),
+                rawLength: 0,
+              });
+              toast.success("Professional PDF downloaded.");
+            }}
           >
             <Download className="w-4 h-4" /> Export PDF
           </Button>

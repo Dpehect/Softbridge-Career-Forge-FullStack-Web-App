@@ -79,7 +79,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
               disabled={applied}
               onClick={() => {
                 applyToJob(job.id);
-                toast.success(applied ? "Already applied" : "Application submitted (demo)");
+                toast.success(applied ? "Already applied" : "Application saved to your dashboard");
               }}
             >
               {applied ? (

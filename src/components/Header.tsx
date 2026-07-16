@@ -28,9 +28,9 @@ export function Header() {
       initial={{ y: -10, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed top-0 left-0 right-0 z-50 p-2"
+      className="fixed top-0 left-0 right-0 z-50 p-3"
     >
-      <div className="max-w-6xl mx-auto glass-panel rounded-2xl px-3.5 py-2 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto glass-panel rounded-2xl px-4 py-2.5 flex items-center justify-between shadow-[0_12px_40px_rgba(44,24,16,0.06)]">
         <Link href="/" className="flex items-center gap-2 group" onClick={() => setOpen(false)}>
           <div className="w-7 h-7 rounded-lg border border-black/10 flex items-center justify-center bg-black/[0.02] group-hover:border-cosmic-teal/40 transition-colors">
             <Anvil className="w-3.5 h-3.5 text-cosmic-teal" />

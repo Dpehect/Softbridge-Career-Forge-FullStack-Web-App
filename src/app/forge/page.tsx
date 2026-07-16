@@ -19,13 +19,14 @@ import {
   PenLine,
   Briefcase,
   ExternalLink,
+  FileDown,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { StatPill } from "@/components/StatPill";
 import { FilePickButton } from "@/components/FilePickButton";
+import { CvWizard } from "@/components/CvWizard";
 import { useCareerStore } from "@/store/useCareerStore";
 import {
   parseCV,
@@ -39,10 +40,10 @@ import {
   cleanExtractedText,
   looksLikeRawPdf,
   parsedCvToText,
-  buildCvFromDraft,
   downloadTextFile,
   downloadJsonFile,
   getJobRecommendations,
+  exportCvAsPdf,
   type CoverLetterTone,
   type OptimizedCV,
   type CoverLetterResult,
@@ -50,6 +51,7 @@ import {
   type ChatbotResult,
   type AtsResult,
   type JobRecommendation,
+  type ParsedCV,
 } from "@/lib/forge";
 import { cn } from "@/lib/utils";
 
@@ -153,17 +155,6 @@ export default function ForgePage() {
   const [lastCvFileName, setLastCvFileName] = useState<string | null>(null);
   const [jobRecs, setJobRecs] = useState<JobRecommendation[]>([]);
   const [jobNote, setJobNote] = useState("");
-  const [draft, setDraft] = useState({
-    name: "",
-    title: "",
-    email: "",
-    phone: "",
-    location: "",
-    summary: "",
-    skills: "",
-    experience: [{ company: "", position: "", duration: "", bullets: "" }],
-    education: [{ school: "", degree: "", year: "" }],
-  });
 
   const cvText = forgeCvText;
   const jdText = forgeJdText;
@@ -295,13 +286,7 @@ export default function ForgePage() {
     toast.success("Backup saved in the app and downloaded to your computer.");
   };
 
-  const onCreateCv = () => {
-    if (!draft.name.trim() || !draft.title.trim()) {
-      toast.error("Name and title are required.");
-      return;
-    }
-    const cv = buildCvFromDraft(draft);
-    const text = parsedCvToText(cv);
+  const onWizardComplete = (cv: ParsedCV, text: string) => {
     setForgeCvText(text);
     setForgeParsedCv(cv);
     setParseBanner(READY_MSG);
@@ -312,6 +297,20 @@ export default function ForgePage() {
     });
     toast.success(READY_MSG);
     setTab("parse");
+  };
+
+  const onExportPdf = async () => {
+    const parsed = ensureParsed();
+    if (!parsed) return;
+    try {
+      setBusy(true);
+      await exportCvAsPdf(parsed);
+      toast.success("Professional PDF downloaded.");
+    } catch {
+      toast.error("Could not export PDF. Try again.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const onJobRecs = () => {
@@ -456,10 +455,10 @@ export default function ForgePage() {
             <Anvil className="w-8 h-8 text-cosmic-teal" />
             Forge
           </h1>
-          <p className="text-muted-steel mt-2 max-w-2xl">
-            Hi — I&apos;m Forge from SoftBridge CareerForge (SoftBridge Solutions). Paste a CV or choose
-            PDF/TXT, compare to a job, improve for ATS, write a cover letter, or practice interviews.
-            Everything stays local in your browser.
+          <p className="text-muted-steel mt-2 max-w-2xl leading-relaxed">
+            Hi — I&apos;m Forge from SoftBridge CareerForge (SoftBridge Solutions). Build or upload a
+            CV, match jobs, optimize for ATS, export a polished PDF, and prepare for interviews —
+            private to your browser.
           </p>
           <a
             href="https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main"
@@ -500,14 +499,14 @@ export default function ForgePage() {
                     });
                   }}
                 >
-                  Örnek
+                  Sample
                 </Button>
               </div>
             </div>
             <p className="text-[11px] text-muted-steel">
-              Metin yapıştır veya <strong>Bilgisayardan CV Seç</strong> / <strong>Klasöre Göz At</strong>{" "}
-              (PDF, TXT). Sürükle-bırak yok — dosya penceresinde klasörlere tıklayarak gez. Seçim sonrası
-              otomatik parse edilir.
+              Paste text or use <strong>Choose CV from computer</strong> /{" "}
+              <strong>Browse folders</strong> (PDF, TXT). Click to open the system file window — no
+              drag-and-drop required. Files auto-parse after selection.
             </p>
             <Textarea
               value={cvText}
@@ -534,10 +533,10 @@ export default function ForgePage() {
                   variant="ghost"
                   onClick={() => {
                     setForgeJdText(SAMPLE_JD);
-                    toast.message("Örnek JD yüklendi");
+                    toast.message("Sample job ad loaded");
                   }}
                 >
-                  Örnek
+                  Sample
                 </Button>
               </div>
             </div>
@@ -577,6 +576,9 @@ export default function ForgePage() {
           </Button>
           <Button variant="soft" disabled={busy} onClick={onBackupCv}>
             <Save className="w-4 h-4" /> Backup CV
+          </Button>
+          <Button variant="outline" disabled={busy} onClick={() => void onExportPdf()}>
+            <FileDown className="w-4 h-4" /> Export PDF
           </Button>
           <Button variant="ghost" disabled={busy} onClick={onClearCv}>
             <RotateCcw className="w-4 h-4" /> Clear CV
@@ -681,15 +683,28 @@ export default function ForgePage() {
                 </p>
               ) : (
                 <>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="accent">Parse sonucu</Badge>
-                    <span className="text-xs text-muted-steel">Yapılandırılmış görünüm</span>
+                  <div className="flex flex-wrap items-center gap-2 justify-between">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="accent">Structured CV</Badge>
+                      <span className="text-xs text-muted-steel">Ready for jobs & export</span>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => void onExportPdf()}>
+                      <FileDown className="w-4 h-4" /> Export PDF
+                    </Button>
                   </div>
+                  {forgeParsedCv.photoDataUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={forgeParsedCv.photoDataUrl}
+                      alt=""
+                      className="w-16 h-16 rounded-2xl object-cover border border-black/8"
+                    />
+                  )}
                   <div className="flex flex-wrap gap-2">
-                    <StatPill label="Ad" value={forgeParsedCv.name} />
-                    <StatPill label="Unvan" value={forgeParsedCv.title} />
-                    <StatPill label="Beceri" value={forgeParsedCv.skills.length} />
-                    <StatPill label="Deneyim" value={forgeParsedCv.experience.length} />
+                    <StatPill label="Name" value={forgeParsedCv.name} />
+                    <StatPill label="Title" value={forgeParsedCv.title} />
+                    <StatPill label="Skills" value={forgeParsedCv.skills.length} />
+                    <StatPill label="Roles" value={forgeParsedCv.experience.length} />
                   </div>
                   <div className="grid md:grid-cols-2 gap-4 text-sm">
                     <div>
@@ -761,148 +776,7 @@ export default function ForgePage() {
           )}
 
           {tab === "create" && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-lg">Create CV from scratch</h2>
-              <p className="text-sm text-muted-steel">
-                Fill the form step by step. We build a clean CV you can optimize and match to jobs.
-              </p>
-              <div className="grid md:grid-cols-2 gap-3">
-                <Input
-                  placeholder="Full name *"
-                  value={draft.name}
-                  onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
-                />
-                <Input
-                  placeholder="Title * (e.g. Frontend Engineer)"
-                  value={draft.title}
-                  onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-                />
-                <Input
-                  placeholder="Email"
-                  value={draft.email}
-                  onChange={(e) => setDraft((d) => ({ ...d, email: e.target.value }))}
-                />
-                <Input
-                  placeholder="Phone"
-                  value={draft.phone}
-                  onChange={(e) => setDraft((d) => ({ ...d, phone: e.target.value }))}
-                />
-                <Input
-                  placeholder="Location"
-                  value={draft.location}
-                  onChange={(e) => setDraft((d) => ({ ...d, location: e.target.value }))}
-                />
-                <Input
-                  placeholder="Skills (comma separated)"
-                  value={draft.skills}
-                  onChange={(e) => setDraft((d) => ({ ...d, skills: e.target.value }))}
-                />
-              </div>
-              <Textarea
-                placeholder="Short summary"
-                value={draft.summary}
-                onChange={(e) => setDraft((d) => ({ ...d, summary: e.target.value }))}
-                className="min-h-[80px]"
-              />
-              <div className="space-y-3">
-                <p className="text-[10px] font-bold uppercase text-muted-steel">Experience</p>
-                {draft.experience.map((exp, i) => (
-                  <div key={i} className="rounded-xl border border-black/8 p-3 space-y-2">
-                    <div className="grid md:grid-cols-3 gap-2">
-                      <Input
-                        placeholder="Position"
-                        value={exp.position}
-                        onChange={(e) => {
-                          const experience = [...draft.experience];
-                          experience[i] = { ...exp, position: e.target.value };
-                          setDraft((d) => ({ ...d, experience }));
-                        }}
-                      />
-                      <Input
-                        placeholder="Company"
-                        value={exp.company}
-                        onChange={(e) => {
-                          const experience = [...draft.experience];
-                          experience[i] = { ...exp, company: e.target.value };
-                          setDraft((d) => ({ ...d, experience }));
-                        }}
-                      />
-                      <Input
-                        placeholder="Duration (2022 – Present)"
-                        value={exp.duration}
-                        onChange={(e) => {
-                          const experience = [...draft.experience];
-                          experience[i] = { ...exp, duration: e.target.value };
-                          setDraft((d) => ({ ...d, experience }));
-                        }}
-                      />
-                    </div>
-                    <Textarea
-                      placeholder="One achievement per line"
-                      value={exp.bullets}
-                      onChange={(e) => {
-                        const experience = [...draft.experience];
-                        experience[i] = { ...exp, bullets: e.target.value };
-                        setDraft((d) => ({ ...d, experience }));
-                      }}
-                      className="min-h-[70px]"
-                    />
-                  </div>
-                ))}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() =>
-                    setDraft((d) => ({
-                      ...d,
-                      experience: [
-                        ...d.experience,
-                        { company: "", position: "", duration: "", bullets: "" },
-                      ],
-                    }))
-                  }
-                >
-                  + Add experience
-                </Button>
-              </div>
-              <div className="space-y-3">
-                <p className="text-[10px] font-bold uppercase text-muted-steel">Education</p>
-                {draft.education.map((edu, i) => (
-                  <div key={i} className="grid md:grid-cols-3 gap-2">
-                    <Input
-                      placeholder="School"
-                      value={edu.school}
-                      onChange={(e) => {
-                        const education = [...draft.education];
-                        education[i] = { ...edu, school: e.target.value };
-                        setDraft((d) => ({ ...d, education }));
-                      }}
-                    />
-                    <Input
-                      placeholder="Degree"
-                      value={edu.degree}
-                      onChange={(e) => {
-                        const education = [...draft.education];
-                        education[i] = { ...edu, degree: e.target.value };
-                        setDraft((d) => ({ ...d, education }));
-                      }}
-                    />
-                    <Input
-                      placeholder="Year"
-                      value={edu.year}
-                      onChange={(e) => {
-                        const education = [...draft.education];
-                        education[i] = { ...edu, year: e.target.value };
-                        setDraft((d) => ({ ...d, education }));
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-              <Button variant="accent" onClick={onCreateCv}>
-                Build my CV
-              </Button>
-            </div>
+            <CvWizard onComplete={onWizardComplete} />
           )}
 
           {tab === "jobs" && (
