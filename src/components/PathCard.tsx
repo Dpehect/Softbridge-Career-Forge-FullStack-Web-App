@@ -51,7 +51,8 @@ export function PathCard({ path, index = 0 }: { path: CareerPath; index?: number
                   cx="20"
                   cy="20"
                   r={radius}
-                  className="stroke-cosmic-teal fill-transparent transition-all duration-500"
+                  className="fill-transparent transition-all duration-500"
+                  stroke={path.color || "#A855F7"}
                   strokeWidth="3"
                   strokeDasharray={circumference}
                   strokeDashoffset={strokeDashoffset}
@@ -68,7 +69,7 @@ export function PathCard({ path, index = 0 }: { path: CareerPath; index?: number
       <p className="text-[10px] font-bold uppercase tracking-wider text-muted-steel mb-1">
         {path.track}
       </p>
-      <h3 className="font-display font-semibold text-lg mb-2 group-hover:text-cosmic-teal transition-colors text-star-white">
+      <h3 className="font-display font-semibold text-lg mb-2 transition-colors text-star-white group-hover:text-cosmic-teal">
         {path.title}
       </h3>
       <p className="text-sm text-muted-steel leading-relaxed flex-1">{path.summary}</p>
@@ -80,7 +81,8 @@ export function PathCard({ path, index = 0 }: { path: CareerPath; index?: number
         </span>
         <Link
           href={`/paths/${path.id}`}
-          className="inline-flex items-center gap-1 text-sm font-semibold text-cosmic-teal hover:gap-2 transition-all cursor-pointer"
+          className="inline-flex items-center gap-1 text-sm font-semibold hover:gap-2 transition-all cursor-pointer"
+          style={{ color: path.color || "#A855F7" }}
         >
           {lang === "tr" ? "Yola Git" : "Open path"} <ArrowUpRight className="w-4 h-4" />
         </Link>

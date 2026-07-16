@@ -132,10 +132,7 @@ export default function HomePage() {
               <Link
                 href="/forge"
                 className="inline-flex h-12 items-center gap-2 rounded-2xl px-6 text-sm font-bold text-white transition-all hover:scale-105 hover:shadow-2xl"
-                style={{
-                  background: "linear-gradient(135deg, #6D28D9, #9333EA, #F472B6)",
-                  boxShadow: "0 8px 32px rgba(109,40,217,0.4)",
-                }}
+                style={{ background: "linear-gradient(135deg, #6B21A8, #C026D3, #F97316)", boxShadow: "0 8px 32px rgba(107,33,168,0.4)" }}
               >
                 {isTR ? "Forge'u Aç" : "Open Forge"} <ArrowRight className="w-4 h-4" />
               </Link>
@@ -153,7 +150,7 @@ export default function HomePage() {
             {stats.map((s) => (
               <div key={s.label} className="glass-panel rounded-2xl p-4 text-center space-y-1.5 hover:scale-105 transition-transform">
                 <div className="w-8 h-8 rounded-xl mx-auto flex items-center justify-center"
-                  style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.15), rgba(244,114,182,0.15))" }}>
+                    style={{ background: "linear-gradient(135deg, rgba(107,33,168,0.15), rgba(249,115,22,0.15))" }}>
                   <s.icon className="w-4 h-4 text-cosmic-teal" />
                 </div>
                 <p className="font-bold text-sm text-star-white">{s.label}</p>

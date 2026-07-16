@@ -114,7 +114,8 @@ export default function ForgePage() {
   if (!mounted) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-cosmic-teal border-t-transparent animate-spin" />
+        <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
+          style={{ borderColor: "#A855F7", borderTopColor: "transparent" }} />
       </div>
     );
   }
@@ -369,13 +370,18 @@ export default function ForgePage() {
         {/* Workspace Title & Intro */}
         <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <Badge variant="accent" className="mb-2">SoftBridge · Workspace</Badge>
-            <h1 className="font-display text-3xl font-bold tracking-tight">{t("forgeTitle")}</h1>
+            <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full text-xs font-bold"
+              style={{ background: "rgba(168,85,247,0.12)", color: "#A855F7" }}>
+              <Anvil className="w-3.5 h-3.5" />
+              SoftBridge · Workspace
+            </div>
+            <h1 className="font-display text-3xl font-bold tracking-tight text-star-white">{t("forgeTitle")}</h1>
             <p className="text-sm text-muted-steel mt-1 max-w-xl leading-relaxed">{t("forgeDesc")}</p>
           </div>
           {forgeParsedCv && (
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" onClick={onExportPdf}>
+              <Button size="sm" variant="outline" onClick={onExportPdf}
+                className="border-cosmic-teal/30 text-star-white hover:bg-cosmic-teal/8">
                 <FileDown className="w-4 h-4 mr-1.5" /> {t("exportPdf")}
               </Button>
               <Button size="sm" variant="ghost" className="text-sunset-coral hover:bg-sunset-coral/5" onClick={onClearCv}>
@@ -392,39 +398,28 @@ export default function ForgePage() {
           <div className="flex flex-col gap-4">
             
             {/* Editor Tabs Navigation */}
-            <div className="flex gap-1.5 p-1 rounded-xl bg-panel-elevated/70 border border-black/5">
-              <button
-                onClick={() => setEditorTab("raw")}
-                className={cn(
-                  "flex-1 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                  editorTab === "raw" ? "bg-star-white text-midnight-void" : "text-muted-steel hover:text-star-white"
-                )}
-              >
-                📝 Raw Text / Import
-              </button>
-              <button
-                onClick={() => setEditorTab("form")}
-                disabled={!forgeParsedCv}
-                className={cn(
-                  "flex-1 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50",
-                  editorTab === "form" ? "bg-star-white text-midnight-void" : "text-muted-steel hover:text-star-white"
-                )}
-              >
-                ✍️ Structured Form
-              </button>
-              <button
-                onClick={() => setEditorTab("versions")}
-                className={cn(
-                  "flex-1 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                  editorTab === "versions" ? "bg-star-white text-midnight-void" : "text-muted-steel hover:text-star-white"
-                )}
-              >
-                📂 Backups ({forgeBackups.length})
-              </button>
+            <div className="flex gap-1 p-1 rounded-2xl" style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.12)" }}>
+              {([
+                ["raw",      "📝", "Import / Paste"],
+                ["form",     "✍️",  "Structured Editor"],
+                ["versions", "📂", `Backups (${forgeBackups.length})`],
+              ] as const).map(([id, emoji, label]) => (
+                <button key={id}
+                  onClick={() => setEditorTab(id as EditorTabId)}
+                  disabled={id === "form" && !forgeParsedCv}
+                  className="flex-1 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer disabled:opacity-40"
+                  style={editorTab === id
+                    ? { background: "linear-gradient(135deg,#6B21A8,#A855F7)", color: "white", boxShadow: "0 4px 12px rgba(107,33,168,0.3)" }
+                    : { color: "var(--text-muted)" }}
+                >
+                  {emoji} {label}
+                </button>
+              ))}
             </div>
 
             {/* Editor Content Area */}
-            <div className="glass-panel rounded-3xl p-5 border border-cosmic-teal/10 min-h-[460px]">
+            <div className="glass-panel rounded-3xl p-5 min-h-[460px]"
+              style={{ border: "1px solid rgba(168,85,247,0.12)" }}>
               
               {/* Tab 1: Raw Text & File Pickers */}
               {editorTab === "raw" && (
@@ -449,8 +444,10 @@ export default function ForgePage() {
                     placeholder="Paste CV text here (e.g. John Doe, Software Engineer, React)..."
                     className="min-h-[220px] font-mono text-xs leading-relaxed"
                   />
-                  <Button variant="soft" className="w-full" disabled={busy || !cvText.trim()} onClick={onParse}>
-                    {busy ? "Parsing CV..." : t("analyzePasteBtn")}
+                  <Button variant="soft" className="w-full text-white font-bold" disabled={busy || !cvText.trim()} onClick={onParse}
+                    style={{ background: cvText.trim() ? "linear-gradient(135deg,#6B21A8,#A855F7)" : undefined,
+                      boxShadow: cvText.trim() ? "0 4px 16px rgba(107,33,168,0.35)" : undefined }}>
+                    {busy ? "Parsing CV…" : t("analyzePasteBtn")}
                   </Button>
                   {lastCvFileName && (
                     <p className="text-xs text-muted-steel">
@@ -458,9 +455,10 @@ export default function ForgePage() {
                     </p>
                   )}
                   {parseBanner && (
-                    <div className="rounded-xl bg-cosmic-teal/10 border border-cosmic-teal/20 p-3 text-xs">
-                      <p className="font-semibold text-cosmic-teal">{parseBanner}</p>
-                      <p className="mt-0.5 text-muted-steel">Switch to **Structured Form** tab to edit fields directly!</p>
+                    <div className="rounded-xl p-3 text-xs"
+                      style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.2)" }}>
+                      <p className="font-semibold" style={{ color: "#A855F7" }}>{parseBanner}</p>
+                      <p className="mt-0.5 text-muted-steel">Switch to <strong>Structured Form</strong> to edit fields!</p>
                     </div>
                   )}
                 </div>
@@ -470,9 +468,9 @@ export default function ForgePage() {
               {editorTab === "form" && forgeParsedCv && (
                 <div className="space-y-4 max-h-[550px] overflow-y-auto pr-1">
                   
-                  {/* Photo & Basics */}
+                  {/* Personal Info */}
                   <div className="space-y-3">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-cosmic-teal">{t("personalInfo")}</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: "#A855F7" }}>{t("personalInfo")}</h4>
                     <div className="flex gap-3 items-center">
                       <div className="w-12 h-12 rounded-full bg-abyss-panel overflow-hidden border flex items-center justify-center shrink-0 relative group">
                         {forgeParsedCv.photoDataUrl ? (
@@ -481,6 +479,7 @@ export default function ForgePage() {
                         ) : (
                           <Camera className="w-4 h-4 text-muted-steel" />
                         )}
+
                         <input
                           type="file"
                           accept="image/*"
@@ -707,32 +706,32 @@ export default function ForgePage() {
           <div className="flex flex-col gap-4">
             
             {/* Tool tab links */}
-            <div className="flex flex-wrap gap-1 p-1 rounded-xl bg-panel-elevated/70 border border-black/5">
+            <div className="flex flex-wrap gap-1 p-1 rounded-2xl" style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.12)" }}>
               {(
                 [
-                  ["preview", "👁️ Live Preview"],
-                  ["feedback", "🎯 ATS & feedback"],
-                  ["match", "🤝 Match JD"],
-                  ["cover", "✉️ Cover letter"],
-                  ["interview", "🗣️ Interview Prep"],
-                  ["chat", "💬 Coach Chat"],
+                  ["preview", "👁️", "Preview"],
+                  ["feedback", "🎯", "ATS Check"],
+                  ["match", "🤝", "Match JD"],
+                  ["cover", "✉️", "Cover Letter"],
+                  ["interview", "🗣️", "Interview"],
+                  ["chat", "💬", "Coach Chat"],
                 ] as const
-              ).map(([id, label]) => (
+              ).map(([id, emoji, label]) => (
                 <button
                   key={id}
                   onClick={() => setPreviewTab(id)}
-                  className={cn(
-                    "px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors",
-                    previewTab === id ? "bg-cosmic-teal text-midnight-void" : "text-muted-steel hover:text-star-white"
-                  )}
+                  className="flex-1 px-2 py-1.5 rounded-xl text-[11px] font-semibold cursor-pointer transition-all whitespace-nowrap"
+                  style={previewTab === id
+                    ? { background: "linear-gradient(135deg,#6B21A8,#A855F7)", color: "white", boxShadow: "0 4px 12px rgba(107,33,168,0.3)" }
+                    : { color: "var(--text-muted)" }}
                 >
-                  {label}
+                  {emoji} {label}
                 </button>
               ))}
             </div>
 
             {/* Tool Output Window */}
-            <div className="glass-panel rounded-3xl p-6 border border-cosmic-teal/10 min-h-[460px]">
+            <div className="glass-panel rounded-3xl p-6 min-h-[460px]" style={{ border: "1px solid rgba(168,85,247,0.12)" }}>
               {aiError && (
                 <div className="rounded-xl border border-sunset-coral/20 bg-sunset-coral/10 px-4 py-3 mb-4 text-xs text-sunset-coral">
                   ⚠️ {aiError}
@@ -751,8 +750,8 @@ export default function ForgePage() {
                     <div className="bg-white text-slate-800 p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm max-w-full font-sans leading-relaxed text-left">
                       <div className="flex justify-between items-center border-b border-slate-200 pb-4 mb-4">
                         <div>
-                          <h2 className="text-2xl font-bold text-slate-900 leading-tight">{forgeParsedCv.name}</h2>
-                          <p className="text-sm font-semibold text-sky-600 mt-0.5">{forgeParsedCv.title || "Software Professional"}</p>
+                          <p className="text-sm font-semibold text-slate-900 leading-tight">{forgeParsedCv.name}</p>
+                          <p className="text-sm font-semibold mt-0.5" style={{ color: "#6B21A8" }}>{forgeParsedCv.title || "Software Professional"}</p>
                           <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 mt-2">
                             {forgeParsedCv.email && <span>✉ {forgeParsedCv.email}</span>}
                             {forgeParsedCv.phone && <span>📞 {forgeParsedCv.phone}</span>}
@@ -771,14 +770,14 @@ export default function ForgePage() {
 
                       {forgeParsedCv.summary && (
                         <div className="mb-4">
-                          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 border-sky-500 pl-2 mb-2">Summary</h3>
+                           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 pl-2 mb-2" style={{ borderColor: "#6B21A8" }}>Summary</h3>
                           <p className="text-xs text-slate-600 text-justify">{forgeParsedCv.summary}</p>
                         </div>
                       )}
 
                       {forgeParsedCv.experience && forgeParsedCv.experience.length > 0 && (
                         <div className="mb-4">
-                          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 border-sky-500 pl-2 mb-2.5">Experience</h3>
+                           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 pl-2 mb-2.5" style={{ borderColor: "#6B21A8" }}>Experience</h3>
                           <div className="space-y-3">
                             {forgeParsedCv.experience.map((exp, idx) => (
                               <div key={idx} className="text-xs">
@@ -786,7 +785,7 @@ export default function ForgePage() {
                                   <span>{exp.position}</span>
                                   <span className="text-slate-400 font-normal">{exp.duration}</span>
                                 </div>
-                                <p className="text-sky-600 font-medium my-0.5">{exp.company}</p>
+                                 <p className="font-medium my-0.5" style={{ color: "#6B21A8" }}>{exp.company}</p>
                                 {exp.description && exp.description.length > 0 && (
                                   <ul className="list-disc list-inside pl-2 space-y-0.5 text-slate-500">
                                     {exp.description.map((b, bIdx) => (
@@ -802,7 +801,7 @@ export default function ForgePage() {
 
                       {forgeParsedCv.skills && forgeParsedCv.skills.length > 0 && (
                         <div className="mb-4">
-                          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 border-sky-500 pl-2 mb-2">Skills</h3>
+                           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 pl-2 mb-2" style={{ borderColor: "#6B21A8" }}>Skills</h3>
                           <div className="flex flex-wrap gap-1">
                             {forgeParsedCv.skills.map((s, idx) => (
                               <span key={idx} className="bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] font-medium">{s}</span>
@@ -813,7 +812,7 @@ export default function ForgePage() {
 
                       {forgeParsedCv.education && forgeParsedCv.education.length > 0 && (
                         <div>
-                          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 border-sky-500 pl-2 mb-2">Education</h3>
+                           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 pl-2 mb-2" style={{ borderColor: "#6B21A8" }}>Education</h3>
                           <div className="space-y-2">
                             {forgeParsedCv.education.map((edu, idx) => (
                               <div key={idx} className="text-xs">
@@ -849,7 +848,7 @@ export default function ForgePage() {
                     <div className="space-y-4">
                       {/* ATS Score display */}
                       <div className="flex gap-4 items-center bg-panel-elevated/55 p-4 rounded-2xl border border-black/5">
-                        <div className="w-16 h-16 rounded-full border-4 border-cosmic-teal flex items-center justify-center font-bold text-lg text-cosmic-teal">
+                        <div className="w-16 h-16 rounded-full border-4 flex items-center justify-center font-bold text-lg" style={{ borderColor: "#A855F7", color: "#A855F7" }}>
                           {ats.atsScore}%
                         </div>
                         <div>
@@ -928,7 +927,7 @@ export default function ForgePage() {
                   {forgeAnalysis && (
                     <div className="space-y-3 pt-2">
                       <div className="flex items-center gap-4 bg-panel-elevated/50 p-4 rounded-xl border border-black/5">
-                        <div className="w-16 h-16 rounded-full border-4 border-cosmic-teal flex items-center justify-center font-bold text-base text-cosmic-teal">
+                        <div className="w-16 h-16 rounded-full border-4 flex items-center justify-center font-bold text-base" style={{ borderColor: "#A855F7", color: "#A855F7" }}>
                           {forgeAnalysis.matchScore}%
                         </div>
                         <div>

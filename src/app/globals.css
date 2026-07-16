@@ -34,37 +34,37 @@
   --text-primary:  #1A0A2E;
   --text-secondary:#5B3F8C;
   --text-muted:    #7C6A9A;
-  --accent:        #6D28D9;   /* Deep Purple */
-  --accent-hover:  #5B21B6;
+  --accent:        #6B21A8;   /* Deep Purple/Magenta */
+  --accent-hover:  #581C87;
   --accent-dark:   #4C1D95;
-  --accent-2:      #F472B6;   /* Coral/Pink */
+  --accent-2:      #F97316;   /* Vibrant Orange/Coral */
   --accent-3:      #4ADE80;   /* Soft Green */
-  --grid-line:     rgba(109, 40, 217, 0.06);
+  --grid-line:     rgba(107, 33, 168, 0.06);
   --glass-bg:      rgba(255, 255, 255, 0.72);
-  --border-color:  rgba(109, 40, 217, 0.10);
-  --glow-purple:   rgba(109, 40, 217, 0.18);
-  --glow-coral:    rgba(244, 114, 182, 0.20);
+  --border-color:  rgba(107, 33, 168, 0.10);
+  --glow-purple:   rgba(107, 33, 168, 0.18);
+  --glow-coral:    rgba(249, 115, 22, 0.20);
   --glow-green:    rgba(74, 222, 128, 0.20);
 }
 
 /* ─── Dark Mode ──────────────────────────────────────────────────────────── */
 .dark {
-  --background:    #0F0F0F;
-  --panel:         #1A1A2E;
-  --text-primary:  #F5F0FF;
-  --text-secondary:#C4B5E8;
-  --text-muted:    #9580B8;
-  --accent:        #7C3AED;   /* Vivid Purple */
-  --accent-hover:  #6D28D9;
-  --accent-dark:   #5B21B6;
-  --accent-2:      #FB7185;   /* Rose/Coral */
-  --accent-3:      #22C55E;   /* Green */
-  --grid-line:     rgba(124, 58, 237, 0.06);
-  --glass-bg:      rgba(26, 26, 46, 0.78);
-  --border-color:  rgba(124, 58, 237, 0.14);
-  --glow-purple:   rgba(124, 58, 237, 0.22);
-  --glow-coral:    rgba(251, 113, 133, 0.22);
-  --glow-green:    rgba(34, 197, 94, 0.22);
+  --background:    #111827;   /* Deep charcoal */
+  --panel:         #1F1535;   /* Rich dark purple-tinted panel */
+  --text-primary:  #F9F5FF;
+  --text-secondary:#D4BBFF;
+  --text-muted:    #9D7ECA;
+  --accent:        #A855F7;   /* Bright Purple */
+  --accent-hover:  #9333EA;
+  --accent-dark:   #7C3AED;
+  --accent-2:      #FB923C;   /* Bright Orange */
+  --accent-3:      #4ADE80;   /* Green */
+  --grid-line:     rgba(168, 85, 247, 0.06);
+  --glass-bg:      rgba(31, 21, 53, 0.82);
+  --border-color:  rgba(168, 85, 247, 0.14);
+  --glow-purple:   rgba(168, 85, 247, 0.25);
+  --glow-coral:    rgba(251, 146, 60, 0.25);
+  --glow-green:    rgba(74, 222, 128, 0.22);
 }
 
 /* ─── Base ────────────────────────────────────────────────────────────────── */
@@ -133,7 +133,7 @@ body::before {
     0 8px 32px var(--glow-coral);
 }
 
-/* Gradient text — purple to coral */
+/* Gradient text — purple to orange */
 @utility gradient-text {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
   -webkit-background-clip: text;
@@ -141,9 +141,9 @@ body::before {
   background-clip: text;
 }
 
-/* Gradient button background */
+/* Gradient button */
 @utility gradient-accent {
-  background: linear-gradient(135deg, var(--accent) 0%, #9333EA 50%, var(--accent-2) 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, #C026D3 50%, var(--accent-2) 100%);
 }
 
 @utility text-balance {

@@ -116,7 +116,7 @@ export function Header() {
           <Link href="/" className="flex items-center gap-2.5 group shrink-0" onClick={() => setOpen(false)}>
             <div
               className="w-8 h-8 rounded-xl flex items-center justify-center shadow-lg transition-all group-hover:scale-105"
-              style={{ background: "linear-gradient(135deg, #7C3AED, #F472B6)", boxShadow: "0 8px 20px rgba(124,58,237,0.4)" }}
+              style={{ background: "linear-gradient(135deg, #6B21A8, #F97316)", boxShadow: "0 8px 20px rgba(107,33,168,0.4)" }}
             >
               <Zap className="w-4 h-4 text-white" />
             </div>
@@ -145,7 +145,7 @@ export function Header() {
                     <motion.div
                       layoutId="active-nav-pill"
                       className="absolute inset-0 rounded-xl -z-10"
-                      style={{ background: "linear-gradient(135deg, #6D28D9, #9333EA)" }}
+                      style={{ background: "linear-gradient(135deg, #F97316, #D97706)" }}
                       transition={{ type: "spring", stiffness: 380, damping: 32 }}
                     />
                   )}
@@ -218,8 +218,8 @@ export function Header() {
               href="/forge"
               className="hidden sm:inline-flex h-8 items-center rounded-xl px-3.5 text-[11px] font-bold text-white transition-all hover:scale-105 hover:shadow-lg"
               style={{
-                background: "linear-gradient(135deg, #6D28D9, #9333EA, #F472B6)",
-                boxShadow: "0 4px 16px rgba(109,40,217,0.35)",
+                background: "linear-gradient(135deg, #6B21A8, #C026D3, #F97316)",
+                boxShadow: "0 4px 16px rgba(107,33,168,0.35)",
               }}
             >
               {t("openForge")}
@@ -260,7 +260,7 @@ export function Header() {
                         ? "text-white"
                         : "text-muted-steel hover:text-star-white hover:bg-cosmic-teal/5"
                     )}
-                    style={isActive ? { background: "linear-gradient(135deg, #6D28D9, #9333EA)" } : {}}
+                    style={isActive ? { background: "linear-gradient(135deg, #6B21A8, #A855F7)" } : {}}
                   >
                     <Icon className="w-4 h-4" />
                     {getNavName(link.name)}
@@ -312,7 +312,7 @@ export function Header() {
                 <motion.div
                   layoutId="bottom-nav-dot"
                   className="absolute -top-1 w-5 h-0.5 rounded-full"
-                  style={{ background: "linear-gradient(90deg, #7C3AED, #F472B6)" }}
+                  style={{ background: "linear-gradient(90deg, #6B21A8, #F97316)" }}
                 />
               )}
               <Icon className={cn("w-5 h-5 transition-colors", isActive ? "text-cosmic-teal" : "text-muted-steel")} />
