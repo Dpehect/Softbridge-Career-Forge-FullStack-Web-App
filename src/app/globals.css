@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-midnight-void: #fdf0e6;
+  --color-abyss-panel: #f8e4d3;
+  --color-cosmic-teal: #e85d3b;
+  --color-sunset-coral: #d94f2e;
+  --color-muted-steel: #7a4633;
+  --color-star-white: #5c2e1f;
+  --color-grid-line: rgba(232, 93, 59, 0.08);
+  --color-deep-void: var(--color-midnight-void);
+  --color-abyss-black: var(--color-abyss-panel);
+  --color-electric-cyan: var(--color-cosmic-teal);
+  --color-nebula-slate: var(--color-muted-steel);
+  --color-solar-pink: var(--color-sunset-coral);
+  --color-cosmic-purple: #a44932;
+  --color-glassy-night: rgba(92, 46, 31, 0.06);
+  --color-panel-elevated: #fff8f2;
+  --color-ink-soft: rgba(92, 46, 31, 0.62);
+
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", system-ui, sans-serif;
+  --font-heading: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "Segoe UI", system-ui, sans-serif;
+  --font-display: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "Segoe UI", system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), "SF Mono", ui-monospace, monospace;
+
+  --animate-float-slow: float-slow 8s ease-in-out infinite;
+  --animate-pulse-soft: pulse-soft 2.4s ease-in-out infinite;
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+html,
+body {
+  background-color: var(--color-midnight-void);
+  color: var(--color-star-white);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-midnight-void);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(232, 93, 59, 0.18);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-cosmic-teal);
+}
+
+@utility mesh-bg {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(253, 240, 230, 0) 36%),
+    linear-gradient(to right, rgba(232, 93, 59, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(232, 93, 59, 0.04) 1px, transparent 1px);
+  background-size: auto, 42px 42px, 42px 42px;
+}
+
+@utility glass-panel {
+  background: color-mix(in srgb, var(--color-panel-elevated) 86%, transparent);
+  border: 1px solid rgba(92, 46, 31, 0.06);
+  backdrop-filter: blur(12px);
+}
+
+@utility text-balance {
+  text-wrap: balance;
+}
