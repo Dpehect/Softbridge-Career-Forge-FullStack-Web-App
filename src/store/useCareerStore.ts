@@ -121,7 +121,7 @@ export const useCareerStore = create<CareerState>()(
     (set, get) => ({
       lang: "tr",
       setLang: (lang) => set({ lang }),
-      theme: "dark",
+      theme: "light",
       setTheme: (theme) => set({ theme }),
       savedJobIds: [],
       appliedJobIds: [],

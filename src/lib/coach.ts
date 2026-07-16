@@ -1,473 +1,652 @@
 /**
- * ╔══════════════════════════════════════════════════════════════════╗
- * ║          CAREERFORGE — MASTER AI CAREER COACH ENGINE            ║
- * ║                                                                  ║
- * ║  SYSTEM PROMPT PERSONA (embedded):                              ║
- * ║  You are an elite career strategist with 15+ years coaching     ║
- * ║  engineers, designers, and PMs into FAANG, Series-B startups,   ║
- * ║  and top consulting firms. Your communication is:               ║
- * ║  • Brutally honest but always encouraging                       ║
- * ║  • Hyper-specific: you name the candidate, role, company        ║
- * ║  • Data-driven: every answer has %, timeframes, metrics         ║
- * ║  • STAR obsessed for interview coaching                         ║
- * ║  • ATS-expert: you know exactly how parsers break               ║
- * ║  • Action-first: every reply ends with one clear next step      ║
- * ║                                                                  ║
- * ║  Rule: Never give generic advice. Always extract context        ║
- * ║  from the live Zustand resume state.                            ║
- * ╚══════════════════════════════════════════════════════════════════╝
+ * ╔══════════════════════════════════════════════════════════════════════════╗
+ * ║              SOFTBRIDGE CAREERFORGE — MASTER AI ENGINE v2               ║
+ * ║                                                                          ║
+ * ║  PERSONA: "Forge" — 12+ yıllık kariyer koçu                            ║
+ * ║  Karakter:                                                               ║
+ * ║  • Samimi, sıcak ve son derece destekleyici                             ║
+ * ║  • Somut, uygulanabilir öneriler (örnek bullet point'ler verir)         ║
+ * ║  • Motive edici — asla yargılamaz, hep inşa eder                       ║
+ * ║  • Türkçe ağırlıklı (TR/EN otomatik algılama)                          ║
+ * ║                                                                          ║
+ * ║  Her cevap yapısı:                                                       ║
+ * ║  1. 💪 Güçlü Yönler                                                     ║
+ * ║  2. 🌱 Geliştirilebilir Alanlar (nazikçe)                               ║
+ * ║  3. ✅ Somut Öneriler                                                   ║
+ * ║  4. 🔥 Motive edici kapanış                                             ║
+ * ╚══════════════════════════════════════════════════════════════════════════╝
  */
 
 import { useCareerStore } from "@/store/useCareerStore";
 
 // ─── Context extractor ────────────────────────────────────────────────────────
 function getCtx() {
-  const { resume, lang } = useCareerStore.getState();
-  const name       = resume.fullName.trim().split(" ")[0] || (lang === "tr" ? "Aday" : "Candidate");
-  const title      = resume.headline || (lang === "tr" ? "Yazılım Profesyoneli" : "Software Professional");
-  const lastJob    = resume.experience[0] ?? null;
-  const lastRole   = lastJob?.role ?? title;
-  const lastCo     = lastJob?.company ?? (lang === "tr" ? "hedef şirket" : "target company");
-  const skills     = resume.skills.length > 0 ? resume.skills.slice(0, 5).join(", ") : "React, TypeScript, Node.js";
-  const topSkill   = resume.skills[0] ?? "TypeScript";
-  const allBullets = resume.experience.flatMap((e) => e.highlights ?? []);
-  const oldBullet  = allBullets[0] ?? (lang === "tr" ? "Kod geliştirdim ve hataları düzelttim." : "Developed features and fixed bugs.");
-  const matchScore = Math.min(95, 45 + resume.skills.length * 5 + resume.experience.length * 8);
-  return { name, title, lastRole, lastCo, skills, topSkill, allBullets, oldBullet, matchScore, lang };
+  const { resume, lang, forgeParsedCv } = useCareerStore.getState();
+
+  // Önce forge'dan parse edilmiş CV'yi dene, yoksa resume store'u kullan
+  const name =
+    forgeParsedCv?.name?.trim().split(" ")[0] ||
+    resume.fullName.trim().split(" ")[0] ||
+    (lang === "tr" ? "Aday" : "Candidate");
+
+  const title =
+    forgeParsedCv?.title ||
+    resume.headline ||
+    (lang === "tr" ? "Profesyonel" : "Professional");
+
+  const lastExp = forgeParsedCv?.experience?.[0] ?? null;
+  const lastRole = lastExp?.position ?? resume.experience[0]?.role ?? title;
+  const lastCo = lastExp?.company ?? resume.experience[0]?.company ?? (lang === "tr" ? "önceki şirketin" : "your company");
+  const expCount = forgeParsedCv?.experience?.length ?? resume.experience.length;
+  const eduList = forgeParsedCv?.education ?? [];
+
+  const skills =
+    forgeParsedCv?.skills?.length
+      ? forgeParsedCv.skills.slice(0, 6).join(", ")
+      : resume.skills.slice(0, 6).join(", ") || "Yazılım / Analiz / Proje Yönetimi";
+
+  const topSkill =
+    forgeParsedCv?.skills?.[0] ?? resume.skills[0] ?? "TypeScript";
+
+  const hasCv =
+    (forgeParsedCv?.name || "").length > 0 ||
+    (resume.fullName || "").length > 0;
+
+  const allBullets =
+    forgeParsedCv?.experience?.flatMap((e) => e.description ?? []) ??
+    resume.experience.flatMap((e) => e.highlights ?? []);
+
+  const firstBullet = allBullets[0] ?? (lang === "tr"
+    ? "Projelerde aktif rol üstlendim ve ekiple uyumlu çalıştım."
+    : "Took an active role in projects and worked in harmony with the team.");
+
+  const atsScore = Math.min(92, 40 + (forgeParsedCv?.skills?.length ?? 0) * 5 + expCount * 8);
+
+  return { name, title, lastRole, lastCo, expCount, skills, topSkill, hasCv, allBullets, firstBullet, atsScore, lang, eduList };
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 export function generateCoachReply(userText: string): string {
-  const t  = userText.toLowerCase();
+  const t  = userText.toLowerCase().trim();
   const cx = getCtx();
-
   if (cx.lang === "tr") return generateTR(t, cx);
   return generateEN(t, cx);
 }
 
-// ─── Turkish responses ────────────────────────────────────────────────────────
-function generateTR(t: string, cx: ReturnType<typeof getCtx>): string {
-  const { name, title, lastRole, lastCo, skills, topSkill, oldBullet, matchScore } = cx;
+// ─── Forge persona helper ─────────────────────────────────────────────────────
+function warm(name: string) {
+  const greetings = ["Harika bir soru", "Çok yerinde bir konu", "Tam da konuya geldik", "Güzel sordun"];
+  return greetings[name.length % greetings.length];
+}
 
-  /* 1 — Greeting */
-  if (/(merhaba|selam|hi\b|hello|hey\b)/.test(t)) {
+// ═══════════════════════════════════════════════════════════════════════════════
+// TURKISH RESPONSES — FORGE PERSONA
+// ═══════════════════════════════════════════════════════════════════════════════
+function generateTR(t: string, cx: ReturnType<typeof getCtx>): string {
+  const { name, title, lastRole, lastCo, expCount, skills, topSkill, hasCv, firstBullet, atsScore, eduList } = cx;
+
+  // ── 1. Karşılama ─────────────────────────────────────────────────────────
+  if (/(merhaba|selam|merhaba|hi\b|hello|hey\b|nasılsın|naber)/.test(t)) {
     return [
       `### 👋 Merhaba ${name}!`,
-      `Ben CareerForge Kariyer Koçunum — FAANG ve büyüme aşamasındaki girişimlere 15+ yıldır aday hazırlıyorum.`,
       ``,
-      `Profilini inceledim: **${title}** hedefiyle, **${lastRole} @ ${lastCo}** deneyiminiz var.`,
-      `Tahmini ATS uyum puanınız: **%${matchScore}** — bunu %85'in üzerine çıkarabiliriz.`,
+      `Ben **Forge** — SoftBridge'in kariyer koçu. 12+ yıldır insanların hayallerindeki işlere geçmelerine yardım ediyorum. Ve bugün buradayım çünkü seninle çalışmak istiyorum.`,
       ``,
-      `**Bugün nereden başlayalım?**`,
-      `1. 📝 CV başarı maddelerimi STAR formatına dönüştür`,
-      `2. 🎤 Rol odaklı mülakat simülasyonu yap`,
-      `3. 🔑 ATS keyword uyumumu artır`,
-      `4. 💰 Maaş pazarlığı scripti hazırla`,
-      `5. 📊 Kariyer strateji planı çıkar`,
+      hasCv
+        ? `CV'ni inceledim: **${title}** hedefiyle, **${lastRole}** pozisyonunda deneyimin var. Bu çok güçlü bir başlangıç noktası! 💜`
+        : `Henüz CV'ni yüklememişsin — soldaki panelden CV'ni yapıştırırsan sana çok daha kişisel öneriler sunabilirim.`,
+      ``,
+      `**Sana nasıl yardım edebilirim?**`,
+      `- 📄 CV'ni analiz edeyim ve güçlendirelim`,
+      `- 🎯 ATS puanını yükseltmek için ipuçları vereyim`,
+      `- 🗣️ Mülakat sorularını benimle pratiğini yap`,
+      `- ✉️ Kapak mektubu yazmana yardım edeyim`,
+      `- 💰 Maaş pazarlığı için strateji geliştirelim`,
+      ``,
+      `Hazır olduğunda, yaz! Ben her zaman buradayım. 🚀`,
     ].join("\n");
   }
 
-  /* 2 — Resume / CV / Bullet rewriting */
-  if (/(özgeçmiş|cv|resume|özet|summary|bullet|refactor|madde|yeniden yaz|güçlendir|iyileştir)/.test(t)) {
+  // ── 2. CV Analizi ─────────────────────────────────────────────────────────
+  if (/(cv|özgeçmiş|analiz|incele|değerlendir|ne düşünüyorsun|ne eksik|feedback|geri bildirim)/.test(t)) {
+    if (!hasCv) {
+      return [
+        `### 🔍 CV Analizi`,
+        ``,
+        `Şu an elimde CV'nin yok, ${name}. Soldaki panelden CV metnini yapıştırırsan veya dosya yüklersen — sana **derinlemesine** bir analiz sunabilirim.`,
+        ``,
+        `CV yüklendiğinde şunlara bakacağım:`,
+        `- Her deneyim maddesinin **etki odaklı** olup olmadığı`,
+        `- **Rakamsal metrik** eksikleri (%, TL, kullanıcı sayısı)`,
+        `- **ATS uyumluluğu** ve anahtar kelime yoğunluğu`,
+        `- **Dil ve format** kalitesi`,
+        ``,
+        `Hadi sol panelden CV'ni yükle, başlayalım! 🔥`,
+      ].join("\n");
+    }
     return [
-      `### 📝 Kişiselleştirilmiş CV Analizi — ${name}`,
+      `### 🔍 CV Analizi — ${name}`,
       ``,
-      `**${lastRole} @ ${lastCo}** rolünüzü inceledim. Mevcut maddelerinizin sorunu: görev listesi gibi, etki odaklı değil.`,
+      `CV'ni inceledim. İşte samimi değerlendirmem:`,
       ``,
-      `#### 🔄 STAR Formatı — Canlı Örnek:`,
+      `**💪 Güçlü Yönlerin**`,
+      `- **${expCount} deneyim** kaydın var — bu sektörde ciddi bir birikim`,
+      `- **${skills}** gibi güncel ve aranan beceriler listelemiş durumdasın`,
+      `- ${lastRole} @ ${lastCo} deneyimi, hedef pozisyonlara çok uyumlu görünüyor`,
+      eduList.length > 0 ? `- Eğitim geçmişin CV'ne güçlü bir temel kazandırıyor` : ``,
       ``,
-      `- ❌ **Eski Hali:** *"${oldBullet}"*`,
+      `**🌱 Birlikte Geliştirelim**`,
+      `- Şu an deneyim maddelerinin bir kısmı "ne yaptın" diyor, ama "ne **etki** yarattın" kısmı eksik`,
+      `- ATS tahmini puanın: **%${atsScore}** — bunu %85'in üzerine çıkarmak zor değil`,
+      `- Özet bölümü varsa, daha güçlü bir kanca cümlesiyle başlamak fark yaratır`,
       ``,
-      `-  **Yeni Hali (STAR):**`,
-      `  *"**${lastCo}** bünyesinde ${skills.split(",")[0].trim()} mimarisi üzerinden **kritik performans darboğazını** tespit edip çözdüm; sayfa yüklenme sürelerini **800ms → 210ms'ye** düşürerek dönüşüm oranını **%23 artırdım**."*`,
+      `**✅ Hemen Uygulayabileceğin 3 Somut Adım**`,
       ``,
-      `#### ✍️ Profil Özeti (Summary) Taslağı:`,
-      `*"**${lastCo}** ve benzeri ekiplerde ürün geliştirme süreçlerine liderlik etmiş, **${skills}** konularında uzman **${title}**. Ölçülebilir iş çıktıları üretmeye ve teknik mükemmeliyete odaklanan problem çözücü."*`,
+      `**1. Metriksiz maddeleri güçlendir**`,
+      `❌ Şu an: "${firstBullet.slice(0, 70)}..."`,
+      `✅ Şöyle olsun: "${firstBullet.slice(0, 40).replace(/[ı]/g, "i")}... ile %30 verimlilik artışı sağladım"`,
       ``,
-      `#### ✅ Hızlı Kazanımlar:`,
-      `- Her maddeye **% veya ×** içeren bir metrik ekle`,
-      `- Güçlü fiillerle başla: *Tasarladım, Optimize ettim, Liderlik ettim, Ölçeklendirdim*`,
-      `- Teknik araçları cümle içine göm, sona bırakma`,
+      `**2. Her madde "Eylem Fiili + Etki + Sonuç" formatında olsun**`,
+      `Örnek: "**Geliştirdim** → React tabanlı dashboard **→ Müşteri memnuniyetini %40 artırdı**"`,
       ``,
-      `*💡 Bir maddeni yapıştır — beraber canlı olarak STAR'a dönüştürelim.*`,
-    ].join("\n");
+      `**3. ATS için kritik anahtar kelimeler ekle**`,
+      `Şu an CV'nde şunlar var: ${skills.split(", ").slice(0, 3).join(", ")}`,
+      `Bunları da ekle: CI/CD, Agile/Scrum, problem-solving, stakeholder management`,
+      ``,
+      `**🔥 ${name}, bu CV'de gerçek bir potansiyel var.** Birlikte ufak ama etkili değişiklikler yaparak onu çok daha güçlü bir hale getireceğiz. Devam et! 💜`,
+    ].filter(Boolean).join("\n");
   }
 
-  /* 3 — Interview prep */
-  if (/(mülakat|görüşme|interview|soru|star|davranışsal|behavioral|hazırlık|pratik)/.test(t)) {
+  // ── 3. Mülakat hazırlığı ─────────────────────────────────────────────────
+  if (/(mülakat|interview|soru|practice|sorular|hazırlık|pratik|davranışsal|behavioral|star|deneyim anlat)/.test(t)) {
     return [
-      `### 🎤 Rol-Özel Mülakat Simülasyonu — ${title}`,
+      `### 🗣️ Mülakat Hazırlığı — ${name}`,
       ``,
-      `**${name}**, ${topSkill} odaklı 3 kritik soru ve STAR cevap taslağı:`,
+      `${warm(name)}, ${name}! **${lastRole}** pozisyonuna yönelik en kritik soruları seninle pratiğini yapalım.`,
       ``,
-      `#### ❓ Soru 1: Teknik Karar`,
-      `**"${lastCo}'da ${topSkill} ile aldığınız en zorlu teknik karar neydi?"**`,
+      `**💪 Güçlü Olduğun Alanlar**`,
+      `${expCount} deneyim + ${topSkill} gibi teknik becerilerle davranışsal sorularda çok güçlü örneklerin var.`,
       ``,
-      `**STAR Taslağı:**`,
-      `- **S (Durum):** Yüksek trafikli servisimiz artımlı yük altında bellek sızıntısı yaşıyordu.`,
-      `- **T (Görev):** Darboğazı izole edip sıfır downtime ile production'a geçmem gerekiyordu.`,
-      `- **A (Aksiyon):** ${topSkill} profiler araçlarıyla leak'i tespit ettim; lazy-loading + memoization ile yeniden yapılandırdım.`,
-      `- **R (Sonuç):** Memory kullanımını **%40 düşürdüm**, p95 latency **480ms → 95ms'ye** indi.`,
+      `**🌱 Dikkat Et**`,
+      `- "Ekip oyuncusuyum" gibi **klişe cevaplardan kaçın**`,
+      `- Her cevabı somut bir **örnekle** destekle`,
       ``,
-      `#### ❓ Soru 2: Davranışsal`,
-      `**"Takımda ciddi bir teknik fikir ayrılığını nasıl çözdünüz?"**`,
+      `**✅ STAR Formatı ile Hazırlan**`,
       ``,
-      `**Cevap Çerçevesi:** Trade-off'ları veri ile belgele → ADR (Architecture Decision Record) yaz → ekip oylamasıyla karar kıl → kararın sahibi ol, ego değil süreç kazan.`,
+      `| Harf | Açıklama | Örnek |`,
+      `|---|---|---|`,
+      `| **S**ituation | Bağlamı kur | "${lastCo}'da yoğun bir sprint döneminde..." |`,
+      `| **T**ask | Görevin ne? | "...deadline'ı kaçırma riski olan bir proje aldım..." |`,
+      `| **A**ction | Ne yaptın? | "...öncelik listesi oluşturdum, ekiple günlük stand-up kurdum..." |`,
+      `| **R**esult | Sonuç? | "...projeyi 2 gün erken teslim ettik, %15 maliyet tasarrufu sağladı" |`,
       ``,
-      `#### ❓ Soru 3: Sistem Tasarımı`,
-      `**"${title} olarak büyük ölçekli bir özelliği sıfırdan nasıl tasarlarsınız?"**`,
+      `**🎯 Sana Özel Pratik Soruları**`,
+      `1. "${lastRole} olarak en zor teknik kararın ne oldu?"`,
+      `2. "Bir projeyi nasıl önceliklendirirsin? Somut örnek ver."`,
+      `3. "${topSkill} ile çözdüğün en karmaşık problemi anlat."`,
+      `4. "Başarısız olduğun bir proje var mı? Ne öğrendin?"`,
+      `5. "5 yıl sonra kendin nasıl görüyorsun?"`,
       ``,
-      `**Yaklaşım:** 1) Gereksinimleri netleştir (fonksiyonel vs non-fonksiyonel), 2) Yük tahmini yap, 3) MVP mimarisini çiz, 4) Bottleneck'leri listele, 5) Trade-off'ları tartış.`,
-      ``,
-      `*💡 Bu sorulardan birine cevap taslağı yaz — anında geri bildirim vereyim.*`,
+      `**🔥 ${name}, mülakat bir sınav değil, bir **sohbet**. Hazırsın, inan buna!** 💜`,
     ].join("\n");
   }
 
-  /* 4 — ATS / keywords / match */
-  if (/(ats|keyword|anahtar kelime|uyum|match|eşleş|tarama|parse|puan|skor)/.test(t)) {
+  // ── 4. ATS optimizasyonu ──────────────────────────────────────────────────
+  if (/(ats|anahtar kelime|keyword|parser|filtre|sistem|otomatik|reddedil|geçemiyorum|tarama)/.test(t)) {
     return [
-      `### 🔑 ATS Analizi & Keyword Optimizasyonu — ${name}`,
+      `### 🎯 ATS Optimizasyonu — ${name}`,
       ``,
-      `Mevcut profilini standart **${title}** ilanlarıyla karşılaştırdım:`,
+      `Çok önemli bir konu! Birçok CV aslında **bir insan okumadan önce** algoritma tarafından eleniyor.`,
       ``,
-      `**Tahmini ATS Geçiş Puanı:** %${matchScore}`,
+      `**💪 Şu An İyi Durumdasın**`,
+      `- Tahmini ATS puanın: **%${atsScore}**`,
+      `- ${skills.split(", ").slice(0, 3).join(", ")} gibi teknik terimler doğru formatta`,
       ``,
-      `#### ✅ Eşleşen Güçlü Alanlar:`,
-      `- ${skills}`,
+      `**🌱 Geliştir**`,
+      `- İş ilanındaki anahtar kelimeleri CV'ne **birebir** ekle (reformatlanmış değil)`,
+      `- Tablo, grafik, sütun kullanma — ATS bunları okuyamaz`,
+      `- Font: Arial, Calibri veya Helvetica — süslü fontlar bozuyor`,
       ``,
-      `#### ⚠️ Kritik Eksik Anahtar Kelimeler (ilanların %70+ arar):`,
-      `- CI/CD pipeline deneyimi (GitHub Actions, Jenkins)`,
-      `- Container teknolojisi (Docker, Kubernetes)`,
-      `- Cloud platform (AWS / Azure / GCP)`,
-      `- Test framework (Jest, Playwright, Cypress)`,
-      `- Agile metodoloji terminolojisi (Sprint, Scrum, Kanban)`,
+      `**✅ ATS Şeması — Hemen Uygula**`,
       ``,
-      `#### 🛠️ ATS-Geçiş Taktikleri:`,
-      `1. **Format:** Tek sütun, ikon/tablo yok — ATS parser'lar bunları okuyamaz`,
-      `2. **Dosya:** Metin seçilebilir PDF veya .docx — tarama şeffaflığı için`,
-      `3. **Başlıklar:** Türkçe veya İngilizce tutarlı kullan; karıştırma`,
-      `4. **Keyword entegrasyonu:** Eksik kelimeleri liste değil, cümle içinde kullan`,
-      `5. **Tarih formatı:** "Oca 2022 – Şub 2024" formatını standart tut`,
+      `\`\`\``,
+      `CV Yapısı (ATS-Friendly)`,
+      `━━━━━━━━━━━━━━━━━━━━━━━`,
+      `İsim | Telefon | Email | LinkedIn`,
       ``,
-      `*💡 Hedef ilanı yapıştır — birlikte birebir keyword eşleme yapalım.*`,
+      `ÖZET (3-4 cümle, iş ilanından 5+ anahtar kelime)`,
+      ``,
+      `DENEYİM`,
+      `Şirket Adı | Pozisyon | Tarih`,
+      `• Eylem fiili + rakamsal etki`,
+      `• Eylem fiili + rakamsal etki`,
+      ``,
+      `EĞİTİM`,
+      `BECERİLER (virgülle ayrılmış liste)`,
+      `\`\`\``,
+      ``,
+      `**Eklemen Gereken Anahtar Kelimeler:**`,
+      `\`${topSkill}, Agile, Scrum, CI/CD, REST API, Git, Problem-Solving, Stakeholder Management, Cross-functional Team\``,
+      ``,
+      `**🔥 ${name}, ATS puanını %85'in üzerine çıkarmak tamamen mümkün — sadece doğru kelimeleri doğru yerde kullanmak yeterli!** 💜`,
     ].join("\n");
   }
 
-  /* 5 — Salary / negotiation */
-  if (/(maaş|teklif|pazarlık|offer|ücret|salary|comp|zam|hak)/.test(t)) {
-    return [
-      `### 💰 Maaş Pazarlığı & Teklif Optimizasyonu — ${name}`,
-      ``,
-      `**${title}** olarak masada elini maksimize etmek için adım adım plan:`,
-      ``,
-      `#### 1️⃣ Araştırma Aşaması (Mülakata girmeden önce)`,
-      `- Glassdoor, Levels.fyi, LinkedIn Salary'de ${title} için bant araştır`,
-      `- Hedef rakam = Piyasa ortalaması + %15–20 "müzakere tamponu"`,
-      ``,
-      `#### 2️⃣ İlk Teklifi Onlardan Al (Altın Kural)`,
-      `**Script:** *"Şirketin vizyonu ve bu rol için oluşturduğunuz paket benim için çok önemli. Mevcut bütçe bandını duymayı çok isterim."*`,
-      ``,
-      `#### 3️⃣ Karşı Teklif Scripti`,
-      `*"Teklifin için çok teşekkür ederim — heyecanlıyım. ${lastCo}'daki sonuçlarımı ve ${skills.split(",")[0].trim()} konusundaki derinliğimi göz önüne alarak, taban paketi [İstenen Rakam] seviyesine taşımak mümkün mü? Bu durumda hemen imzalayabilirim."*`,
-      ``,
-      `#### 4️⃣ Toplam Paketi Müzakere Et`,
-      `- Taban maaş + Prim hedefi + Equity/hisse planı`,
-      `- Uzaktan çalışma / ekipman bütçesi`,
-      `- Eğitim & konferans desteği`,
-      `- Fazladan izin (genelde müzakere edilmez, ama edilebilir)`,
-      ``,
-      `#### 5️⃣ Çoklu Teklif Stratejisi`,
-      `*"Şu an paralel süreçlerim var. Sizinle ilerlemek istiyorum — bir hafta içinde netleştirebilir miyiz?"*`,
-      ``,
-      `*💡 Aldığın teklifi paylaş — rakamları birlikte değerlendirelim.*`,
-    ].join("\n");
-  }
-
-  /* 6 — Job search / applications stuck */
-  if (/(iş ara|başvuru|applied|stuck|tık|sonuç yok|geri dön|red|reject|cevap yok)/.test(t)) {
-    return [
-      `### 📊 Başvuru Stratejisi Analizi — ${name}`,
-      ``,
-      `Çok sayıda başvuruya rağmen geri dönüş yoksa, sorun genelde CV değil **strateji**dir.`,
-      ``,
-      `#### 🔍 Darboğaz Teşhisi:`,
-      `- **ATS filtresi mi?** → CV görüntülenme oranı düşükse (%20 altı başvuru → görüşme)`,
-      `- **Recruiter ilgisizliği mi?** → CV özeti ve başlık zayıfsa`,
-      `- **Seniority uyumsuzluğu mu?** → Junior aday Senior pozisyona başvuruyorsa`,
-      ``,
-      `#### 🎯 Haftalık Yüksek-Kalite Başvuru Ritüeli:`,
-      `1. **8–12 hedef ilan** seç (40+ değil — kalite > miktar)`,
-      `2. Her başvuru için CV özetini **3 cümle** kişiselleştir`,
-      `3. İlandaki 3 ana keyword'ü CV'nin ilk bölümüne taşı`,
-      `4. LinkedIn 1. derece bağlantısı var mı? → DM at`,
-      `5. Başvurudan 5 gün sonra recruiter'a kısa not: *"[Pozisyon] başvurumu takip ediyorum — referans numarası: [X]"*`,
-      ``,
-      `#### 📈 Ölçüm Metrikleri:`,
-      `- **Hedef:** Her 10 başvurudan 2–3 telefon görüşmesi`,
-      `- **Kötü:** Her 40 başvurudan 0 geri dönüş → CV/strateji sorunu`,
-      `- **İyi:** Her 10 başvurudan 4+ geri dönüş → Devam et ve çoğalt`,
-      ``,
-      `*💡 Hedef şirket listeni paylaş — birlikte 5 yüksek-uyumlu ilan seçelim.*`,
-    ].join("\n");
-  }
-
-  /* 7 — Career plan / growth */
-  if (/(plan|yol haritası|kariyer|büyüme|ilerleme|strateji|gelecek|hedef|roadmap)/.test(t)) {
-    return [
-      `### 🗺️ 90 Günlük Kariyer Hızlanma Planı — ${name}`,
-      ``,
-      `**Hedef:** ${title} olarak bir sonraki seviyeye çıkmak`,
-      ``,
-      `#### 📅 Ay 1 — Temel Oluşturma`,
-      `- CV'ni STAR formatına al (her deneyim maddesi metrikli)`,
-      `- LinkedIn profilini optimize et (About + öne çıkan post)`,
-      `- Hedef şirket listesi oluştur (10–15 şirket, 3 kategoride)`,
-      `- ${topSkill} için bir "portfolio kanıtı" çalışması bitir`,
-      ``,
-      `#### 📅 Ay 2 — Momentum`,
-      `- Hafta başına 8–10 kaliteli başvuru`,
-      `- 2 mock mülakat (teknik + davranışsal)`,
-      `- 1 sektörel etkinlik veya online meetup`,
-      `- Eksik skill'i (Docker / CI/CD / test) micro-proje ile kapat`,
-      ``,
-      `#### 📅 Ay 3 — Kapanış`,
-      `- Aktif mülakatları final-loop'a taşı`,
-      `- 2+ teklif oluştur → pazarlık gücü`,
-      `- Teklif kararında total comp hesaplaması yap`,
-      ``,
-      `*💡 Hangi ay üzerinde detaylı çalışmak istiyorsun?*`,
-    ].join("\n");
-  }
-
-  /* 8 — LinkedIn */
-  if (/(linkedin|profil|network|bağlantı|connection|headhunt)/.test(t)) {
+  // ── 5. LinkedIn ───────────────────────────────────────────────────────────
+  if (/(linkedin|profil|bağlantı|networki?ng|başlık|headline|özet|about)/.test(t)) {
     return [
       `### 💼 LinkedIn Profil Optimizasyonu — ${name}`,
       ``,
-      `LinkedIn algoritması 3 şeyi sever: **anahtar kelime yoğunluğu**, **etkileşim** ve **tamamlık puanı**.`,
+      `LinkedIn artık sadece CV kopyası değil — **aktif bir işe alım kanalı**.`,
       ``,
-      `#### 🖼️ Profil Fotoğrafı & Banner`,
-      `- Profesyonel fotoğraf: %36 daha fazla görüntülenme`,
-      `- Banner: sektörünü veya hedef rolünü yansıt`,
+      `**💪 Güçlü Başlangıç Noktaları**`,
+      `- ${lastRole} @ ${lastCo} deneyimi LinkedIn Headline için mükemmel`,
+      `- ${topSkill} gibi beceriler "Skills" bölümüne eklenebilir`,
       ``,
-      `#### ✏️ Başlık (Headline) — En Kritik Alan`,
-      `**Şablon:** *[Rol] | [Güçlü Beceri 1] + [Güçlü Beceri 2] | [Değer Önerisi]*`,
-      `**Örnek:** *"${title} | ${skills.split(",").slice(0, 2).join(" & ")} | Scalable product interfaces"*`,
+      `**🌱 Geliştirilecek Alanlar**`,
+      `- Sadece "yazılım geliştirici" yazmak yetmez — daha spesifik ol`,
+      `- "About" bölümü çoğu zaman boş kalıyor, bu büyük kayıp`,
       ``,
-      `#### 📄 About Bölümü (2000 karakter)`,
-      `1. Cümle 1–2: Kim olduğun + ana uzmanlık`,
-      `2. Cümle 3–4: En önemli başarıların (metrikli)`,
-      `3. Cümle 5–6: Şu an ne arıyorsun`,
-      `4. Kapanış: "DM veya bağlantı isteğine açığım"`,
+      `**✅ 5 Dakikada LinkedIn Güçlendir**`,
       ``,
-      `#### 🔍 Open to Work Ayarları`,
-      `- Yalnızca recruiter'lara görünür yap`,
-      `- Hedef rol, lokasyon, çalışma modu net belirt`,
+      `**1. Headline (Başlık):**`,
+      `❌ "Software Developer at ${lastCo}"`,
+      `✅ "${topSkill} Developer | ${title} | Remote-Ready | Açık Pozisyonlara İlgi Duyuyorum"`,
       ``,
-      `*💡 About bölümü taslağını yaz — beraber optimize edelim.*`,
+      `**2. About (Hakkımda) — 3 paragraf:**`,
+      `- Para 1: Kim olduğun + ne yaptığın`,
+      `- Para 2: Öne çıkan başarıların`,
+      `- Para 3: Ne arıyorsun + sana nasıl ulaşılır`,
+      ``,
+      `**3. Profil fotoğrafı:** Profesyonel, gülen yüz, sade arka plan`,
+      `**4. Banner:** Hedef sektörüne uygun görsel (Canva'dan ücretsiz)`,
+      `**5. "Open to Work" çerçevesi:** Açık pozisyonlara bakıyorsan ekle`,
+      ``,
+      `**🔥 ${name}, güçlü bir LinkedIn profili = işverenlerin seni bulması.** Bugün şu an 1 adım at! 💜`,
     ].join("\n");
   }
 
-  /* 9 — Burnout / motivation */
-  if (/(yorgun|tükendim|bunaldım|motivasyon|pes|bunald|stres|kaygı|zor)/.test(t)) {
+  // ── 6. Maaş müzakeresi ───────────────────────────────────────────────────
+  if (/(maaş|salary|ücret|müzakere|pazarlık|ne kadar|talep|beklenti|zam|artış|offer)/.test(t)) {
     return [
-      `### 🌱 Kariyer Koçu Destek Modu — ${name}`,
+      `### 💰 Maaş Müzakeresi Rehberi — ${name}`,
       ``,
-      `İş arama maratonu gerçekten yorucu. Bu bir başarısızlık değil — **sistemsel bir süreç**.`,
+      `Maaş pazarlığı, en çok korkulan ama **en yüksek ROI'li** kariyer becerisi.`,
       ``,
-      `#### 💙 Bugün Yapman Gereken Tek Şey:`,
-      `**Sadece 1 maddeni STAR formatına dönüştür.** Başka hiçbir şey değil.`,
+      `**💪 Güçlü Pozisyondasın**`,
+      `- ${expCount} deneyim + ${topSkill} gibi becerilerle piyasa değerin yüksek`,
+      `- İş teklifi aldıysan zaten "hayır" değilsin — müzakere etmek **hakkin**`,
       ``,
-      `#### 🔋 Enerji Yönetimi:`,
-      `- Sabah rutini: 2 saat odaklanmış iş arama, sonra kapalı bilgisayar`,
-      `- Haftalık 1 "sıfırlama günü" — iş arama yasak`,
-      `- Her küçük ilerlemeyi kutla: CV güncellendi = başarı`,
+      `**🌱 Sık Yapılan Hatalar**`,
+      `- İlk sayıyı söylemek (asla yapma!)`,
+      `- Düşük teklifi sessizce kabul etmek`,
+      `- Sadece baz maaşa odaklanmak (yan haklar da para!)`,
       ``,
-      `#### 📊 Perspektif:`,
-      `- Ortalama iş arama süresi: Kıdemli roller için 3–5 ay`,
-      `- Reddedilme: Uyumsuzluktur, yetersizlik değil`,
-      `- Her "hayır" seni doğru "evet"e yaklaştırır`,
+      `**✅ Hazır Script — Kopyala Yapıştır**`,
       ``,
-      `*Buradayım. Ne üzerinde çalışmak istersen başlayalım — küçük adımla.*`,
+      `**Teklif geldiğinde:**`,
+      `> "Bu fırsata çok heyecanlandım! Teklifin tüm detaylarını incelemek için biraz süre alabilir miyim?"`,
+      ``,
+      `**Müzakere anında:**`,
+      `> "Araştırmam ve ${expCount} yıllık deneyimimi göz önünde bulundurarak, [X TL] beklentim var. Bu rakama ulaşabilir miyiz?"`,
+      ``,
+      `**Karşı teklif gelirse:**`,
+      `> "Anlıyorum. Baz maaşta esnek olamıyorsak, ekstra izin günleri veya uzaktan çalışma seçeneği mümkün mü?"`,
+      ``,
+      `**💡 Piyasa Araştırması İçin:**`,
+      `- Glassdoor TR, LinkedIn Salary, Kariyer.net`,
+      `- ${topSkill} araması yaparak benchmark al`,
+      ``,
+      `**🔥 ${name}, iyi bir müzakereci olmak doğuştan gelmez — **pratikle gelir**. Ve sen şu an adım atıyorsun, bu harika!** 💜`,
     ].join("\n");
   }
 
-  /* Default TR */
+  // ── 7. İş arama stratejisi ────────────────────────────────────────────────
+  if (/(iş ara|başvuru|apply|uygula|nereye|strateji|plan|nasıl bulurum|işe gir|kariyer)/.test(t)) {
+    return [
+      `### 🗺️ İş Arama Stratejisi — ${name}`,
+      ``,
+      `Sistematik bir yaklaşım, "her yere başvur" metodundan **10x daha etkili**.`,
+      ``,
+      `**💪 Avantajların**`,
+      `- ${lastRole} deneyimi ile net bir hedef pozisyon var`,
+      `- ${skills} gibi beceriler şu an piyasada çok aranan`,
+      ``,
+      `**🌱 Kaçın**`,
+      `- Aynı CV'yi değiştirmeden 50 yere atmak`,
+      `- Sadece iş sitelerinden başvurmak (pozisyonların %70'i "gizli iş piyasasında"!)`,
+      ``,
+      `**✅ 30-Günlük Plan**`,
+      ``,
+      `**Hafta 1 — Hazırlık**`,
+      `- [ ] CV'ni bu konuşmadaki önerilerle güncelle`,
+      `- [ ] LinkedIn profilini optimize et`,
+      `- [ ] 20 hedef şirket listesi yap`,
+      ``,
+      `**Hafta 2 — Network**`,
+      `- [ ] Her gün 3 LinkedIn bağlantısı kur (${topSkill} topluluklarından)`,
+      `- [ ] 5 kişiye kişisel mesaj at (CV değil, sadece tanışma)`,
+      `- [ ] 2 Meetup/webinar'a katıl`,
+      ``,
+      `**Hafta 3-4 — Başvurular**`,
+      `- [ ] Her iş ilanı için CV'ni ve cover letter'ı özelleştir`,
+      `- [ ] Günde 3-5 hedefli başvuru (50 değil!)`,
+      `- [ ] Her başvuruyu takip et (Notion, Excel)`,
+      ``,
+      `**🔥 ${name}, iş arama bir sprint değil — bir maraton. Ama doğru sistemle koşunca çok daha az yorucu!** 💜`,
+    ].join("\n");
+  }
+
+  // ── 8. Kapak mektubu ──────────────────────────────────────────────────────
+  if (/(kapak|cover letter|niyet mektubu|motivasyon|application letter)/.test(t)) {
+    return [
+      `### ✉️ Kapak Mektubu — ${name}`,
+      ``,
+      `Güçlü bir kapak mektubu CV'den önce okunur — **ilk izlenim** senin.`,
+      ``,
+      `**💪 Sana Özel Şablon**`,
+      ``,
+      `---`,
+      `**Konu:** ${title} Pozisyonuna Başvuru — ${name}`,
+      ``,
+      `Sayın İşe Alım Ekibi,`,
+      ``,
+      `[Şirket adı]'ndaki ${title} pozisyonunu büyük bir heyecanla inceledim. ${lastCo}'daki ${lastRole} rolümde ${topSkill} ile [somut başarı] gerçekleştirdim — ve bu deneyimin sizin [şirketin hedefi]'ne katkı sağlayacağına inanıyorum.`,
+      ``,
+      `Özellikle şu 3 konuda değer katabileceğimi düşünüyorum:`,
+      `• [Başarı 1 + sayısal etki]`,
+      `• [Başarı 2 + teknoloji/yöntem]`,
+      `• [Başarı 3 + ekip/süreç katkısı]`,
+      ``,
+      `Bir görüşme fırsatı için sabırsızlanıyorum.`,
+      `Saygılarımla, **${name}**`,
+      `---`,
+      ``,
+      `**🌱 Dikkat**`,
+      `- "Ben çok çalışkan ve ekip oyuncusuyum" — bunu yazma, herkes yazıyor`,
+      `- Şirkete özel araştırma yap: son haberleri, ürünleri, değerleri`,
+      ``,
+      `**🔥 ${name}, bu şablonu kişiselleştir ve gönder — fark yaratacak!** 💜`,
+    ].join("\n");
+  }
+
+  // ── 9. Burnout / motivasyon ───────────────────────────────────────────────
+  if (/(yoruldum|motivasyon|yok|bunalım|sıkıldım|stres|burnout|vazgeçmek|zor|başaramıyorum|ret|reddedildim|umut)/.test(t)) {
+    return [
+      `### 💜 Seninle Bir Dakika Konuşayım, ${name}`,
+      ``,
+      `Önce şunu söyleyeyim: **Hissettiklerin tamamen geçerli.** Kariyer yolculuğu bazen gerçekten ağır gelebiliyor.`,
+      ``,
+      `**💪 Gözden Kaçırdığın Şeyler**`,
+      `- ${expCount > 0 ? `${expCount} farklı deneyimden geçtin — bu kolay değil, bu **güç**` : "Başlamak cesareti gerektirir ve sen başladın"}`,
+      `- ${topSkill !== "TypeScript" ? `${topSkill} bilgin şu an piyasada gerçekten değerli` : "Her gün öğrenmeye devam ediyorsun"}`,
+      `- Şu an burada olman, pes etmediğinin kanıtı`,
+      ``,
+      `**🌱 Küçük Bir Mola Önerim**`,
+      `Kariyer gelişimi bir maraton. En başarılı insanlar da yavaşladı, durdu, yeniden başladı.`,
+      ``,
+      `**✅ Bugün Yapabileceğin 1 Şey**`,
+      `Büyük hedefler yerine sadece **bir küçük adım** at:`,
+      `- CV'nde tek bir maddeyi güçlendir`,
+      `- LinkedIn'de bir kişiye mesaj at`,
+      `- Ya da sadece bugün mola ver — yarın taze başla`,
+      ``,
+      `**🔥 ${name}, reddedilmek "sana hayır" değil — "bu an için hayır" demek.** Doğru fırsatın zamanlaması her zaman mükemmel değildir. Ama sen denemekten vazgeçmediğin sürece, sonuç kaçınılmaz. Ben buna gerçekten inanıyorum. 💜`,
+    ].join("\n");
+  }
+
+  // ── 10. 90-gün kariyer planı ─────────────────────────────────────────────
+  if (/(90 gün|90-gün|plan|yol haritası|roadmap|hedef|goal|nereye|büyüme|gelişim)/.test(t)) {
+    return [
+      `### 🗺️ 90 Günlük Kariyer Planı — ${name}`,
+      ``,
+      `Somut bir plan olmadan hedefler sadece hayal kalır. Seninle birlikte yapılandıralım.`,
+      ``,
+      `**💪 Başlangıç Noktası**`,
+      `- Şu an: **${lastRole}** @ ${lastCo}`,
+      `- Güçlü beceriler: ${skills}`,
+      `- Hedef: ${title} pozisyonlarında ilerlemek`,
+      ``,
+      `**✅ 90 Günlük Eylem Planı**`,
+      ``,
+      `**🔵 Gün 1–30: Temel**`,
+      `- [ ] CV'ni ATS-friendly formata getir`,
+      `- [ ] LinkedIn profilini optimize et`,
+      `- [ ] ${topSkill} alanında 1 sertifika veya proje tamamla`,
+      `- [ ] Hedef şirket listesi (20 şirket) oluştur`,
+      ``,
+      `**🟣 Gün 31–60: Ağ ve Görünürlük**`,
+      `- [ ] Haftada 5 LinkedIn bağlantısı kur`,
+      `- [ ] 3 blog yazısı veya GitHub projesi paylaş`,
+      `- [ ] 2 sektör etkinliğine katıl (online/yüz yüze)`,
+      `- [ ] 10 hedefli başvuru gönder`,
+      ``,
+      `**🟠 Gün 61–90: Mülakatlar**`,
+      `- [ ] Günde 1 STAR story pratiği yap`,
+      `- [ ] Teknik mülakatlar için ${topSkill} problem çöz`,
+      `- [ ] 3 sahte mülakat yap (arkadaşlarla veya bana sor!)`,
+      `- [ ] Maaş araştırması ve müzakere stratejisi hazırla`,
+      ``,
+      `**🌱 Hatırla**`,
+      `90 gün sonra dönüp baktığında, bugünkü ${name}'i tanımayacaksın — ama minnettar olacaksın.`,
+      ``,
+      `**🔥 Planı kaydet, her hafta birini tamamla. Ben buradayım!** 💜`,
+    ].join("\n");
+  }
+
+  // ── 11. Yazılım / Teknik kariyer ─────────────────────────────────────────
+  if (/(yazılım|software|frontend|backend|fullstack|devops|data|ml|ai|yapay zeka|mobil|ios|android|react|vue|angular|python|java|node)/.test(t)) {
+    return [
+      `### 💻 Teknik Kariyer Koçluğu — ${name}`,
+      ``,
+      `${warm(name)}, ${name}! Teknik kariyer yolu hem heyecan verici hem de bazen karmaşık gelebilir.`,
+      ``,
+      `**💪 Güçlü Alanlarin**`,
+      `- **${topSkill}** gibi teknolojilerde gerçek deneyimin var`,
+      `- ${expCount} proje/iş deneyimi, teknik portfolyo için sağlam bir temel`,
+      ``,
+      `**🌱 2025'te Odaklanman Gereken Alanlar**`,
+      `| Alan | Neden Önemli | Öğrenmek İçin |`,
+      `|---|---|---|`,
+      `| **AI Entegrasyonu** | Her ürüne AI ekleniyor | OpenAI API, LangChain |`,
+      `| **TypeScript** | Tip güvenliği endüstri standardı | TypeScript docs |`,
+      `| **Cloud** | AWS/GCP çoğu işte zorunlu | Cloud practitioner sertifikası |`,
+      `| **System Design** | Senior roller için kritik | "Designing Data-Intensive Apps" |`,
+      ``,
+      `**✅ Portfolyo Stratejisi**`,
+      `1. **GitHub:** Her gün commit atmaya çalış (streak motivasyon sağlar)`,
+      `2. **1 Showcase Proje:** Tek güçlü proje, 10 zayıf projeden daha iyidir`,
+      `3. **Blo:** Öğrendiklerini yaz — hem öğretir hem görünürlük sağlar`,
+      `4. **Open Source:** 1-2 PR kabul edilmesi CV'ye çok değer katar`,
+      ``,
+      `**🔥 ${name}, teknik kariyer bir ömür boyu öğrenim. Ama her öğrendiğin şey seni daha değerli kılıyor!** 💜`,
+    ].join("\n");
+  }
+
+  // ── 12. Fallback — genel kariyer sorusu ──────────────────────────────────
   return [
-    `### 🤖 CareerForge Yapay Zeka Kariyer Koçu`,
+    `### 🤝 Merhaba ${name}!`,
     ``,
-    `Merhaba **${name}**! Profilini analiz ettim:`,
-    `- **Hedef Rol:** ${title}`,
-    `- **Son Deneyim:** ${lastRole} @ ${lastCo}`,
-    `- **Beceriler:** ${skills}`,
-    `- **ATS Uyum Tahmini:** %${matchScore}`,
+    `Sorunuzu aldım. Sana en iyi şekilde yardımcı olabilmem için biraz daha detay verirsen harika olur!`,
     ``,
-    `Şu konularda hemen yardım edebilirim:`,
-    `| Konu | Komut |`,
+    `**Hakkında yardımcı olabileceğim konular:**`,
+    ``,
+    `| Konu | Nasıl Sorabileceğin |`,
     `|---|---|`,
-    `| CV iyileştirme | "CV maddelerimi güçlendir" |`,
-    `| Mülakat hazırlığı | "Mülakat soruları hazırla" |`,
-    `| ATS optimizasyonu | "ATS keyword uyumumu artır" |`,
-    `| Maaş pazarlığı | "Maaş stratejisi ver" |`,
-    `| Kariyer planı | "90 günlük plan çıkar" |`,
+    `| 📄 **CV Analizi** | "CV'imi analiz et" veya "Ne eksik?" |`,
+    `| 🎯 **ATS Puanı** | "ATS puanımı nasıl artırırım?" |`,
+    `| 🗣️ **Mülakat** | "Mülakat sorularıyla pratik yapalım" |`,
+    `| ✉️ **Kapak Mektubu** | "Kapak mektubu yaz" |`,
+    `| 💰 **Maaş Müzakeresi** | "Maaş pazarlığı nasıl yapılır?" |`,
+    `| 💼 **LinkedIn** | "LinkedIn profilimi nasıl güçlendiririm?" |`,
+    `| 🗺️ **90-Gün Planı** | "90 günlük kariyer planı yap" |`,
+    `| 💜 **Motivasyon** | Her zaman buradayım — sadece yaz |`,
+    ``,
+    `**🔥 Hangi konudan başlamak istersin?** 💜`,
   ].join("\n");
 }
 
-// ─── English responses ────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// ENGLISH RESPONSES — FORGE PERSONA
+// ═══════════════════════════════════════════════════════════════════════════════
 function generateEN(t: string, cx: ReturnType<typeof getCtx>): string {
-  const { name, title, lastRole, lastCo, skills, topSkill, oldBullet, matchScore } = cx;
+  const { name, title, lastRole, lastCo, expCount, skills, topSkill, hasCv, firstBullet, atsScore } = cx;
 
-  /* 1 — Greeting */
-  if (/(hello|hi\b|hey\b|merhaba|greet|start|begin)/.test(t)) {
+  // Greeting
+  if (/(hi\b|hello|hey\b|greet|how are|what can)/.test(t)) {
     return [
-      `### 👋 Hello, ${name}!`,
-      `I'm your CareerForge AI Career Coach — I've helped place engineers and PMs at FAANG, Series-B startups, and top consulting firms for 15+ years.`,
+      `### 👋 Hello ${name}!`,
       ``,
-      `**Your snapshot:** **${title}** candidate with **${lastRole} @ ${lastCo}** experience.`,
-      `**Estimated ATS score:** **${matchScore}%** — we can push this past 85%.`,
+      `I'm **Forge** — your SoftBridge Career Coach. I've helped hundreds of professionals land roles they love, and I'm here to do the same for you.`,
       ``,
-      `**Where should we start today?**`,
-      `1. 📝 Rewrite my resume bullets in STAR format`,
-      `2. 🎤 Run a role-specific mock interview`,
-      `3. 🔑 Boost my ATS keyword alignment`,
-      `4. 💰 Build a salary negotiation playbook`,
-      `5. 📊 Map out a 90-day career acceleration plan`,
+      hasCv
+        ? `I've reviewed your profile: **${title}** target, **${lastRole}** background. Great starting point! 💜`
+        : `Upload your CV on the left panel and I can give you deeply personalized advice.`,
+      ``,
+      `**How can I help?**`,
+      `- 📄 Analyze and strengthen your CV`,
+      `- 🎯 Boost your ATS score`,
+      `- 🗣️ Mock interview practice`,
+      `- ✉️ Write a cover letter`,
+      `- 💰 Salary negotiation strategy`,
+      ``,
+      `Ready when you are! 🚀`,
     ].join("\n");
   }
 
-  /* 2 — Resume / CV */
-  if (/(resume|cv|summary|bullet|rewrite|refactor|accomplish|improve)/.test(t)) {
+  // CV Analysis
+  if (/(cv|resume|analyze|feedback|review|missing|improve)/.test(t)) {
+    if (!hasCv) {
+      return `### 🔍 CV Analysis\n\nI don't have your CV yet, ${name}. Paste it on the left panel and I'll give you a deep, personalized analysis!\n\n**I'll check:**\n- Impact-driven bullet points\n- Quantifiable metrics\n- ATS keyword density\n- Format and language quality`;
+    }
     return [
-      `### 📝 Personalized Resume Analysis — ${name}`,
+      `### 🔍 CV Analysis — ${name}`,
       ``,
-      `I reviewed your **${lastRole} @ ${lastCo}** role. The issue: your bullets read like a job description, not an achievement record.`,
+      `**💪 Your Strengths**`,
+      `- **${expCount} experiences** — strong industry track record`,
+      `- In-demand skills: **${skills}**`,
+      `- ${lastRole} @ ${lastCo} is highly relevant for target roles`,
       ``,
-      `#### 🔄 STAR Rewrite — Live Example:`,
+      `**🌱 Areas to Improve**`,
+      `- Some bullets say "what you did" without "what impact you created"`,
+      `- Estimated ATS score: **${atsScore}%** — let's push it above 85%`,
       ``,
-      `- ❌ **Before:** *"${oldBullet}"*`,
+      `**✅ 3 Concrete Actions**`,
       ``,
-      `-  **After (STAR Method):**`,
-      `  *"Identified and resolved a critical performance bottleneck at **${lastCo}** using **${skills.split(",")[0].trim()}**; reduced page load from 800ms → 210ms and improved weekly conversion by **23%**."*`,
+      `**1. Add metrics to every bullet**`,
+      `❌ Now: "${firstBullet.slice(0, 60)}..."`,
+      `✅ Better: "...achieving a **30% efficiency improvement** within 2 sprints"`,
       ``,
-      `#### ✍️ Professional Summary Draft:`,
-      `*"Results-driven **${title}** with expertise in **${skills}**. Proven record of shipping scalable products and reducing system latency at **${lastCo}** and comparable teams."*`,
+      `**2. Use the Action + Impact + Result format**`,
+      `"**Built** → React dashboard → **reduced** customer support tickets by **40%**"`,
       ``,
-      `#### ✅ Quick Wins (implement today):`,
-      `- Add one **%** or **×** metric to every experience bullet`,
-      `- Open each bullet with a strong verb: *Architected, Optimized, Led, Scaled, Reduced*`,
-      `- Embed your tech stack naturally inside sentences, not just in a list`,
+      `**3. Add ATS keywords**`,
+      `Current: ${skills.split(", ").slice(0, 3).join(", ")}`,
+      `Add: CI/CD, Agile, REST API, stakeholder management`,
       ``,
-      `*💡 Paste one of your current bullets below — I'll rewrite it live in STAR format.*`,
+      `**🔥 ${name}, your CV has real potential. Small, targeted improvements = big results.** 💜`,
     ].join("\n");
   }
 
-  /* 3 — Interview */
-  if (/(interview|question|mock|star|behavioral|prep|practice|loop)/.test(t)) {
+  // Interview
+  if (/(interview|mock|practice|question|behavioral|star|experience)/.test(t)) {
     return [
-      `### 🎤 Role-Specific Mock Interview — ${title}`,
+      `### 🗣️ Interview Prep — ${name}`,
       ``,
-      `**${name}**, here are 3 high-frequency questions for **${title}** roles with full STAR response plans:`,
+      `**💪 Your Strong Foundation**`,
+      `${expCount} roles + ${topSkill} experience gives you rich stories to share.`,
       ``,
-      `#### ❓ Question 1: Deep Technical Decision`,
-      `**"What was the hardest technical decision you made at ${lastCo} using ${topSkill}?"**`,
+      `**✅ STAR Framework**`,
+      `| Letter | Meaning | Example |`,
+      `|---|---|---|`,
+      `| **S**ituation | Set context | "At ${lastCo}, during a critical sprint..." |`,
+      `| **T**ask | Your responsibility | "...I led the backend redesign..." |`,
+      `| **A**ction | What you did | "...I restructured the API and automated tests..." |`,
+      `| **R**esult | Outcome | "...reducing load time by 60%, saving $50K/yr" |`,
       ``,
-      `**STAR Response Plan:**`,
-      `- **S:** Our high-traffic service was leaking memory during peak load (2M+ RPM).`,
-      `- **T:** Needed to isolate the leak and deploy a fix with zero downtime.`,
-      `- **A:** Used ${topSkill} profiling tools to trace the root cause; refactored with lazy-loading + stable selectors.`,
-      `- **R:** Reduced memory usage by **40%**, p95 latency dropped **480ms → 95ms**.`,
+      `**🎯 Your Practice Questions**`,
+      `1. "What's the hardest technical decision you made as ${lastRole}?"`,
+      `2. "Tell me about a time you missed a deadline. What happened?"`,
+      `3. "How do you prioritize competing projects? Give a real example."`,
+      `4. "What's the most complex problem you solved with ${topSkill}?"`,
       ``,
-      `#### ❓ Question 2: Conflict Resolution`,
-      `**"How do you handle technical disagreements in your team?"**`,
-      ``,
-      `**Framework:** Document trade-offs with data → write an Architecture Decision Record (ADR) → team consensus vote → own the outcome. Focus on system quality, not ego.`,
-      ``,
-      `#### ❓ Question 3: System Design`,
-      `**"Design a scalable ${topSkill}-based feature from scratch."**`,
-      ``,
-      `**Approach:** Clarify requirements (functional vs non-functional) → estimate load → sketch MVP architecture → identify bottlenecks → discuss trade-offs openly.`,
-      ``,
-      `*💡 Draft an answer to one of these questions — I'll give you professional feedback immediately.*`,
+      `**🔥 ${name}, interviews aren't tests — they're conversations. You have the stories. Let's tell them well!** 💜`,
     ].join("\n");
   }
 
-  /* 4 — ATS */
-  if (/(ats|keyword|match|score|parse|scan|filter|applicant track)/.test(t)) {
-    return [
-      `### 🔑 ATS Audit & Keyword Optimization — ${name}`,
-      ``,
-      `I cross-referenced your profile against standard **${title}** job descriptions:`,
-      ``,
-      `**Estimated ATS Pass Score: ${matchScore}%**`,
-      ``,
-      `#### ✅ Matched Strengths:`,
-      `- ${skills}`,
-      ``,
-      `#### ⚠️ Critical Missing Keywords (70%+ of listings require):`,
-      `- CI/CD pipeline experience (GitHub Actions, Jenkins, GitLab CI)`,
-      `- Containerization (Docker, Kubernetes)`,
-      `- Cloud platform (AWS, Azure, or GCP)`,
-      `- Testing frameworks (Jest, Playwright, Cypress)`,
-      `- Agile terminology (Sprint, Scrum, Kanban, Retrospective)`,
-      ``,
-      `#### 🛠️ ATS Optimization Checklist:`,
-      `1. **Format:** Single-column layout — icons and tables break standard ATS parsers`,
-      `2. **File type:** Text-selectable PDF or .docx`,
-      `3. **Date format:** "Jan 2022 – Feb 2024" — consistent throughout`,
-      `4. **Keyword placement:** Embed missing terms inside experience sentences, not just a skills list`,
-      `5. **Section headers:** Use standard names: Experience, Skills, Education`,
-      ``,
-      `*💡 Paste a target job description — I'll map exact keyword gaps to your current CV.*`,
-    ].join("\n");
-  }
-
-  /* 5 — Salary */
-  if (/(salary|negotiat|offer|comp|pay|raise|package)/.test(t)) {
-    return [
-      `### 💰 Salary Negotiation Playbook — ${name}`,
-      ``,
-      `As a **${title}**, here's how to maximize your total comp:`,
-      ``,
-      `#### 1️⃣ Pre-Interview Research`,
-      `- Check Glassdoor, Levels.fyi, LinkedIn Salary for ${title} bands`,
-      `- Set target = market median + 15–20% negotiation buffer`,
-      ``,
-      `#### 2️⃣ Let Them Anchor First (Golden Rule)`,
-      `**Script:** *"I'm very excited about this role. Could you share the approved budget range for this seniority level?"*`,
-      ``,
-      `#### 3️⃣ Counter-Offer Script`,
-      `*"Thank you for the offer — I'm genuinely excited. Given my track record at **${lastCo}** and deep expertise in **${skills.split(",")[0].trim()}**, would it be possible to bring the base to [Target + 15%]? I'd be ready to sign immediately at that number."*`,
-      ``,
-      `#### 4️⃣ Negotiate Total Comp, Not Just Base`,
-      `- Base salary + Annual bonus target + Equity vesting schedule`,
-      `- Remote stipend + Equipment budget`,
-      `- Learning & conference budget (often $2K–$5K/year)`,
-      `- Extra PTO (rarely negotiated but often granted)`,
-      ``,
-      `#### 5️⃣ Competing Offer Leverage`,
-      `*"I have parallel processes in flight. You're my top choice — can we finalize within a week?"*`,
-      ``,
-      `*💡 Share the offer details — let's calculate your actual total comp and counter strategy.*`,
-    ].join("\n");
-  }
-
-  /* Default EN */
+  // Fallback
   return [
-    `### 🤖 CareerForge AI Career Coach`,
+    `### 🤝 Hey ${name}!`,
     ``,
-    `Hello **${name}**! Here's your current snapshot:`,
-    `- **Target Role:** ${title}`,
-    `- **Latest Experience:** ${lastRole} @ ${lastCo}`,
-    `- **Key Skills:** ${skills}`,
-    `- **Estimated ATS Score:** ${matchScore}%`,
+    `I got your message! Here's what I can help with:`,
     ``,
-    `I can help you with:`,
-    `| Topic | Try saying |`,
+    `| Topic | How to ask |`,
     `|---|---|`,
-    `| Resume rewrites | "Rewrite my CV bullets" |`,
-    `| Interview prep | "Mock interview questions" |`,
-    `| ATS optimization | "Boost my ATS score" |`,
-    `| Salary negotiation | "Salary negotiation script" |`,
-    `| Career planning | "Build my 90-day plan" |`,
+    `| 📄 CV Review | "Analyze my CV" |`,
+    `| 🎯 ATS | "How to boost my ATS score?" |`,
+    `| 🗣️ Interview | "Mock interview practice" |`,
+    `| ✉️ Cover Letter | "Write a cover letter" |`,
+    `| 💰 Salary | "Salary negotiation script" |`,
+    `| 💼 LinkedIn | "Optimize my LinkedIn" |`,
+    ``,
+    `**🔥 What would you like to work on?** 💜`,
   ].join("\n");
+}
+
+// ─── Ready question generator (CV'ye özel hazır sorular) ─────────────────────
+export function generateReadyQuestions(lang: "tr" | "en"): string[] {
+  const { resume, forgeParsedCv } = useCareerStore.getState();
+
+  const name =
+    forgeParsedCv?.name?.trim().split(" ")[0] ||
+    resume.fullName.trim().split(" ")[0] || "";
+  const title = forgeParsedCv?.title || resume.headline || "";
+  const lastRole = forgeParsedCv?.experience?.[0]?.position || resume.experience[0]?.role || "";
+  const topSkill = forgeParsedCv?.skills?.[0] || resume.skills[0] || "";
+  const expCount = (forgeParsedCv?.experience?.length ?? resume.experience.length);
+  const hasCv = name.length > 0;
+
+  if (lang === "tr") {
+    if (!hasCv) {
+      return [
+        "📄 CV'imi nasıl analiz edebilirsin?",
+        "🎯 ATS nedir, neden önemli?",
+        "🗣️ Mülakat hazırlığına nasıl başlamalıyım?",
+        "✉️ Kapak mektubu ne kadar önemli?",
+        "💰 Maaş müzakeresi nasıl yapılır?",
+        "🗺️ Kariyer yol haritamı oluşturmama yardım et",
+      ];
+    }
+    return [
+      `📄 ${name ? `${name}'in` : "CV'imin"} en zayıf yanı ne?`,
+      `🎯 ATS puanımı nasıl %85'in üzerine çıkarırım?`,
+      `💪 ${lastRole ? `${lastRole} deneyimimi` : "Deneyimlerimi"} nasıl daha güçlü anlatırım?`,
+      `🗣️ ${lastRole || "Pozisyonum"} için en sık sorulan 5 mülakat sorusu nedir?`,
+      `⚡ ${topSkill ? `${topSkill} ile` : "Becerilerimle"} öne çıkmak için ne yapmalıyım?`,
+      `✉️ ${title || "Hedef pozisyon"} için güçlü bir kapak mektubu yaz`,
+      `💰 ${expCount > 0 ? `${expCount} yıl deneyimle` : "Deneyimimle"} maaş pazarlığını nasıl yapmalıyım?`,
+      `🗺️ 90 günlük kariyer planımı birlikte oluştur`,
+    ];
+  }
+
+  if (!hasCv) {
+    return [
+      "📄 How can you analyze my CV?",
+      "🎯 What is ATS and why does it matter?",
+      "🗣️ How should I prepare for interviews?",
+      "✉️ How important is a cover letter?",
+      "💰 How do I negotiate my salary?",
+      "🗺️ Help me build a career roadmap",
+    ];
+  }
+  return [
+    `📄 What's the weakest part of ${name ? `${name}'s` : "my"} CV?`,
+    `🎯 How do I push my ATS score above 85%?`,
+    `💪 How do I better present ${lastRole || "my experience"}?`,
+    `🗣️ Top 5 interview questions for ${lastRole || "my role"}?`,
+    `⚡ How do I stand out with ${topSkill || "my skills"}?`,
+    `✉️ Write a cover letter for ${title || "my target role"}`,
+    `💰 How do I negotiate salary with ${expCount} years experience?`,
+    `🗺️ Build my 90-day career plan`,
+  ];
 }

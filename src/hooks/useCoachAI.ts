@@ -51,23 +51,30 @@ function slugId(prefix: string, i: number) {
 // ─── Main Hook ────────────────────────────────────────────────────────────────
 
 export function useCoachAI() {
-  const { resume, lang, addCoachMessage, coachMessages, clearCoach } =
+  const { resume, lang, addCoachMessage, coachMessages, clearCoach, forgeParsedCv } =
     useCareerStore();
   const [loading, setLoading] = useState(false);
 
   // ── Derived CV context ─────────────────────────────────────────────────────
   const cvContext = useMemo(() => {
-    const name = resume.fullName.split(" ")[0] || (lang === "tr" ? "Aday" : "Candidate");
-    const title = resume.headline || (lang === "tr" ? "Yazılım Profesyoneli" : "Software Professional");
-    const lastJob = resume.experience[0] ?? null;
-    const lastTitle = lastJob?.role ?? title;
-    const lastCompany = lastJob?.company ?? (lang === "tr" ? "hedef şirket" : "target company");
-    const allBullets = resume.experience.flatMap((e) => e.highlights ?? []);
-    const topSkills = resume.skills.slice(0, 5);
+    // Prefer forge-parsed CV over manual resume store
+    const forgeFirst = !!forgeParsedCv?.name;
+    const name = (forgeFirst ? forgeParsedCv!.name : resume.fullName).split(" ")[0] || (lang === "tr" ? "Aday" : "Candidate");
+    const title = (forgeFirst ? forgeParsedCv!.title : resume.headline) || (lang === "tr" ? "Yazılım Profesyoneli" : "Software Professional");
+    const lastJobForge = forgeParsedCv?.experience?.[0];
+    const lastJob = forgeFirst ? null : (resume.experience[0] ?? null);
+    const lastTitle = lastJobForge?.position ?? lastJob?.role ?? title;
+    const lastCompany = lastJobForge?.company ?? lastJob?.company ?? (lang === "tr" ? "hedef şirket" : "target company");
+    const allBullets = forgeFirst
+      ? (forgeParsedCv?.experience ?? []).flatMap((e) => e.description ?? [])
+      : resume.experience.flatMap((e) => e.highlights ?? []);
+    const topSkills = (forgeFirst ? forgeParsedCv?.skills ?? [] : resume.skills).slice(0, 5);
     const firstSkill = topSkills[0] ?? (lang === "tr" ? "teknik beceri" : "technical skill");
-    const skillCount = resume.skills.length;
-    const expCount = resume.experience.length;
-    const hasSummary = (resume.summary?.trim().length ?? 0) > 40;
+    const skillCount = forgeFirst ? (forgeParsedCv?.skills?.length ?? 0) : resume.skills.length;
+    const expCount = forgeFirst ? (forgeParsedCv?.experience?.length ?? 0) : resume.experience.length;
+    const hasSummary = forgeFirst
+      ? (forgeParsedCv?.summary?.trim().length ?? 0) > 40
+      : (resume.summary?.trim().length ?? 0) > 40;
     const metricsPresent = hasMetrics(allBullets);
     const bulletsPresent = allBullets.length > 0;
 
@@ -76,7 +83,7 @@ export function useCoachAI() {
       allBullets, topSkills, firstSkill, skillCount,
       expCount, hasSummary, metricsPresent, bulletsPresent,
     };
-  }, [resume, lang]);
+  }, [resume, lang, forgeParsedCv]);
 
   // ── CV Health Insights ─────────────────────────────────────────────────────
   const cvInsights = useMemo((): CvInsight[] => {
@@ -328,6 +335,7 @@ export function useCoachAI() {
 
   // ── CV is loaded? ─────────────────────────────────────────────────────────
   const hasCv = Boolean(
+    forgeParsedCv?.name ||
     resume.fullName.trim() ||
     resume.experience.length > 0 ||
     resume.skills.length > 0

@@ -38,23 +38,48 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased h-full dark`}
+      lang="tr"
+      className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
     >
-      <body className="min-h-full flex flex-col bg-midnight-void text-star-white font-sans mesh-bg selection:bg-cosmic-teal/20">
+      {/*
+        Inline script: reads localStorage BEFORE React hydrates.
+        Prevents flash of wrong theme (FOWT).
+        Default = light if no saved preference exists.
+      */}
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+(function() {
+  try {
+    var stored = localStorage.getItem('career-store');
+    if (stored) {
+      var parsed = JSON.parse(stored);
+      var theme = parsed && parsed.state && parsed.state.theme;
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      }
+    }
+    // Default = light — do nothing if no preference saved
+  } catch(e) {}
+})();
+`,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col bg-background text-primary font-sans mesh-bg selection:bg-cosmic-teal/20">
         <Header />
         <main className="flex-1 pt-[5.25rem] md:pt-24 pb-16 lg:pb-0">{children}</main>
         <Footer />
         <Toaster
-          theme="dark"
+          theme="system"
           position="bottom-right"
           toastOptions={{
-            className: "border border-cosmic-teal/10 bg-panel-elevated text-star-white",
-            style: { background: "#110720", color: "#F5EEFF", borderColor: "rgba(192,132,252,0.15)" },
+            className: "border bg-panel text-primary",
+            style: { borderColor: "rgba(192,132,252,0.2)" },
           }}
         />
       </body>
     </html>
   );
 }
-
