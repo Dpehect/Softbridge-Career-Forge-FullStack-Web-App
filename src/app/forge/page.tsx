@@ -123,6 +123,8 @@ export default function ForgePage() {
   const [chatInput, setChatInput] = useState("");
   const [chatResult, setChatResult] = useState<ChatbotResult | null>(null);
   const [busy, setBusy] = useState(false);
+  const [parseBanner, setParseBanner] = useState<string | null>(null);
+  const [lastCvFileName, setLastCvFileName] = useState<string | null>(null);
 
   const cvText = forgeCvText;
   const jdText = forgeJdText;
@@ -147,13 +149,14 @@ export default function ForgePage() {
     }
   };
 
-  const runParse = (text: string, source: "manual" | "file" = "manual") => {
+  const runParse = (text: string, source: "manual" | "file" = "manual", fileName?: string) => {
     if (!text.trim()) {
-      toast.error("Önce CV metnini yapıştır veya dosya seç.");
+      toast.error("Önce CV metnini yapıştır veya bilgisayardan CV seç.");
       return null;
     }
     const parsed = parseCV(text);
     setForgeParsedCv(parsed);
+    if (fileName) setLastCvFileName(fileName);
     pushForgeHistory({
       action: "parse",
       summary: `${parsed.name} — ${parsed.skills.length} beceri, ${parsed.experience.length} deneyim${
@@ -161,11 +164,20 @@ export default function ForgePage() {
       }`,
       payload: parsed,
     });
-    toast.success(
-      "CV'niz başarıyla parse edildi. Şimdi iş ilanı yapıştırabilir veya doğrudan optimizasyon yapabilirsiniz."
-    );
+    const successMsg =
+      "CV'niz başarıyla yüklendi ve parse edildi. Şimdi iş ilanı yapıştırabilir veya doğrudan optimizasyon yapabilirsiniz.";
+    setParseBanner(successMsg);
+    toast.success(successMsg);
+    toast.message("Sonuç burada ve geçmişte saklanmıştır");
     setTab("parse");
     return parsed;
+  };
+
+  const handleCvFile = (text: string, fileName: string) => {
+    setForgeCvText(text);
+    run(() => {
+      runParse(text, "file", fileName);
+    });
   };
 
   const onParse = () =>
@@ -304,20 +316,22 @@ export default function ForgePage() {
               </p>
               <div className="flex flex-wrap items-center gap-1.5">
                 <FilePickButton
-                  label="CV dosyası seç"
+                  label="Bilgisayardan CV Seç"
                   silentSuccess
-                  onText={(text) => {
-                    setForgeCvText(text);
-                    run(() => {
-                      runParse(text, "file");
-                    });
-                  }}
+                  onText={(text, fileName) => handleCvFile(text, fileName)}
+                />
+                <FilePickButton
+                  label="Klasöre Göz At"
+                  variant="ghost"
+                  silentSuccess
+                  onText={(text, fileName) => handleCvFile(text, fileName)}
                 />
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => {
                     setForgeCvText(SAMPLE_CV);
+                    setLastCvFileName(null);
                     run(() => {
                       runParse(SAMPLE_CV, "manual");
                     });
@@ -328,13 +342,17 @@ export default function ForgePage() {
               </div>
             </div>
             <p className="text-[11px] text-muted-steel">
-              Sürükle-bırak yok — <strong>CV dosyası seç</strong> ile klasörlere tıklayarak gezin
-              (PDF, TXT, MD). Dosya seçilince metin çıkarılır, parse edilir ve geçmişe kaydedilir.
+              Metin yapıştır veya <strong>Bilgisayardan CV Seç</strong> / <strong>Klasöre Göz At</strong>{" "}
+              (PDF, TXT). Sürükle-bırak yok — dosya penceresinde klasörlere tıklayarak gez. Seçim sonrası
+              otomatik parse edilir.
             </p>
             <Textarea
               value={cvText}
-              onChange={(e) => setForgeCvText(e.target.value)}
-              placeholder="CV’ni buraya yapıştır veya dosya seç…"
+              onChange={(e) => {
+                setForgeCvText(e.target.value);
+                setParseBanner(null);
+              }}
+              placeholder="CV’ni buraya yapıştır veya bilgisayardan dosya seç…"
               className="min-h-[180px] font-mono text-xs"
             />
           </div>
@@ -416,14 +434,79 @@ export default function ForgePage() {
 
         <div className="glass-panel rounded-3xl p-5 md:p-7 min-h-[320px]">
           {tab === "parse" && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-lg">Yapılandırılmış CV</h2>
+            <div className="space-y-5">
+              <div>
+                <h2 className="font-semibold text-lg">Yapılandırılmış CV</h2>
+                <p className="text-sm text-muted-steel mt-1">
+                  CV’ni aşağıya yapıştır veya bilgisayarından dosya seç. Parse sonucu bu bölümde
+                  yapılandırılmış görünür; geçmişe de kaydedilir.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-black/8 bg-panel-elevated/40 p-4 space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  <FilePickButton
+                    label="Bilgisayardan CV Seç"
+                    variant="accent"
+                    size="default"
+                    silentSuccess
+                    onText={(text, fileName) => handleCvFile(text, fileName)}
+                  />
+                  <FilePickButton
+                    label="Klasöre Göz At"
+                    variant="outline"
+                    size="default"
+                    silentSuccess
+                    onText={(text, fileName) => handleCvFile(text, fileName)}
+                  />
+                  <Button
+                    variant="soft"
+                    disabled={busy || !cvText.trim()}
+                    onClick={onParse}
+                  >
+                    Metni Parse Et
+                  </Button>
+                </div>
+                <p className="text-[11px] text-muted-steel">
+                  Desteklenen formatlar: <strong>PDF</strong>, <strong>TXT</strong> (ve MD). Butona bas →
+                  dosya penceresi açılır → klasörlere tıklayarak ilerle → seçince otomatik parse.
+                </p>
+                <Textarea
+                  value={cvText}
+                  onChange={(e) => {
+                    setForgeCvText(e.target.value);
+                    setParseBanner(null);
+                  }}
+                  placeholder="CV metnini buraya yapıştır… veya yukarıdan bilgisayarından dosya seç."
+                  className="min-h-[140px] font-mono text-xs"
+                />
+                {lastCvFileName && (
+                  <p className="text-xs text-muted-steel">
+                    Son seçilen dosya: <span className="font-semibold text-star-white">{lastCvFileName}</span>
+                  </p>
+                )}
+              </div>
+
+              {parseBanner && (
+                <div className="rounded-2xl border border-cosmic-teal/25 bg-cosmic-teal/10 px-4 py-3 space-y-1">
+                  <p className="text-sm font-semibold text-star-white">{parseBanner}</p>
+                  <p className="text-xs text-cosmic-teal font-medium">
+                    Sonuç burada ve geçmişte saklanmıştır.
+                  </p>
+                </div>
+              )}
+
               {!forgeParsedCv ? (
                 <p className="text-sm text-muted-steel">
-                  CV yapıştırıp <strong>Parse</strong>’a bas. Sonuç burada ve geçmişte saklanır.
+                  Henüz parse yok. Metin yapıştırıp <strong>Metni Parse Et</strong> de veya{" "}
+                  <strong>Bilgisayardan CV Seç</strong> ile dosya yükle.
                 </p>
               ) : (
                 <>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="accent">Parse sonucu</Badge>
+                    <span className="text-xs text-muted-steel">Yapılandırılmış görünüm</span>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     <StatPill label="Ad" value={forgeParsedCv.name} />
                     <StatPill label="Unvan" value={forgeParsedCv.title} />
@@ -452,10 +535,16 @@ export default function ForgePage() {
                           {s}
                         </Badge>
                       ))}
+                      {forgeParsedCv.skills.length === 0 && (
+                        <span className="text-sm text-muted-steel">Beceri algılanamadı</span>
+                      )}
                     </div>
                   </div>
                   <div className="space-y-3">
                     <p className="text-[10px] font-bold uppercase text-muted-steel">Deneyim</p>
+                    {forgeParsedCv.experience.length === 0 && (
+                      <p className="text-sm text-muted-steel">Deneyim bloğu algılanamadı</p>
+                    )}
                     {forgeParsedCv.experience.map((e, i) => (
                       <div key={i} className="rounded-xl border border-black/5 p-3 bg-panel-elevated/50">
                         <p className="font-semibold text-sm">
@@ -472,8 +561,21 @@ export default function ForgePage() {
                       </div>
                     ))}
                   </div>
+                  {forgeParsedCv.education.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase text-muted-steel mb-2">Eğitim</p>
+                      <ul className="space-y-1 text-sm">
+                        {forgeParsedCv.education.map((edu, i) => (
+                          <li key={i}>
+                            {edu.school} — {edu.degree} ({edu.year})
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   <p className="text-xs text-cosmic-teal">
-                    Sonraki adım: JD ekleyip Match veya ATS çalıştır.
+                    Sonuç burada ve geçmişte saklanmıştır. Sonraki adım: iş ilanı yapıştır →{" "}
+                    <strong>Karşılaştır</strong> veya <strong>Optimize et</strong>.
                   </p>
                 </>
               )}
