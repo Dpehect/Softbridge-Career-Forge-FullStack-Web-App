@@ -23,6 +23,57 @@ const emptyResume = (): ResumeProfile => ({
   photoDataUrl: null,
 });
 
+export function parsedToResume(cv: ParsedCV): ResumeProfile {
+  return {
+    fullName: cv.name === "Candidate" || cv.name === "Aday" ? "" : cv.name,
+    headline: cv.title || "",
+    email: cv.email || "",
+    location: cv.location || "",
+    summary: cv.summary || "",
+    skills: cv.skills || [],
+    photoDataUrl: cv.photoDataUrl || null,
+    experience: (cv.experience || []).map((e, i) => ({
+      id: `exp-${Date.now()}-${i}`,
+      role: e.position,
+      company: e.company,
+      start: e.duration.split(/[–-]/)[0]?.trim() || "",
+      end: e.duration.split(/[–-]/)[1]?.trim() || "",
+      highlights: e.description,
+    })),
+    education: (cv.education || []).map((e, i) => ({
+      id: `edu-${Date.now()}-${i}`,
+      school: e.school,
+      degree: e.degree,
+      year: e.year,
+    })),
+  };
+}
+
+export function resumeToParsed(resume: ResumeProfile): ParsedCV {
+  return {
+    name: resume.fullName || "Candidate",
+    title: resume.headline || "Professional",
+    email: resume.email,
+    phone: null,
+    location: resume.location || null,
+    summary: resume.summary || null,
+    skills: resume.skills,
+    photoDataUrl: resume.photoDataUrl || null,
+    experience: resume.experience.map((e) => ({
+      company: e.company,
+      position: e.role,
+      duration: [e.start, e.end].filter(Boolean).join(" – ") || "—",
+      description: e.highlights,
+    })),
+    education: resume.education.map((e) => ({
+      school: e.school,
+      degree: e.degree,
+      year: e.year,
+    })),
+    rawLength: 0,
+  };
+}
+
 const defaultResume: ResumeProfile = emptyResume();
 
 interface CareerState {
@@ -122,9 +173,12 @@ export const useCareerStore = create<CareerState>()(
             : [...completedModuleIds, id],
         });
       },
-      updateResume: (patch) => set({ resume: { ...get().resume, ...patch } }),
-      setResume: (resume) => set({ resume }),
-      resetResume: () => set({ resume: emptyResume() }),
+      updateResume: (patch) => {
+        const updated = { ...get().resume, ...patch };
+        set({ resume: updated, forgeParsedCv: resumeToParsed(updated) });
+      },
+      setResume: (resume) => set({ resume, forgeParsedCv: resumeToParsed(resume) }),
+      resetResume: () => set({ resume: emptyResume(), forgeParsedCv: null }),
       addCoachMessage: (message) =>
         set({
           coachMessages: [
@@ -150,7 +204,7 @@ export const useCareerStore = create<CareerState>()(
         }),
       setForgeCvText: (text) => set({ forgeCvText: text }),
       setForgeJdText: (text) => set({ forgeJdText: text }),
-      setForgeParsedCv: (cv) => set({ forgeParsedCv: cv }),
+      setForgeParsedCv: (cv) => set({ forgeParsedCv: cv, resume: cv ? parsedToResume(cv) : emptyResume() }),
       setForgeAnalysis: (analysis) => set({ forgeAnalysis: analysis }),
       setForgeTone: (tone) => set({ forgeTone: tone }),
       pushForgeHistory: (item) =>
@@ -170,6 +224,7 @@ export const useCareerStore = create<CareerState>()(
           forgeCvText: "",
           forgeParsedCv: null,
           forgeAnalysis: null,
+          resume: emptyResume(),
         }),
       saveForgeBackup: (label) => {
         const { forgeCvText, forgeParsedCv, forgeBackups } = get();

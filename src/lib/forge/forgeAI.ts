@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useCareerStore } from "@/store/useCareerStore";
 import type { ParsedCV, MatchAnalysis, OptimizedCV, CoverLetterResult, CoverLetterTone, InterviewResult } from "./types";
 import { generateCvFeedback } from "./cvFeedback";
@@ -325,5 +326,85 @@ function simulateChatCoach(
       "İş görüşmesi için teknik soru hazırlığı yap"
     ],
     nextStep: "Sorunuzu detaylandırın veya hazır yönlendirmelerden birini yazın."
+  };
+}
+
+export function useForgeAI() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const getFeedback = async (cv: ParsedCV) => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await simulateAIResponse("feedback", cv);
+    } catch (err: any) {
+      setError(err?.message || "Geri bildirim üretilemedi.");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getJobMatch = async (cv: ParsedCV, jdText: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await simulateAIResponse("match", cv, { jd: jdText }) as MatchAnalysis;
+    } catch (err: any) {
+      setError(err?.message || "Eşleştirme analizi yapılamadı.");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getOptimization = async (cv: ParsedCV, jdText: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await simulateAIResponse("optimize", cv, { jd: jdText }) as OptimizedCV;
+    } catch (err: any) {
+      setError(err?.message || "CV optimizasyonu başarısız.");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getCoverLetter = async (cv: ParsedCV, jdText: string, tone?: CoverLetterTone) => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await simulateAIResponse("coverletter", cv, { jd: jdText, tone }) as CoverLetterTone extends undefined ? any : CoverLetterResult;
+    } catch (err: any) {
+      setError(err?.message || "Ön yazı oluşturulamadı.");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getInterviewPrep = async (cv: ParsedCV, jdText: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await simulateAIResponse("interview", cv, { jd: jdText }) as InterviewResult;
+    } catch (err: any) {
+      setError(err?.message || "Mülakat soruları üretilemedi.");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    loading,
+    error,
+    getFeedback,
+    getJobMatch,
+    getOptimization,
+    getCoverLetter,
+    getInterviewPrep,
   };
 }

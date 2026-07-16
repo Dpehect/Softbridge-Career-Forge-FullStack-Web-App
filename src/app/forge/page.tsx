@@ -38,6 +38,7 @@ import {
   exportCvAsPdf,
   generateCvFeedback,
   simulateAIResponse,
+  useForgeAI,
   type CoverLetterTone,
   type OptimizedCV,
   type CoverLetterResult,
@@ -90,6 +91,15 @@ export default function ForgePage() {
   const [parseBanner, setParseBanner] = useState<string | null>(null);
   const [lastCvFileName, setLastCvFileName] = useState<string | null>(null);
 
+  const {
+    loading: aiLoading,
+    error: aiError,
+    getJobMatch,
+    getOptimization,
+    getCoverLetter,
+    getInterviewPrep
+  } = useForgeAI();
+
   // Sync tab hash routing & hydration mounting
   useEffect(() => {
     setMounted(true);
@@ -111,6 +121,7 @@ export default function ForgePage() {
 
   const cvText = forgeCvText;
   const jdText = forgeJdText;
+  const isLoading = busy || aiLoading;
 
   const run = async (fn: () => Promise<void> | void) => {
     setBusy(true);
@@ -215,7 +226,7 @@ export default function ForgePage() {
         toast.error("Please paste the Job Description (JD) text first.");
         return;
       }
-      const analysis = await simulateAIResponse("match", forgeParsedCv, { jd: jdText });
+      const analysis = await getJobMatch(forgeParsedCv, jdText);
       setForgeAnalysis(analysis);
       pushForgeHistory({
         action: "analyze",
@@ -229,7 +240,7 @@ export default function ForgePage() {
   const onOptimize = () =>
     run(async () => {
       if (!forgeParsedCv) return;
-      const result = await simulateAIResponse("optimize", forgeParsedCv, { jd: jdText });
+      const result = await getOptimization(forgeParsedCv, jdText);
       setOptimized(result);
       pushForgeHistory({
         action: "optimize",
@@ -247,7 +258,7 @@ export default function ForgePage() {
         toast.error("Please paste the JD text first.");
         return;
       }
-      const result = await simulateAIResponse("coverletter", forgeParsedCv, { jd: jdText, tone: forgeTone });
+      const result = await getCoverLetter(forgeParsedCv, jdText, forgeTone);
       setCover(result);
       pushForgeHistory({
         action: "coverletter",
@@ -277,7 +288,7 @@ export default function ForgePage() {
     run(async () => {
       const parsed = forgeParsedCv || parseCV(cvText || "Aday\nSoftware Engineer\nReact");
       if (!forgeParsedCv && cvText.trim()) setForgeParsedCv(parsed);
-      const result = await simulateAIResponse("interview", parsed, { jd: jdText });
+      const result = await getInterviewPrep(parsed, jdText);
       setInterview(result);
       pushForgeHistory({
         action: "interview",
@@ -722,6 +733,11 @@ export default function ForgePage() {
 
             {/* Tool Output Window */}
             <div className="glass-panel rounded-3xl p-6 border border-cosmic-teal/10 min-h-[460px]">
+              {aiError && (
+                <div className="rounded-xl border border-sunset-coral/20 bg-sunset-coral/10 px-4 py-3 mb-4 text-xs text-sunset-coral">
+                  ⚠️ {aiError}
+                </div>
+              )}
               
               {/* Tab 1: Live CV Preview */}
               {previewTab === "preview" && (
