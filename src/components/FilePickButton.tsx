@@ -53,9 +53,13 @@ export function FilePickButton({
       }
     } catch (err) {
       const code = err instanceof Error ? err.message : "";
-      if (code === "PDF_NO_TEXT") {
+      if (code === "PDF_SCANNED") {
         toast.error(
-          "Could not read clean text from this PDF (it may be a scan/image). Export as TXT or paste the text."
+          "This PDF appears to be a scanned document. Please export it as searchable text or paste the content manually."
+        );
+      } else if (code === "PDF_NO_TEXT") {
+        toast.error(
+          "Could not extract text from this PDF. Try another export, use TXT, or paste the content manually."
         );
       } else if (code === "UNSUPPORTED") {
         toast.error("Supported formats: PDF and TXT (also MD).");

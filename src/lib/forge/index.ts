@@ -10,6 +10,7 @@ export {
   extractTextFromPdfBytes,
   cleanExtractedText,
   looksLikeRawPdf,
+  isLikelyHumanText,
 } from "./extractFileText";
 export {
   parsedCvToText,
