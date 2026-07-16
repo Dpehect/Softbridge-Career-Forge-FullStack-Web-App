@@ -182,6 +182,14 @@ export function useCoachAI() {
         });
       }
 
+      questions.unshift({
+        id: slugId("q", i++),
+        label: "En zor mülakat sorusu + 3 STAR",
+        prompt: `Bu CV ile bir mülakata girsem en zorlanacağım soru hangisi olabilir? Özellikle “Neden önceki projeniz başarısız oldu?” tipinde bir soru için STAR metoduna uygun 3 farklı cevap şablonu yaz. Hedef rol: ${title}. CV bağlamı: ${firstSkill}, ${lastCompany}.`,
+        tag: "interview",
+        priority: "high",
+      });
+
       // MEDIUM PRIORITY — always useful
       questions.push({
         id: slugId("q", i++),
@@ -268,6 +276,13 @@ export function useCoachAI() {
         });
       }
 
+      questions.unshift({
+        id: slugId("q", i++),
+        label: "Hardest interview Q + 3 STAR",
+        prompt: `If I interview with this CV, what is the hardest question I might face? Especially for “Why did a previous project fail?”, give 3 different STAR-method answer templates. Target role: ${title}. Context: ${firstSkill}, ${lastCompany}.`,
+        tag: "interview",
+        priority: "high",
+      });
       questions.push({
         id: slugId("q", i++),
         label: `Interview questions for "${firstSkill}"`,

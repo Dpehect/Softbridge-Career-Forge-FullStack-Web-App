@@ -28,3 +28,12 @@ export {
 export { exportCvAsPdf } from "./exportPdf";
 export { generateCvFeedback, type CvDeepFeedback } from "./cvFeedback";
 export { simulateAIResponse, useForgeAI } from "./forgeAI";
+export {
+  CAREER_GOALS,
+  getGoal,
+  buildJourneyInsight,
+  matchSkills,
+  type CareerGoal,
+  type CareerGoalId,
+  type JourneyInsight,
+} from "./journey";

@@ -22,13 +22,21 @@ export const DICTIONARY = {
     // Landing Page
     heroTitle: "Kariyer hedefleriniz için profesyonel bir çalışma alanı",
     heroSubtitle: "Özgeçmişinizi güçlendirin, iş fırsatlarını eşleştirin, mülakatlara hazırlanın ve ATS raporlarını alın — hepsi tarayıcınızda gizli.",
-    startForge: "Forge ile Başla",
+    startForge: "CV yükle · Hedef seç · Yüksel",
     openWorkspace: "Özgeçmiş Düzenleyici",
     howItWorks: "Nasıl Çalışır?",
     threeSteps: "Daha güçlü bir özgeçmişe 3 adım",
     step1: "1. PDF/TXT yükleyin veya sıfırdan oluşturun",
     step2: "2. Detaylı analizleri ve ATS puanını inceleyin",
     step3: "3. PDF dışa aktarın veya mülakat pratiği yapın",
+    whyTitle: "Neden CareerForge?",
+    whySubtitle: "Güven, ATS ve yerel zeka — modern kariyer iş akışı.",
+    valuePrivacyTitle: "Privacy First",
+    valuePrivacyBody: "Verileriniz yerel cihazınızda işlenir.",
+    valueAtsTitle: "ATS Pro",
+    valueAtsBody: "Robotları geçmek için optimize edilmiştir.",
+    valueLocalTitle: "Local Powered",
+    valueLocalBody: "İnternetsiz, 7/24 kesintisiz çalışır.",
 
     // Forge Page
     forgeTitle: "Forge Çalışma Alanı",
@@ -75,6 +83,26 @@ export const DICTIONARY = {
     quickActions: "Hızlı İşlemler",
     openCoach: "AI Koç Sohbeti",
     recentHistory: "Son Analizler",
+    statAnalyzedCv: "Analiz Edilen CV",
+    statAtsScore: "ATS Skoru",
+    statInterviewPrep: "Mülakat Hazırlığı",
+    statNotAnalyzed: "Henüz analiz edilmedi",
+    statInterviewSub: "tamamlanan soru seti",
+    recentActivity: "Son İşlemler",
+    emptyDashTitle: "Henüz bir özgeçmiş yüklemediniz",
+    emptyDashBody: "İlk analizinizi yapmak için Forge sayfasına gidin.",
+    emptyDashCta: "Forge'a Git",
+    loadingLabel: "Yükleniyor…",
+    analyzingLabel: "Analiz Ediliyor…",
+    errorTitle: "Kariyerinizi bekletmeyelim",
+    errorOffline:
+      "Yerel AI motorumuza şu an ulaşamıyoruz. Bağlantınızı kontrol edip Ollama'nın çalıştığından emin olun, sonra tekrar deneyin.",
+    aiReady: "Local AI Ready",
+    aiOffline: "Local AI Offline",
+    aiChecking: "AI kontrol ediliyor…",
+    footerTagline: "CV analizi, iş eşleştirme, ATS, PDF dışa aktarma ve mülakat hazırlığı — tarayıcınızda gizli.",
+    footerProduct: "Ürün",
+    footerCompany: "SoftBridge",
 
     // Jobs
     jobBoardTitle: "Fırsatlar & Eşleşmeler",
@@ -122,13 +150,21 @@ export const DICTIONARY = {
     // Landing Page
     heroTitle: "A professional career workspace for clarity & results",
     heroSubtitle: "Strengthen your CV, match job listings, prepare for interviews, and get ATS analysis report — all private in your browser.",
-    startForge: "Start with Forge",
-    openWorkspace: "Resume Workspace",
+    startForge: "Upload CV · Set goal · Rise",
+    openWorkspace: "Resume Builder",
     howItWorks: "How it works",
     threeSteps: "Three steps to a stronger CV",
     step1: "1. Upload PDF/TXT or build from scratch",
     step2: "2. Review structured details and ATS scores",
     step3: "3. Export PDF or practice interviews",
+    whyTitle: "Why CareerForge?",
+    whySubtitle: "Trust, ATS fit, and local intelligence — a modern career workflow.",
+    valuePrivacyTitle: "Privacy First",
+    valuePrivacyBody: "Your data is processed on your local device.",
+    valueAtsTitle: "ATS Pro",
+    valueAtsBody: "Optimized to pass automated resume screeners.",
+    valueLocalTitle: "Local Powered",
+    valueLocalBody: "Works offline, 24/7 — no internet required.",
 
     // Forge Page
     forgeTitle: "Forge Workspace",
@@ -175,6 +211,26 @@ export const DICTIONARY = {
     quickActions: "Quick Actions",
     openCoach: "AI Coach Chat",
     recentHistory: "Recent History",
+    statAnalyzedCv: "Analyzed CVs",
+    statAtsScore: "ATS Score",
+    statInterviewPrep: "Interview Prep",
+    statNotAnalyzed: "Not analyzed yet",
+    statInterviewSub: "question sets completed",
+    recentActivity: "Recent activity",
+    emptyDashTitle: "You haven't uploaded a resume yet",
+    emptyDashBody: "Go to the Forge page to run your first analysis.",
+    emptyDashCta: "Go to Forge",
+    loadingLabel: "Loading…",
+    analyzingLabel: "Analyzing…",
+    errorTitle: "Let's not put your career on hold",
+    errorOffline:
+      "We can't reach the local AI engine right now. Check that Ollama is running, then try again.",
+    aiReady: "Local AI Ready",
+    aiOffline: "Local AI Offline",
+    aiChecking: "Checking AI…",
+    footerTagline: "CV analysis, job matching, ATS checks, PDF export, and interview prep — private in your browser.",
+    footerProduct: "Product",
+    footerCompany: "SoftBridge",
 
     // Jobs
     jobBoardTitle: "Opportunities & Matcher",
@@ -204,9 +260,11 @@ export const DICTIONARY = {
 };
 
 export function useTranslation() {
-  const { lang, setLang } = useCareerStore();
+  const { setLang } = useCareerStore();
+  // SoftBridge CareerForge: product copy locked to Turkish
+  const lang = "tr" as const;
   const t = (key: keyof typeof DICTIONARY["en"]) => {
-    return DICTIONARY[lang][key] || DICTIONARY["en"][key] || key;
+    return DICTIONARY.tr[key] || DICTIONARY.en[key] || key;
   };
   return { t, lang, setLang };
 }

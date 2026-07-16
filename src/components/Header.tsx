@@ -16,6 +16,7 @@ import { useCareerStore } from "@/store/useCareerStore";
 import { exportCvAsPdf } from "@/lib/forge";
 import { toast } from "sonner";
 import { useTranslation } from "@/lib/forge/i18n";
+import { AiStatusDot } from "@/components/AiStatusDot";
 
 const GITHUB_REPO =
   "https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main";
@@ -32,7 +33,7 @@ export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { resume, resetResume, forgeParsedCv, clearForgeCv, theme, setTheme } = useCareerStore();
-  const { t, lang, setLang } = useTranslation();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -90,7 +91,7 @@ export function Header() {
       };
     }
     if (!cvToExport) {
-      toast.error(lang === "tr" ? "Önce bir CV yükleyin." : "Please load a CV first.");
+      toast.error("Önce bir CV yükleyin.");
       return;
     }
     try {
@@ -183,19 +184,13 @@ export function Header() {
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="h-8 w-8 rounded-xl border border-border-color flex items-center justify-center text-muted-steel hover:text-star-white hover:bg-cosmic-teal/8 hover:border-cosmic-teal/30 transition-all cursor-pointer"
-              title={theme === "dark" ? "Light mode" : "Dark mode"}
+              title={theme === "dark" ? "Açık tema" : "Koyu tema"}
             >
               {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </button>
 
-            {/* Language toggle */}
-            <button
-              onClick={() => setLang(lang === "tr" ? "en" : "tr")}
-              className="h-8 px-2.5 rounded-xl border border-border-color text-[10px] font-bold text-muted-steel hover:text-star-white hover:bg-cosmic-teal/8 hover:border-cosmic-teal/30 transition-all cursor-pointer"
-              title={lang === "tr" ? "Switch to EN" : "TR'ye geç"}
-            >
-              {lang === "tr" ? "EN" : "TR"}
-            </button>
+            {/* Local AI status — green = hazır */}
+            <AiStatusDot />
 
             {/* GitHub */}
             <a
@@ -216,11 +211,7 @@ export function Header() {
             {/* CTA */}
             <Link
               href="/forge"
-              className="hidden sm:inline-flex h-8 items-center rounded-xl px-3.5 text-[11px] font-bold text-white transition-all hover:scale-105 hover:shadow-lg"
-              style={{
-                background: "linear-gradient(135deg, #6B21A8, #C026D3, #F97316)",
-                boxShadow: "0 4px 16px rgba(107,33,168,0.35)",
-              }}
+              className="hidden sm:inline-flex h-8 items-center rounded-xl px-3.5 text-[11px] font-bold text-white bg-indigo-600 shadow-sm transition-colors hover:bg-indigo-700"
             >
               {t("openForge")}
             </Link>
@@ -269,17 +260,11 @@ export function Header() {
               })}
               <div className="border-t border-border-color mt-1 pt-2 flex gap-2">
                 <button
-                  onClick={() => { setLang(lang === "tr" ? "en" : "tr"); setOpen(false); }}
-                  className="flex-1 py-2 rounded-xl text-xs font-bold border border-border-color text-muted-steel hover:text-star-white transition-colors cursor-pointer"
-                >
-                  {lang === "tr" ? "EN" : "TR"}
-                </button>
-                <button
                   onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); setOpen(false); }}
                   className="flex-1 py-2 rounded-xl text-xs font-bold border border-border-color text-muted-steel hover:text-star-white transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-                  {theme === "dark" ? "Light" : "Dark"}
+                  {theme === "dark" ? "Açık" : "Koyu"}
                 </button>
               </div>
               {hasContent && (

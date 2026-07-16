@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import {
   Anvil,
@@ -49,6 +50,10 @@ import {
 } from "@/lib/forge";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/forge/i18n";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { ErrorAlert } from "@/components/ErrorAlert";
+import { JourneyResults } from "@/components/JourneyResults";
+import { buildJourneyInsight } from "@/lib/forge/journey";
 
 type EditorTabId = "raw" | "form" | "versions";
 type PreviewTabId = "preview" | "feedback" | "match" | "cover" | "interview" | "chat";
@@ -62,6 +67,7 @@ export default function ForgePage() {
     forgeTone,
     forgeHistory,
     forgeBackups,
+    careerGoalId,
     setForgeCvText,
     setForgeJdText,
     setForgeParsedCv,
@@ -75,7 +81,8 @@ export default function ForgePage() {
     deleteForgeBackup,
   } = useCareerStore();
 
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const isTR = lang === "tr";
 
   const [editorTab, setEditorTab] = useState<EditorTabId>("raw");
   const [previewTab, setPreviewTab] = useState<PreviewTabId>("preview");
@@ -319,6 +326,18 @@ export default function ForgePage() {
     [forgeParsedCv, forgeCvText]
   );
 
+  const journeyInsight = useMemo(
+    () =>
+      buildJourneyInsight({
+        cv: forgeParsedCv,
+        goalId: careerGoalId,
+        atsScore: ats?.atsScore ?? forgeAnalysis?.atsScore ?? cvFeedback?.atsScore,
+        feedback: cvFeedback,
+        missingFromMatch: forgeAnalysis?.missingSkills,
+      }),
+    [forgeParsedCv, careerGoalId, ats, forgeAnalysis, cvFeedback]
+  );
+
   // Form Editor Actions
   const updateParsedField = (patch: Partial<ParsedCV>) => {
     if (forgeParsedCv) {
@@ -444,10 +463,19 @@ export default function ForgePage() {
                     placeholder="Paste CV text here (e.g. John Doe, Software Engineer, React)..."
                     className="min-h-[220px] font-mono text-xs leading-relaxed"
                   />
-                  <Button variant="soft" className="w-full text-white font-bold" disabled={busy || !cvText.trim()} onClick={onParse}
-                    style={{ background: cvText.trim() ? "linear-gradient(135deg,#6B21A8,#A855F7)" : undefined,
-                      boxShadow: cvText.trim() ? "0 4px 16px rgba(107,33,168,0.35)" : undefined }}>
-                    {busy ? "Parsing CV…" : t("analyzePasteBtn")}
+                  <Button
+                    variant="primary"
+                    className={cn("w-full font-bold", busy && "opacity-60")}
+                    disabled={busy || !cvText.trim()}
+                    onClick={onParse}
+                  >
+                    {busy ? (
+                      <>
+                        <LoadingSpinner /> {t("analyzingLabel")}
+                      </>
+                    ) : (
+                      t("analyzePasteBtn")
+                    )}
                   </Button>
                   {lastCvFileName && (
                     <p className="text-xs text-muted-steel">
@@ -831,73 +859,65 @@ export default function ForgePage() {
                 </div>
               )}
 
-              {/* Tab 2: Feedback & ATS Check */}
+              {/* Tab 2: Solution journey (not just "analysis done") */}
               {previewTab === "feedback" && (
                 <div className="space-y-5">
-                  <div className="flex items-center justify-between border-b border-black/5 pb-3">
+                  <div className="flex items-center justify-between border-b border-black/5 pb-3 gap-3">
                     <div>
-                      <h2 className="font-semibold text-base">ATS Analysis & Feedback</h2>
-                      <p className="text-xs text-muted-steel">Structural reviews and format parsing tests.</p>
+                      <h2 className="font-extrabold tracking-tighter text-base">
+                        Kariyer yolculuğu sonuçları
+                      </h2>
+                      <p className="text-xs text-slate-500">
+                        Mevcut durum → ne kaybediyorsun → sırada ne var
+                      </p>
                     </div>
-                    <Button size="sm" variant="accent" disabled={busy || !forgeParsedCv} onClick={onAts}>
-                      {busy ? "Analyzing..." : "Run ATS Scan"}
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      disabled={busy || !forgeParsedCv}
+                      onClick={onAts}
+                      className={cn(busy && "opacity-60")}
+                    >
+                      {busy ? (
+                        <>
+                          <LoadingSpinner /> {t("analyzingLabel")}
+                        </>
+                      ) : (
+                        "Skoru yenile"
+                      )}
                     </Button>
                   </div>
 
-                  {ats ? (
-                    <div className="space-y-4">
-                      {/* ATS Score display */}
-                      <div className="flex gap-4 items-center bg-panel-elevated/55 p-4 rounded-2xl border border-black/5">
-                        <div className="w-16 h-16 rounded-full border-4 flex items-center justify-center font-bold text-lg" style={{ borderColor: "#A855F7", color: "#A855F7" }}>
-                          {ats.atsScore}%
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold">ATS Compatibility Rating</p>
-                          <p className="text-xs text-muted-steel mt-0.5">Estimated parser rate based on single-column layouts and metadata density.</p>
-                        </div>
+                  {forgeParsedCv || cvFeedback || ats ? (
+                    <>
+                      <JourneyResults
+                        insight={journeyInsight}
+                        issues={
+                          ats?.issues?.length
+                            ? ats.issues
+                            : cvFeedback?.improvements?.slice(0, 4)
+                        }
+                      />
+                      <div className="rounded-2xl border border-indigo-200/50 bg-indigo-50/60 dark:bg-indigo-500/10 dark:border-indigo-500/20 p-4 space-y-2">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
+                          AI Koç fısıltısı
+                        </p>
+                        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                          {journeyInsight.coachHookTr}
+                        </p>
+                        <Link
+                          href="/coach"
+                          className="inline-flex text-sm font-semibold text-indigo-600 hover:underline"
+                        >
+                          Özgeçmişinle sohbet et →
+                        </Link>
                       </div>
-
-                      {/* Issues & Fixes */}
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <p className="text-xs font-bold uppercase text-sunset-coral">Identified Issues</p>
-                          <ul className="space-y-1.5 text-xs text-muted-steel">
-                            {ats.issues.map((issue, i) => <li key={i}>• {issue}</li>)}
-                          </ul>
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-xs font-bold uppercase text-cosmic-teal">Recommended Fixes</p>
-                          <ul className="space-y-1.5 text-xs text-muted-steel">
-                            {ats.fixes.map((fix, i) => <li key={i}>• {fix}</li>)}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  ) : cvFeedback ? (
-                    <div className="space-y-4">
-                      {/* Overall feedback fallback */}
-                      <div className="bg-panel-elevated/55 p-4 rounded-2xl border border-black/5">
-                        <p className="text-sm font-semibold mb-1">Feedback Summary</p>
-                        <p className="text-xs text-muted-steel leading-relaxed">{cvFeedback.summaryLine}</p>
-                      </div>
-
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <p className="text-xs font-bold uppercase text-cosmic-teal">Strengths</p>
-                          <ul className="space-y-1 text-xs text-muted-steel">
-                            {cvFeedback.strengths.map((s, i) => <li key={i}>• {s}</li>)}
-                          </ul>
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-xs font-bold uppercase text-sunset-coral">Key Improvements</p>
-                          <ul className="space-y-1 text-xs text-muted-steel">
-                            {cvFeedback.improvements.map((imp, i) => <li key={i}>• {imp}</li>)}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
+                    </>
                   ) : (
-                    <p className="text-xs text-muted-steel">Please parse or edit your CV to view structural recommendations.</p>
+                    <p className="text-sm text-slate-500">
+                      Yolculuk başlasın: CV&apos;nizi yükleyin veya yapıştırın — size “analiz bitti”
+                      değil, “şimdi ne yapmalısınız” diyeceğiz.
+                    </p>
                   )}
                 </div>
               )}
@@ -916,13 +936,28 @@ export default function ForgePage() {
                     className="text-xs min-h-[90px]"
                   />
                   <div className="flex gap-2">
-                    <Button size="sm" variant="accent" disabled={busy || !forgeParsedCv} onClick={onAnalyze}>
-                      {busy ? "Matching..." : "Check Match Score"}
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      disabled={isLoading || !forgeParsedCv}
+                      onClick={onAnalyze}
+                      className={cn(isLoading && "opacity-60")}
+                    >
+                      {isLoading ? (
+                        <>
+                          <LoadingSpinner /> {t("analyzingLabel")}
+                        </>
+                      ) : (
+                        "Check Match Score"
+                      )}
                     </Button>
-                    <Button size="sm" variant="outline" disabled={busy || !forgeParsedCv} onClick={onOptimize}>
+                    <Button size="sm" variant="ghostBorder" disabled={isLoading || !forgeParsedCv} onClick={onOptimize}>
                       Optimize for JD
                     </Button>
                   </div>
+                  {aiError && (
+                    <ErrorAlert title={t("errorTitle")} message={aiError} />
+                  )}
 
                   {forgeAnalysis && (
                     <div className="space-y-3 pt-2">

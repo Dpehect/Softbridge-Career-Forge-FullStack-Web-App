@@ -90,6 +90,9 @@ interface CareerState {
   forgeTone: CoverLetterTone;
   forgeHistory: ForgeHistoryItem[];
   forgeBackups: CvBackup[];
+  /** Solution-center: target role for progress cockpit */
+  careerGoalId: string | null;
+  setCareerGoalId: (id: string | null) => void;
   lang: "tr" | "en";
   setLang: (lang: "tr" | "en") => void;
   theme: "light" | "dark";
@@ -99,6 +102,8 @@ interface CareerState {
   enrollPath: (id: string) => void;
   toggleModule: (id: string) => void;
   updateResume: (patch: Partial<ResumeProfile>) => void;
+  /** Merge skills into resume + parsed CV (one-click from journey) */
+  addSkills: (skills: string[]) => number;
   setResume: (resume: ResumeProfile) => void;
   resetResume: () => void;
   addCoachMessage: (message: Omit<CoachMessage, "id" | "createdAt">) => void;
@@ -119,8 +124,9 @@ interface CareerState {
 export const useCareerStore = create<CareerState>()(
   persist(
     (set, get) => ({
+      // Product language locked to Turkish (SaaS consistency)
       lang: "tr",
-      setLang: (lang) => set({ lang }),
+      setLang: () => set({ lang: "tr" }),
       theme: "light",
       setTheme: (theme) => set({ theme }),
       savedJobIds: [],
@@ -133,7 +139,7 @@ export const useCareerStore = create<CareerState>()(
           id: "welcome",
           role: "assistant",
           content:
-            "Merhaba, ben Forge. Hedef rolünü, zaman çizelgeni ve takıldığın noktayı yaz — somut bir sonraki adım çıkaralım.",
+            "Merhaba — ben kariyer danışmanın. CV'nle sohbet edebiliriz: en zor mülakat sorunu, STAR cevap iskeletini ve yarın yapman gereken tek iyileştirmeyi birlikte çıkaralım. Hedef rolün nedir?",
           createdAt: new Date().toISOString(),
         },
       ],
@@ -144,6 +150,8 @@ export const useCareerStore = create<CareerState>()(
       forgeTone: "Profesyonel",
       forgeHistory: [],
       forgeBackups: [],
+      careerGoalId: "fullstack",
+      setCareerGoalId: (careerGoalId) => set({ careerGoalId }),
       toggleSaveJob: (id) => {
         const { savedJobIds } = get();
         set({
@@ -176,6 +184,23 @@ export const useCareerStore = create<CareerState>()(
       updateResume: (patch) => {
         const updated = { ...get().resume, ...patch };
         set({ resume: updated, forgeParsedCv: resumeToParsed(updated) });
+      },
+      addSkills: (skills) => {
+        const { resume, forgeParsedCv } = get();
+        const existing = new Set(
+          resume.skills.map((s) => s.toLowerCase().trim())
+        );
+        const toAdd = skills
+          .map((s) => s.trim())
+          .filter((s) => s && !existing.has(s.toLowerCase()));
+        if (toAdd.length === 0) return 0;
+        const nextSkills = [...resume.skills, ...toAdd];
+        const updated = { ...resume, skills: nextSkills };
+        const nextParsed = forgeParsedCv
+          ? { ...forgeParsedCv, skills: [...new Set([...forgeParsedCv.skills, ...toAdd])] }
+          : resumeToParsed(updated);
+        set({ resume: updated, forgeParsedCv: nextParsed });
+        return toAdd.length;
       },
       setResume: (resume) => set({ resume, forgeParsedCv: resumeToParsed(resume) }),
       resetResume: () => set({ resume: emptyResume(), forgeParsedCv: null }),

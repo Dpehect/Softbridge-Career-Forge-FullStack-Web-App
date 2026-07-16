@@ -181,15 +181,15 @@ export default function CoachPage() {
             <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full text-xs font-bold"
               style={{ background: "rgba(124,58,237,0.12)", color: "#7C3AED" }}>
               <Brain className="w-3.5 h-3.5" />
-              {isTR ? "Yapay Zeka Kariyer Koçu" : "AI Career Coach"}
+              {isTR ? "Chat with your Resume" : "Chat with your Resume"}
             </div>
-            <h1 className="font-display text-3xl font-bold text-star-white">
-              {isTR ? "Kişisel Kariyer Danışmanın" : "Your Personal Career Coach"}
+            <h1 className="font-display text-3xl font-extrabold tracking-tighter text-star-white">
+              {isTR ? "Özgeçmişinle sohbet et" : "Chat with your resume"}
             </h1>
-            <p className="text-muted-steel mt-1.5 text-sm max-w-xl leading-relaxed">
+            <p className="text-slate-500 mt-1.5 text-sm max-w-xl leading-relaxed">
               {isTR
-                ? "CV'ni yükle → anlık analiz al → kişiselleştirilmiş sorular ve derin koçluk."
-                : "Upload your CV → get instant analysis → personalized questions and deep coaching."}
+                ? "SSS değil — danışman. En zor mülakat sorunu, STAR cevap iskeletini ve yarın yapman gereken tek adımı birlikte çıkarırız."
+                : "Not an FAQ — a counselor. We surface your hardest interview question, STAR answer skeletons, and the one fix to make tomorrow."}
             </p>
           </div>
           <Button variant="ghost" size="sm" onClick={clearCoach}
@@ -221,8 +221,8 @@ export default function CoachPage() {
                     <p className="text-xs font-bold mb-1.5" style={{ color: "#7C3AED" }}>CareerForge Coach</p>
                     <p className="text-star-white/90 leading-relaxed">
                       {isTR
-                        ? "Merhaba! CV'ni yükle — analiz ettikten sonra sana özel mülakat soruları, CV iyileştirme önerileri ve kariyer tavsiyeleri hazırlayacağım."
-                        : "Hello! Upload your CV — after analysis I'll generate personalized interview questions, CV improvement advice, and career coaching tailored to you."}
+                        ? "Merhaba — ben danışmanınım. CV'nle sohbet edelim: Bu CV ile bir mülakata girsen en zorlanacağın soru genelde “Neden önceki projeniz başarısız oldu / ne ters gitti?” olur. İstersen STAR metoduna uygun 3 cevap şablonu çıkarayım."
+                        : "Hi — I'm your counselor. Let's chat with your resume: the hardest interview question is often “Why did a past project fail?” Want 3 STAR-ready answer templates for that?"}
                     </p>
                   </div>
                 </motion.div>

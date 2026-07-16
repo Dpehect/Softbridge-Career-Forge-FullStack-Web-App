@@ -1,10 +1,22 @@
+"use client";
+
 import Link from "next/link";
-import { Anvil, Code2 } from "lucide-react";
+import { Anvil } from "lucide-react";
+import { useTranslation } from "@/lib/forge/i18n";
 
-const GITHUB_REPO =
-  "https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main";
-
+/** Single source for footer copy — language follows app toggle (no mixed TR/EN). */
 export function Footer() {
+  const { t } = useTranslation();
+
+  const productLinks = [
+    { href: "/forge", label: t("navForge") },
+    { href: "/resume", label: t("navResume") },
+    { href: "/jobs", label: t("navJobs") },
+    { href: "/paths", label: t("navPaths") },
+    { href: "/coach", label: t("navCoach") },
+    { href: "/dashboard", label: t("navDashboard") },
+  ] as const;
+
   return (
     <footer className="mt-auto border-t border-black/5 bg-panel-elevated/40">
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-14">
@@ -15,28 +27,22 @@ export function Footer() {
                 <Anvil className="w-4 h-4" />
               </div>
               <div>
-                <p className="font-display font-bold text-sm">SoftBridge CareerForge</p>
-                <p className="text-[11px] text-muted-steel">Professional career workspace</p>
+                <p className="font-display font-bold text-sm tracking-tight">
+                  SoftBridge CareerForge
+                </p>
+                <p className="text-[11px] text-slate-600 dark:text-muted-steel">{t("logoSub")}</p>
               </div>
             </div>
-            <p className="text-sm text-muted-steel max-w-sm leading-relaxed">
-              CV analysis, job matching, ATS optimization, PDF export, and interview prep — private
-              in your browser.
+            <p className="text-sm text-slate-600 dark:text-muted-steel max-w-sm leading-relaxed">
+              {t("footerTagline")}
             </p>
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-steel mb-3">
-              Product
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-muted-steel mb-3">
+              {t("footerProduct")}
             </p>
             <ul className="space-y-2.5 text-sm">
-              {[
-                ["/forge", "Forge"],
-                ["/resume", "Resume"],
-                ["/jobs", "Jobs"],
-                ["/paths", "Paths"],
-                ["/coach", "Coach"],
-                ["/dashboard", "Dashboard"],
-              ].map(([href, label]) => (
+              {productLinks.map(({ href, label }) => (
                 <li key={href}>
                   <Link href={href} className="hover:text-cosmic-teal transition-colors">
                     {label}
@@ -46,8 +52,8 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-steel mb-3">
-              SoftBridge
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-muted-steel mb-3">
+              {t("footerCompany")}
             </p>
             <ul className="space-y-2.5 text-sm">
               <li>
@@ -63,7 +69,7 @@ export function Footer() {
             </ul>
           </div>
         </div>
-        <div className="mt-10 pt-5 border-t border-black/5 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-muted-steel">
+        <div className="mt-10 pt-5 border-t border-black/5 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-600 dark:text-muted-steel">
           <span>© {new Date().getFullYear()} SoftBridge Solutions · CareerForge</span>
         </div>
       </div>

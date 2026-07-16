@@ -20,19 +20,34 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://careerforge.softbridgesolutions.com"),
   title: {
-    template: "%s | SoftBridge CareerForge",
-    default: "SoftBridge CareerForge — Professional career workspace",
+    default: "CareerForge | Kişisel Kariyer Asistanı",
+    template: "%s | CareerForge",
   },
   description:
-    "Upload or build your CV, get professional feedback, match jobs, export PDF, and prepare for interviews. Built by SoftBridge Solutions.",
+    "CV analizi, iş eşleştirme, ATS optimizasyonu, PDF dışa aktarma ve mülakat hazırlığı — tarayıcınızda gizli. SoftBridge Solutions.",
+  keywords: [
+    "CV analizi",
+    "ATS",
+    "kariyer asistanı",
+    "CareerForge",
+    "mülakat hazırlığı",
+    "SoftBridge",
+  ],
+  authors: [{ name: "SoftBridge Solutions" }],
   openGraph: {
-    title: "SoftBridge CareerForge",
+    title: "CareerForge | Kişisel Kariyer Asistanı",
     description:
-      "Professional CV tools, job matching, ATS checks, and interview prep — private in your browser.",
-    siteName: "SoftBridge CareerForge",
-    locale: "en_US",
+      "Profesyonel CV araçları, iş eşleştirme, ATS kontrolü ve mülakat hazırlığı — tarayıcınızda gizli.",
+    siteName: "CareerForge",
+    locale: "tr_TR",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "CareerForge | Kişisel Kariyer Asistanı",
+    description: "Yerel AI ile CV analizi ve kariyer hazırlığı.",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
