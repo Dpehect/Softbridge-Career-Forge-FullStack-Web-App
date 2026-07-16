@@ -199,10 +199,11 @@ export default function ForgePage() {
   const handleCvFile = (text: string, fileName: string) => {
     // Only store cleaned human text — never binary PDF dumps
     const cleaned = cleanExtractedText(text);
-    if (!cleaned.trim() || looksLikeRawPdf(cleaned)) {
+    if (!cleaned.trim() || looksLikeRawPdf(cleaned) || looksLikeRawPdf(text)) {
       toast.error(
-        "Could not extract clean text from this file. Paste the CV text instead."
+        "This PDF appears to be scanned. Please export as searchable text or paste manually."
       );
+      // never put garbage into the editor
       return;
     }
     setForgeCvText(cleaned);
@@ -591,7 +592,7 @@ export default function ForgePage() {
             <RotateCcw className="w-4 h-4" /> Clear CV
           </Button>
           <Button variant="ghost" disabled={busy} onClick={() => setTab("create")}>
-            <PenLine className="w-4 h-4" /> Create from scratch
+            <PenLine className="w-4 h-4" /> Build CV from Scratch
           </Button>
         </div>
 

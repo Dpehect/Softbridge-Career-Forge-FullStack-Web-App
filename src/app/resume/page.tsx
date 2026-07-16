@@ -104,7 +104,7 @@ export default function ResumePage() {
     const cleaned = cleanExtractedText(text);
     if (!cleaned.trim() || looksLikeRawPdf(cleaned) || looksLikeRawPdf(text)) {
       toast.error(
-        "Could not get clean text from this file. If it is a scan, export searchable text or paste manually."
+        "This PDF appears to be scanned. Please export as searchable text or paste manually."
       );
       return;
     }

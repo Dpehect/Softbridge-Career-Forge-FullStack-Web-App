@@ -1,15 +1,12 @@
 /**
- * Extract readable text from TXT/MD and PDF files.
- * Uses fflate (already in the project) to decompress FlateDecode content streams
- * so normal text PDFs work. Never returns raw %PDF garbage to the UI.
+ * Reliable PDF/TXT text extraction for CareerForge.
+ * - Decompresses FlateDecode streams with fflate
+ * - Never returns raw %PDF / font / xref garbage to the UI
  */
 
 import { inflateSync, unzlibSync } from "fflate";
 
-const PDF_META =
-  /(%PDF|\/Type|\/Font|\/Encoding|\/BaseFont|\/Subtype|\/Length|\/Filter|\/FlateDecode|\/Pages|\/Page|\/MediaBox|\/Parent|\/Kids|\/Count|\/Resources|\/Contents|\/ProcSet|\/ExtGState|\/XObject|endstream|endobj|startxref|\/DecodeParms|\/Width|\/Height|\/BitsPerComponent|\/ColorSpace)/i;
-
-function decodePdfEscapes(s: string) {
+function decodePdfStringEscapes(s: string): string {
   return s
     .replace(/\\n/g, "\n")
     .replace(/\\r/g, "\r")
@@ -17,33 +14,15 @@ function decodePdfEscapes(s: string) {
     .replace(/\\\(/g, "(")
     .replace(/\\\)/g, ")")
     .replace(/\\\\/g, "\\")
-    .replace(/\\(\d{3})/g, (_, oct) => {
+    .replace(/\\(\d{1,3})/g, (_, oct: string) => {
       const code = parseInt(oct, 8);
-      return code >= 32 && code < 0x10000 ? String.fromCharCode(code) : " ";
+      if (Number.isNaN(code) || code < 32) return " ";
+      return String.fromCharCode(code);
     });
 }
 
-function bytesToLatin1(bytes: Uint8Array): string {
-  let raw = "";
-  const chunk = 0x2000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    const slice = bytes.subarray(i, Math.min(i + chunk, bytes.length));
-    let part = "";
-    for (let j = 0; j < slice.length; j++) part += String.fromCharCode(slice[j]!);
-    raw += part;
-  }
-  return raw;
-}
-
-function latin1ToBytes(s: string): Uint8Array {
-  const out = new Uint8Array(s.length);
-  for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i) & 0xff;
-  return out;
-}
-
 function tryInflate(data: Uint8Array): Uint8Array | null {
-  if (!data.length) return null;
-  // PDF FlateDecode is usually zlib-wrapped
+  if (data.length < 2) return null;
   try {
     return unzlibSync(data);
   } catch {
@@ -54,7 +33,6 @@ function tryInflate(data: Uint8Array): Uint8Array | null {
   } catch {
     /* continue */
   }
-  // Some producers omit zlib header quirks — try skipping first 2 bytes
   if (data.length > 6) {
     try {
       return inflateSync(data.subarray(2));
@@ -65,202 +43,234 @@ function tryInflate(data: Uint8Array): Uint8Array | null {
   return null;
 }
 
-function isHumanSnippet(s: string): boolean {
-  const t = s.trim();
-  if (t.length < 1 || t.length > 800) return false;
-  if (PDF_META.test(t)) return false;
-  if (/^[\d.\-,\s]+$/.test(t) && t.length < 3) return false;
-  let letters = 0;
+function indexOfBytes(hay: Uint8Array, needle: number[], from = 0): number {
+  outer: for (let i = from; i <= hay.length - needle.length; i++) {
+    for (let j = 0; j < needle.length; j++) {
+      if (hay[i + j] !== needle[j]) continue outer;
+    }
+    return i;
+  }
+  return -1;
+}
+
+function bytesToLatin1(bytes: Uint8Array): string {
+  let s = "";
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]!);
+  return s;
+}
+
+function isMostlyPrintable(s: string): boolean {
+  if (!s) return false;
+  let ok = 0;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c === 9 || c === 10 || c === 13 || (c >= 32 && c < 127) || c >= 160) ok++;
+  }
+  return ok / s.length > 0.55;
+}
+
+function extractTextOps(content: string): string[] {
+  const out: string[] = [];
+
+  // (Hello World) Tj
+  const tj = /\(((?:\\.|[^\\()])*?)\)\s*(?:Tj|'|")/g;
+  let m: RegExpExecArray | null;
+  while ((m = tj.exec(content))) {
+    const t = decodePdfStringEscapes(m[1]).replace(/\s+/g, " ").trim();
+    if (t.length >= 1) out.push(t);
+  }
+
+  // [(Hel) -20 (lo)] TJ
+  const tja = /\[([\s\S]*?)\]\s*TJ/g;
+  while ((m = tja.exec(content))) {
+    let line = "";
+    const parts = /\(((?:\\.|[^\\()])*?)\)/g;
+    let p: RegExpExecArray | null;
+    while ((p = parts.exec(m[1]))) {
+      line += decodePdfStringEscapes(p[1]);
+    }
+    line = line.replace(/\s+/g, " ").trim();
+    if (line) out.push(line);
+  }
+
+  // <00480065> Tj (UTF-16BE or ASCII hex)
+  const hex = /<([0-9A-Fa-f\s]+)>\s*Tj/g;
+  while ((m = hex.exec(content))) {
+    const h = m[1].replace(/\s/g, "");
+    if (h.length < 2 || h.length % 2) continue;
+    let s = "";
+    const utf16 = h.length % 4 === 0 && (/^00|feff/i.test(h.slice(0, 4)) || (h.match(/00/g) || []).length >= h.length / 8);
+    if (utf16) {
+      for (let i = 0; i + 3 < h.length; i += 4) {
+        const code = parseInt(h.slice(i, i + 4), 16);
+        if (code === 0xfeff) continue;
+        if (code >= 32 && code < 0xd800) s += String.fromCharCode(code);
+        else if (code === 0 || code === 10 || code === 13) s += " ";
+      }
+    } else {
+      for (let i = 0; i < h.length; i += 2) {
+        const code = parseInt(h.slice(i, i + 2), 16);
+        if (code >= 32 && code < 127) s += String.fromCharCode(code);
+      }
+    }
+    s = s.replace(/\s+/g, " ").trim();
+    if (s) out.push(s);
+  }
+
+  return out;
+}
+
+const GARBAGE_LINE =
+  /^(%PDF|obj|endobj|stream|endstream|xref|trailer|startxref|\/Type|\/Font|\/Length|\/Filter|\/FlateDecode|\/Subtype|\/BaseFont|\/Encoding|\/Pages|\/Page|\/MediaBox|\/Resources|\/Contents|\/Parent|\/Kids|\/Count|\/XObject|\/ProcSet|\/ExtGState|\/Width|\/Height|\/BitsPerComponent|\/ColorSpace|\/DecodeParms)/i;
+
+function isHumanLine(line: string): boolean {
+  const t = line.trim();
+  if (t.length < 2) return false;
+  if (GARBAGE_LINE.test(t)) return false;
+  if (/%PDF|endobj|endstream|FlateDecode/i.test(t)) return false;
+  // need some letters
+  const letters = (t.match(/\p{L}/gu) || []).length;
+  if (letters < 1 && !/\d{4}|@/.test(t)) return false;
+  // reject high binary residue
   let bad = 0;
   for (let i = 0; i < t.length; i++) {
     const c = t.charCodeAt(i);
     if (c < 9 || (c > 13 && c < 32)) bad++;
-    if (/\p{L}/u.test(t[i]!)) letters++;
   }
-  if (bad / t.length > 0.12) return false;
-  // allow short tokens (names, years) if mostly letters/digits
-  if (t.length <= 3) return /[\p{L}\p{N}@]/u.test(t);
-  return letters >= 1 || /@|\d{4}/.test(t);
-}
-
-/** Pull text-showing operators from a content stream string. */
-function extractOperators(content: string): string[] {
-  const parts: string[] = [];
-
-  // (text) Tj  |  (text) '  |  (text) "
-  const parenRe = /\(((?:\\.|[^\\()])*?)\)\s*(?:Tj|'|")/g;
-  let m: RegExpExecArray | null;
-  while ((m = parenRe.exec(content))) {
-    const decoded = decodePdfEscapes(m[1]);
-    if (decoded && isHumanSnippet(decoded)) parts.push(decoded);
-  }
-
-  // [(parts) ...] TJ
-  const tjArrayRe = /\[([\s\S]*?)\]\s*TJ/g;
-  while ((m = tjArrayRe.exec(content))) {
-    const inner = m[1];
-    const strRe = /\(((?:\\.|[^\\()])*?)\)/g;
-    let sm: RegExpExecArray | null;
-    let line = "";
-    while ((sm = strRe.exec(inner))) {
-      line += decodePdfEscapes(sm[1]);
-    }
-    line = line.replace(/\s+/g, " ").trim();
-    if (line && isHumanSnippet(line)) parts.push(line);
-  }
-
-  // <hex> Tj — UTF-16BE or ASCII
-  const hexRe = /<([0-9A-Fa-f\s]+)>\s*Tj/g;
-  while ((m = hexRe.exec(content))) {
-    const hex = m[1].replace(/\s/g, "");
-    if (hex.length < 2 || hex.length % 2 !== 0) continue;
-    let s = "";
-    const isUtf16 = hex.length >= 4 && (hex.startsWith("00") || hex.startsWith("FEFF") || /00[0-9A-F]{2}/i.test(hex.slice(0, 8)));
-    if (isUtf16 && hex.length % 4 === 0) {
-      for (let i = 0; i + 3 < hex.length; i += 4) {
-        const code = parseInt(hex.slice(i, i + 4), 16);
-        if (code === 0xfeff) continue;
-        if (code >= 32 && code < 0xd800) s += String.fromCharCode(code);
-        else if (code === 0 || code === 0x0a || code === 0x0d) s += " ";
-      }
-    } else {
-      for (let i = 0; i < hex.length; i += 2) {
-        const code = parseInt(hex.slice(i, i + 2), 16);
-        if (code >= 32 && code < 127) s += String.fromCharCode(code);
-        else if (code === 0) s += " ";
-      }
-    }
-    s = s.replace(/\s+/g, " ").trim();
-    if (s && isHumanSnippet(s)) parts.push(s);
-  }
-
-  return parts;
-}
-
-function cleanLines(parts: string[]): string {
-  const lines: string[] = [];
-  let wordBuf = "";
-
-  const flushWords = () => {
-    if (wordBuf.length >= 2) lines.push(wordBuf);
-    wordBuf = "";
-  };
-
-  for (const raw of parts) {
-    let t = raw
-      .replace(/\u0000/g, "")
-      .replace(/[\u0001-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-    if (!t || PDF_META.test(t)) continue;
-    if (/^%PDF/.test(t)) continue;
-
-    // Character-by-character PDFs
-    if (t.length === 1 && /\p{L}|\p{N}/u.test(t)) {
-      wordBuf += t;
-      continue;
-    }
-    flushWords();
-
-    t = t.replace(/[^\p{L}\p{N}\p{P}\p{Zs}@+#/&%°'’\-–—()[\]{}:;,./\\|+*=<>€$£₺]/gu, "").trim();
-    if (!t) continue;
-    if (t.length < 2 && !/\p{L}|\p{N}/u.test(t)) continue;
-    lines.push(t);
-  }
-  flushWords();
-
-  // Join consecutive single-word lines into sentences when helpful
-  const joined: string[] = [];
-  for (const line of lines) {
-    const prev = joined[joined.length - 1];
-    if (
-      prev &&
-      prev.length < 40 &&
-      !/[.!?]$/.test(prev) &&
-      line.length < 40 &&
-      !/^[A-Z][A-Z\s]{3,}$/.test(line) // don't glue ALL CAPS headers
-    ) {
-      // if previous looks like partial, glue with space
-      if (!prev.includes(" ") && line.length < 20) {
-        joined[joined.length - 1] = `${prev} ${line}`;
-        continue;
-      }
-    }
-    joined.push(line);
-  }
-
-  return joined.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  if (bad / t.length > 0.1) return false;
+  return true;
 }
 
 export function cleanExtractedText(text: string): string {
-  // Strip common PDF binary / header residue before line cleaning
   let t = text
     .replace(/%PDF-[\d.]+/gi, " ")
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, " ")
-    .replace(/\/(Type|Font|Encoding|BaseFont|Length|Filter|FlateDecode|Subtype|Pages|Page|MediaBox|Resources|Contents|Parent|Kids|Count|XObject|ProcSet|ExtGState|DecodeParms)\b[^\n]*/gi, " ")
-    .replace(/\b(endobj|endstream|startxref|xref|trailer|obj)\b/gi, " ")
-    .replace(/[^\S\n]{2,}/g, " ");
-  const parts = t.split(/\n+/).map((l) => l.trim()).filter(Boolean);
-  return cleanLines(parts);
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n");
+
+  const rawLines = t.split("\n").map((l) => l.trim()).filter(Boolean);
+  const kept: string[] = [];
+  let charBuf = "";
+
+  const flushChars = () => {
+    if (charBuf.length >= 2 && isHumanLine(charBuf)) kept.push(charBuf);
+    charBuf = "";
+  };
+
+  for (let line of rawLines) {
+    if (GARBAGE_LINE.test(line)) continue;
+    line = line
+      .replace(/[^\p{L}\p{N}\p{P}\p{Zs}@+#/&%°'’\-–—()[\]{}:;,./\\|+*=<>€$£₺]/gu, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!line) continue;
+
+    // single-char PDF fragmentation
+    if (line.length === 1 && /\p{L}|\p{N}/u.test(line)) {
+      charBuf += line;
+      continue;
+    }
+    flushChars();
+    if (isHumanLine(line)) kept.push(line);
+  }
+  flushChars();
+
+  // de-dupe consecutive identical lines
+  const deduped: string[] = [];
+  for (const l of kept) {
+    if (deduped[deduped.length - 1] === l) continue;
+    deduped.push(l);
+  }
+
+  return deduped.join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 export function looksLikeRawPdf(text: string): boolean {
-  const head = text.slice(0, 800);
+  const head = text.slice(0, 1200);
   if (/%PDF-?\d/.test(head)) return true;
-  if (/\/FlateDecode|endstream|startxref|\/Type\s*\/Catalog/.test(text.slice(0, 5000))) {
-    const sample = text.slice(0, 2500);
-    const letters = (sample.match(/\p{L}/gu) ?? []).length;
-    if (letters / Math.max(sample.length, 1) < 0.3) return true;
+  if (/\/FlateDecode|endstream|startxref|\/Type\s*\/Catalog|endobj/.test(text.slice(0, 8000))) {
+    const sample = text.slice(0, 3000);
+    const letters = (sample.match(/\p{L}/gu) || []).length;
+    if (letters / Math.max(sample.length, 1) < 0.28) return true;
   }
   return false;
 }
 
 export function isLikelyHumanText(s: string): boolean {
-  return isHumanSnippet(s);
+  return isHumanLine(s);
 }
 
-interface StreamBlock {
+interface StreamHit {
   dict: string;
   data: Uint8Array;
 }
 
-/** Locate stream...endstream pairs with preceding dictionary. */
-function findStreams(bytes: Uint8Array): StreamBlock[] {
-  const raw = bytesToLatin1(bytes);
-  const blocks: StreamBlock[] = [];
-  const re = /<<([\s\S]*?)>>\s*stream\r?\n([\s\S]*?)endstream/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(raw))) {
-    const dict = m[1];
-    let dataStr = m[2];
-    // PDF allows \r\n after stream keyword; data may end with \n before endstream
-    if (dataStr.endsWith("\r")) dataStr = dataStr.slice(0, -1);
-    if (dataStr.endsWith("\n")) dataStr = dataStr.slice(0, -1);
-    blocks.push({ dict, data: latin1ToBytes(dataStr) });
+/** Find dictionary + stream pairs using byte search (robust for binary PDFs). */
+function findStreams(bytes: Uint8Array): StreamHit[] {
+  const hits: StreamHit[] = [];
+  const streamWord = [0x73, 0x74, 0x72, 0x65, 0x61, 0x6d]; // stream
+  const endWord = [0x65, 0x6e, 0x64, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d]; // endstream
+  let pos = 0;
+
+  while (pos < bytes.length) {
+    const sIdx = indexOfBytes(bytes, streamWord, pos);
+    if (sIdx < 0) break;
+
+    // keyword must be boundary-ish (not part of longer token)
+    const before = sIdx > 0 ? bytes[sIdx - 1]! : 10;
+    if (before > 32 && before !== 0x0d && before !== 0x0a && before !== 0x3e /* > */) {
+      pos = sIdx + 6;
+      continue;
+    }
+
+    let dataStart = sIdx + 6;
+    // skip whitespace / single EOL after "stream"
+    if (bytes[dataStart] === 0x0d && bytes[dataStart + 1] === 0x0a) dataStart += 2;
+    else if (bytes[dataStart] === 0x0a || bytes[dataStart] === 0x0d) dataStart += 1;
+
+    const eIdx = indexOfBytes(bytes, endWord, dataStart);
+    if (eIdx < 0) break;
+
+    // dictionary: look back up to 2.5kb for last << ... >> before stream
+    const lookBack = Math.max(0, sIdx - 2500);
+    const dictRegion = bytesToLatin1(bytes.subarray(lookBack, sIdx));
+    const dictMatch = dictRegion.match(/<<[\s\S]*>>\s*$/);
+    const dict = dictMatch ? dictMatch[0] : "";
+
+    let data = bytes.subarray(dataStart, eIdx);
+    // trim trailing CR/LF that belongs before endstream
+    while (data.length && (data[data.length - 1] === 0x0a || data[data.length - 1] === 0x0d)) {
+      data = data.subarray(0, data.length - 1);
+    }
+
+    const lenM = dict.match(/\/Length\s+(\d+)/);
+    if (lenM) {
+      const len = parseInt(lenM[1], 10);
+      if (len > 0 && len <= data.length) data = data.subarray(0, len);
+    }
+
+    hits.push({ dict, data: new Uint8Array(data) });
+    pos = eIdx + 9;
   }
-  return blocks;
+
+  return hits;
+}
+
+function dictIsImage(dict: string): boolean {
+  return /\/Subtype\s*\/Image|\/DCTDecode|\/JPXDecode|\/CCITTFaxDecode|\/JBIG2Decode/i.test(dict);
+}
+
+function dictIsFont(dict: string): boolean {
+  return /\/Subtype\s*\/(Type1|TrueType|Type0|CIDFont)|\/FontFile|\/ToUnicode/i.test(dict);
 }
 
 function dictHasFlate(dict: string): boolean {
   return /\/Filter\s*\/FlateDecode|\/Filter\s*\[\s*\/FlateDecode/i.test(dict);
 }
 
-function dictLooksLikeImage(dict: string): boolean {
-  return /\/Subtype\s*\/Image|\/DCTDecode|\/JPXDecode|\/CCITTFaxDecode|\/JBIG2Decode/i.test(dict);
-}
-
-function dictLooksLikeContent(dict: string): boolean {
-  // Prefer page content streams (not pure fonts/images)
-  if (dictLooksLikeImage(dict)) return false;
-  if (/\/Subtype\s*\/Type1|\/Subtype\s*\/TrueType|\/Subtype\s*\/Type0|\/FontFile/i.test(dict)) {
-    return false;
-  }
-  return true;
-}
-
 /**
- * Extract text from PDF bytes. Returns empty string if nothing readable
- * (caller maps empty + image-only → scanned message).
+ * Extract text from PDF bytes.
+ * Returns empty text + likelyScanned when only images / no readable text.
  */
 export function extractTextFromPdfBytes(bytes: Uint8Array): {
   text: string;
@@ -269,72 +279,58 @@ export function extractTextFromPdfBytes(bytes: Uint8Array): {
   if (bytes.length < 8) return { text: "", likelyScanned: false };
 
   const streams = findStreams(bytes);
-  let imageStreams = 0;
-  let contentAttempts = 0;
+  let images = 0;
   const snippets: string[] = [];
 
-  for (const block of streams) {
-    if (dictLooksLikeImage(block.dict)) {
-      imageStreams++;
+  for (const st of streams) {
+    if (dictIsImage(st.dict)) {
+      images++;
       continue;
     }
-    if (!dictLooksLikeContent(block.dict) && dictHasFlate(block.dict)) {
-      // still try — some content dicts are minimal
-    }
+    if (dictIsFont(st.dict)) continue;
 
-    contentAttempts++;
-    let payload = block.data;
+    let payload = st.data;
+    const maybeCompressed =
+      dictHasFlate(st.dict) ||
+      (payload[0] === 0x78 && (payload[1] === 0x01 || payload[1] === 0x9c || payload[1] === 0xda));
 
-    // Honor /Length when present (trim padding)
-    const lenMatch = block.dict.match(/\/Length\s+(\d+)/);
-    if (lenMatch) {
-      const len = parseInt(lenMatch[1], 10);
-      if (len > 0 && len <= payload.length) payload = payload.subarray(0, len);
-    }
-
-    let contentBytes = payload;
-    if (dictHasFlate(block.dict) || (payload[0] === 0x78 && (payload[1] === 0x9c || payload[1] === 0x01 || payload[1] === 0xda))) {
+    if (maybeCompressed) {
       const inflated = tryInflate(payload);
-      if (inflated) contentBytes = inflated;
-      else if (dictHasFlate(block.dict)) continue; // compressed but can't inflate — skip
+      if (inflated) payload = inflated;
+      else if (dictHasFlate(st.dict)) continue;
     }
 
-    const contentStr = bytesToLatin1(contentBytes);
-    // Only parse if it looks like content operators, not pure binary
-    if (!/Tj|TJ|BT|ET|'|"/.test(contentStr) && contentStr.length > 200) {
-      // maybe uncompressed text without operators — skip binary
-      const printable = (contentStr.match(/[\x20-\x7E\n\r\t]/g) ?? []).length;
-      if (printable / contentStr.length < 0.6) continue;
+    const content = bytesToLatin1(payload);
+    if (!/Tj|TJ|\bBT\b|\bET\b|'|"/.test(content)) {
+      if (!isMostlyPrintable(content)) continue;
     }
 
-    const ops = extractOperators(contentStr);
-    snippets.push(...ops);
+    snippets.push(...extractTextOps(content));
 
-    // Also catch BT ... ET blocks for nested strings we might miss
-    const btRe = /BT([\s\S]*?)ET/g;
-    let bt: RegExpExecArray | null;
-    while ((bt = btRe.exec(contentStr))) {
-      snippets.push(...extractOperators(bt[1]));
+    // BT ... ET blocks
+    const bt = /BT([\s\S]*?)ET/g;
+    let bm: RegExpExecArray | null;
+    while ((bm = bt.exec(content))) {
+      snippets.push(...extractTextOps(bm[1]));
     }
   }
 
-  // Uncompressed literal strings anywhere near Tj (fallback for simple PDFs)
-  if (snippets.length < 5) {
+  // Fallback: operator scan on whole file (uncompressed simple PDFs)
+  if (snippets.length < 3) {
     const raw = bytesToLatin1(bytes);
-    snippets.push(...extractOperators(raw));
+    // only scan limited printable-ish chunks to avoid garbage flood
+    snippets.push(...extractTextOps(raw));
   }
 
-  const text = cleanLines(snippets);
-  const letterCount = (text.match(/\p{L}/gu) ?? []).length;
-  const likelyScanned =
-    letterCount < 40 && imageStreams > 0 && contentAttempts >= 0 && text.replace(/\s/g, "").length < 40;
+  const text = cleanExtractedText(snippets.join("\n"));
+  const letters = (text.match(/\p{L}/gu) || []).length;
 
-  if (letterCount < 25 && text.replace(/\s/g, "").length < 30) {
-    return { text: "", likelyScanned: likelyScanned || imageStreams > 0 };
+  if (letters < 20 || text.replace(/\s/g, "").length < 25) {
+    return { text: "", likelyScanned: images > 0 || streams.length > 0 };
   }
 
   if (looksLikeRawPdf(text)) {
-    return { text: "", likelyScanned: imageStreams > 0 };
+    return { text: "", likelyScanned: images > 0 };
   }
 
   return { text, likelyScanned: false };
@@ -344,39 +340,43 @@ export async function extractTextFromFile(
   file: File
 ): Promise<{ text: string; kind: "text" | "pdf" }> {
   const name = file.name.toLowerCase();
-  const isPdf = name.endsWith(".pdf") || file.type === "application/pdf";
+  const isPdf =
+    name.endsWith(".pdf") ||
+    file.type === "application/pdf" ||
+    file.type === "application/x-pdf";
 
   if (isPdf) {
-    const buf = await file.arrayBuffer();
-    const { text, likelyScanned } = extractTextFromPdfBytes(new Uint8Array(buf));
+    const buf = new Uint8Array(await file.arrayBuffer());
+    // magic header
+    const magic = String.fromCharCode(buf[0] || 0, buf[1] || 0, buf[2] || 0, buf[3] || 0);
+    const { text, likelyScanned } = extractTextFromPdfBytes(buf);
     if (!text.trim()) {
-      throw new Error(likelyScanned ? "PDF_SCANNED" : "PDF_NO_TEXT");
+      throw new Error(likelyScanned || magic.startsWith("%PDF") ? "PDF_SCANNED" : "PDF_NO_TEXT");
     }
+    // final safety: never return garbage
+    if (looksLikeRawPdf(text)) throw new Error("PDF_SCANNED");
     return { text, kind: "pdf" };
   }
 
   const isTextLike =
     file.type.startsWith("text/") ||
     file.type === "application/json" ||
-    file.type === "application/rtf" ||
-    /\.(txt|md|markdown|csv|json|log|rtf)$/i.test(file.name) ||
-    file.type === "";
+    file.type === "" ||
+    /\.(txt|md|markdown|csv|json|log|rtf)$/i.test(file.name);
 
-  if (!isTextLike) {
-    throw new Error("UNSUPPORTED");
-  }
+  if (!isTextLike) throw new Error("UNSUPPORTED");
 
   let text = await file.text();
-  if (looksLikeRawPdf(text) || text.trimStart().startsWith("%PDF")) {
-    const buf = await file.arrayBuffer();
-    const { text: pdfText, likelyScanned } = extractTextFromPdfBytes(new Uint8Array(buf));
-    if (!pdfText.trim()) {
-      throw new Error(likelyScanned ? "PDF_SCANNED" : "PDF_NO_TEXT");
-    }
+  if (text.trimStart().startsWith("%PDF") || looksLikeRawPdf(text)) {
+    const buf = new Uint8Array(await file.arrayBuffer());
+    const { text: pdfText, likelyScanned } = extractTextFromPdfBytes(buf);
+    if (!pdfText.trim()) throw new Error(likelyScanned ? "PDF_SCANNED" : "PDF_NO_TEXT");
+    if (looksLikeRawPdf(pdfText)) throw new Error("PDF_SCANNED");
     return { text: pdfText, kind: "pdf" };
   }
 
   text = cleanExtractedText(text);
   if (!text.trim()) throw new Error("EMPTY");
+  if (looksLikeRawPdf(text)) throw new Error("PDF_SCANNED");
   return { text, kind: "text" };
 }
