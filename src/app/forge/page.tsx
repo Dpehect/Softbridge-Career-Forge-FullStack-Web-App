@@ -27,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { StatPill } from "@/components/StatPill";
 import { FilePickButton } from "@/components/FilePickButton";
 import { CvWizard } from "@/components/CvWizard";
+import { CvFeedbackPanel } from "@/components/CvFeedbackPanel";
 import { useCareerStore } from "@/store/useCareerStore";
 import {
   parseCV,
@@ -44,6 +45,7 @@ import {
   downloadJsonFile,
   getJobRecommendations,
   exportCvAsPdf,
+  generateCvFeedback,
   type CoverLetterTone,
   type OptimizedCV,
   type CoverLetterResult,
@@ -82,44 +84,6 @@ const tabs: { id: TabId; label: string; icon: ElementType }[] = [
   { id: "interview", label: "Interview", icon: Mic2 },
   { id: "history", label: "History", icon: History },
 ];
-
-const SAMPLE_CV = `Ayşe Yılmaz
-Senior Frontend Engineer
-ayse.yilmaz@email.com | İstanbul | +90 532 000 00 00
-
-Özet
-React ve TypeScript ile kullanıcı odaklı web ürünleri geliştiren frontend mühendisi. Tasarım sistemleri, performans ve erişilebilirlik odaklı çalışır.
-
-Deneyim
-Senior Frontend Engineer @ Softbridge Solutions | 2023 – Present
-- CareerForge ürün yüzeylerini Next.js ile geliştirdim
-- Tasarım sistemi bileşenlerini standartlaştırdım
-- Core Web Vitals iyileştirmeleri yaptım
-
-Frontend Engineer @ Harbor Commerce | 2021 – 2023
-- Merchant onboarding akışını yeniden tasarladım
-- Aktivasyon metriklerinde iyileşme sağladım
-
-Beceriler
-TypeScript, React, Next.js, Tailwind, Zustand, Jest, Git, Figma
-
-Eğitim
-İstanbul Teknik Üniversitesi – Bilgisayar Mühendisliği Lisans 2021`;
-
-const SAMPLE_JD = `Senior Frontend Engineer – Softbridge Solutions
-Remote / Hybrid
-
-We are looking for a Senior Frontend Engineer to build high-craft product surfaces with React, TypeScript, and Next.js.
-
-Requirements:
-- 5+ years React experience
-- Strong TypeScript
-- Next.js App Router
-- Design systems and accessibility
-- Experience with testing (Jest, Playwright)
-- Collaboration with design and product
-
-Nice to have: GraphQL, CI/CD, performance optimization, mentoring.`;
 
 export default function ForgePage() {
   const {
@@ -443,6 +407,10 @@ export default function ForgePage() {
   };
 
   const historyPreview = useMemo(() => forgeHistory.slice(0, 8), [forgeHistory]);
+  const cvFeedback = useMemo(
+    () => (forgeParsedCv ? generateCvFeedback(forgeParsedCv, forgeCvText) : null),
+    [forgeParsedCv, forgeCvText]
+  );
 
   return (
     <div className="px-4 md:px-8 pb-20 pt-6">
@@ -478,35 +446,24 @@ export default function ForgePage() {
               </p>
               <div className="flex flex-wrap items-center gap-1.5">
                 <FilePickButton
-                  label="Bilgisayardan CV Seç"
+                  label="Choose CV from computer"
                   silentSuccess
                   onText={(text, fileName) => handleCvFile(text, fileName)}
                 />
                 <FilePickButton
-                  label="Klasöre Göz At"
+                  label="Browse folders"
                   variant="ghost"
                   silentSuccess
                   onText={(text, fileName) => handleCvFile(text, fileName)}
                 />
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    setForgeCvText(SAMPLE_CV);
-                    setLastCvFileName(null);
-                    run(() => {
-                      runParse(SAMPLE_CV, "manual");
-                    });
-                  }}
-                >
-                  Sample
+                <Button size="sm" variant="ghost" onClick={onClearCv}>
+                  <RotateCcw className="w-3.5 h-3.5" /> Clear / Reset CV
                 </Button>
               </div>
             </div>
             <p className="text-[11px] text-muted-steel">
-              Paste text or use <strong>Choose CV from computer</strong> /{" "}
-              <strong>Browse folders</strong> (PDF, TXT). Click to open the system file window — no
-              drag-and-drop required. Files auto-parse after selection.
+              Paste text or choose a <strong>PDF/TXT</strong> file. No sample CVs. Scanned PDFs need a
+              searchable export or manual paste.
             </p>
             <Textarea
               value={cvText}
@@ -514,39 +471,29 @@ export default function ForgePage() {
                 setForgeCvText(e.target.value);
                 setParseBanner(null);
               }}
-              placeholder="CV’ni buraya yapıştır veya bilgisayardan dosya seç…"
+              placeholder="Paste your CV text here…"
               className="min-h-[180px] font-mono text-xs"
             />
           </div>
           <div className="glass-panel rounded-2xl p-4 space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted-steel">
-                İş ilanı (JD)
+                Job description
               </p>
               <div className="flex flex-wrap items-center gap-1.5">
                 <FilePickButton
-                  label="JD dosyası seç"
+                  label="Choose JD file"
                   onText={(text) => setForgeJdText(text)}
                 />
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    setForgeJdText(SAMPLE_JD);
-                    toast.message("Sample job ad loaded");
-                  }}
-                >
-                  Sample
-                </Button>
               </div>
             </div>
             <p className="text-[11px] text-muted-steel">
-              Sistem dosya penceresinde klasörlere tıklayarak ilerle; sürüklemen gerekmez.
+              Paste a job ad or upload a text file for match scoring.
             </p>
             <Textarea
               value={jdText}
               onChange={(e) => setForgeJdText(e.target.value)}
-              placeholder="İş ilanını buraya yapıştır veya dosya seç…"
+              placeholder="Paste the job description here…"
               className="min-h-[180px] font-mono text-xs"
             />
           </div>
@@ -708,20 +655,20 @@ export default function ForgePage() {
                   </div>
                   <div className="grid md:grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-[10px] font-bold uppercase text-muted-steel mb-1">İletişim</p>
+                      <p className="text-[10px] font-bold uppercase text-muted-steel mb-1">Contact</p>
                       <p>{forgeParsedCv.email || "—"}</p>
-                      <p className="text-muted-steel">{forgeParsedCv.phone || "Telefon yok"}</p>
-                      <p className="text-muted-steel">{forgeParsedCv.location || "Konum yok"}</p>
+                      <p className="text-muted-steel">{forgeParsedCv.phone || "No phone"}</p>
+                      <p className="text-muted-steel">{forgeParsedCv.location || "No location"}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold uppercase text-muted-steel mb-1">Özet</p>
+                      <p className="text-[10px] font-bold uppercase text-muted-steel mb-1">Summary</p>
                       <p className="text-ink-soft leading-relaxed">
-                        {forgeParsedCv.summary || "Özet algılanamadı"}
+                        {forgeParsedCv.summary || "No summary detected"}
                       </p>
                     </div>
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold uppercase text-muted-steel mb-2">Beceriler</p>
+                    <p className="text-[10px] font-bold uppercase text-muted-steel mb-2">Skills</p>
                     <div className="flex flex-wrap gap-1.5">
                       {forgeParsedCv.skills.map((s) => (
                         <Badge key={s} variant="soft">
@@ -729,14 +676,14 @@ export default function ForgePage() {
                         </Badge>
                       ))}
                       {forgeParsedCv.skills.length === 0 && (
-                        <span className="text-sm text-muted-steel">Beceri algılanamadı</span>
+                        <span className="text-sm text-muted-steel">No skills detected</span>
                       )}
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <p className="text-[10px] font-bold uppercase text-muted-steel">Deneyim</p>
+                    <p className="text-[10px] font-bold uppercase text-muted-steel">Experience</p>
                     {forgeParsedCv.experience.length === 0 && (
-                      <p className="text-sm text-muted-steel">Deneyim bloğu algılanamadı</p>
+                      <p className="text-sm text-muted-steel">No experience blocks detected</p>
                     )}
                     {forgeParsedCv.experience.map((e, i) => (
                       <div key={i} className="rounded-xl border border-black/5 p-3 bg-panel-elevated/50">
@@ -754,9 +701,10 @@ export default function ForgePage() {
                       </div>
                     ))}
                   </div>
+                  {cvFeedback && <CvFeedbackPanel feedback={cvFeedback} />}
                   {forgeParsedCv.education.length > 0 && (
                     <div>
-                      <p className="text-[10px] font-bold uppercase text-muted-steel mb-2">Eğitim</p>
+                      <p className="text-[10px] font-bold uppercase text-muted-steel mb-2">Education</p>
                       <ul className="space-y-1 text-sm">
                         {forgeParsedCv.education.map((edu, i) => (
                           <li key={i}>

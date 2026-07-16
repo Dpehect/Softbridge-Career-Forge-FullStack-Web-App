@@ -26,3 +26,4 @@ export {
   type JobRecommendation,
 } from "./jobRecommendations";
 export { exportCvAsPdf } from "./exportPdf";
+export { generateCvFeedback, type CvDeepFeedback } from "./cvFeedback";

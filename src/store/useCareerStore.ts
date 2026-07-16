@@ -11,47 +11,18 @@ import type {
   ParsedCV,
 } from "@/lib/forge/types";
 
-const defaultResume: ResumeProfile = {
-  fullName: "Alex Rivera",
-  headline: "Product-minded frontend engineer",
-  email: "alex@example.com",
-  location: "Lisbon, Portugal",
-  summary:
-    "I build calm, high-craft web products. Recently focused on career tooling, design systems, and motion that earns its keep.",
-  skills: ["TypeScript", "React", "Next.js", "System Design", "Product Sense"],
-  experience: [
-    {
-      id: "exp-1",
-      role: "Frontend Engineer",
-      company: "Northlane Labs",
-      start: "2023",
-      end: "Present",
-      highlights: [
-        "Shipped evaluation dashboard used by 40+ enterprise teams",
-        "Cut interaction latency 28% through selective hydration",
-      ],
-    },
-    {
-      id: "exp-2",
-      role: "UI Engineer",
-      company: "Harbor Commerce",
-      start: "2021",
-      end: "2023",
-      highlights: [
-        "Owned merchant onboarding redesign; activation +14%",
-        "Led design system migration across 3 product surfaces",
-      ],
-    },
-  ],
-  education: [
-    {
-      id: "edu-1",
-      school: "University of Porto",
-      degree: "BSc Computer Science",
-      year: "2021",
-    },
-  ],
-};
+const emptyResume = (): ResumeProfile => ({
+  fullName: "",
+  headline: "",
+  email: "",
+  location: "",
+  summary: "",
+  skills: [],
+  experience: [],
+  education: [],
+});
+
+const defaultResume: ResumeProfile = emptyResume();
 
 interface CareerState {
   savedJobIds: string[];
@@ -73,6 +44,7 @@ interface CareerState {
   toggleModule: (id: string) => void;
   updateResume: (patch: Partial<ResumeProfile>) => void;
   setResume: (resume: ResumeProfile) => void;
+  resetResume: () => void;
   addCoachMessage: (message: Omit<CoachMessage, "id" | "createdAt">) => void;
   clearCoach: () => void;
   setForgeCvText: (text: string) => void;
@@ -143,6 +115,7 @@ export const useCareerStore = create<CareerState>()(
       },
       updateResume: (patch) => set({ resume: { ...get().resume, ...patch } }),
       setResume: (resume) => set({ resume }),
+      resetResume: () => set({ resume: emptyResume() }),
       addCoachMessage: (message) =>
         set({
           coachMessages: [
