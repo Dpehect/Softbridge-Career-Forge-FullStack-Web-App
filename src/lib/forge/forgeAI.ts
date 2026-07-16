@@ -202,130 +202,167 @@ function simulateChatCoach(
   const msg = message.toLowerCase();
   const name = cv.name.split(" ")[0] || "Candidate";
   const title = cv.title || "Software Professional";
-  
-  if (lang === "en") {
-    if (msg.includes("hello") || msg.includes("hi") || msg.includes("hey") || msg.includes("merhaba")) {
+  const lastJob = cv.experience[0];
+  const lastTitle = lastJob ? lastJob.position : title;
+  const lastCompany = lastJob ? lastJob.company : (lang === "tr" ? "hedef şirketiniz" : "target company");
+  const skillsList = cv.skills.length > 0 ? cv.skills.slice(0, 4).join(", ") : "React, TypeScript, Next.js, Node.js";
+
+  if (lang === "tr") {
+    if (msg.includes("merhaba") || msg.includes("selam") || msg.includes("hello") || msg.includes("hi")) {
       return {
-        category: "Career Strategy",
-        response: `Hello ${name}! I'm your CareerForge AI Career Coach. I've reviewed your CV and would love to help you build towards your ${title} goals. What should we optimize today?`,
+        category: "Kariyer Stratejisi",
+        response: `Merhaba **${name}**! Ben senin CareerForge kariyer koçunum. CV'ndeki **${lastTitle} @ ${lastCompany}** deneyimlerini inceledim. Bugün hedeflerin doğrultusunda ne üzerine çalışalım?`,
         actionableTips: [
-          "1. Help me rewrite my latest experience bullets",
-          "2. Prepare mock interview questions for my stack",
-          "3. Optimize my summary for a job description (JD)"
+          "CV özeti (summary) ve başarı maddelerini optimize et",
+          "Kritik mülakat sorularına hazırlık yap (STAR metodu)",
+          "Maaş pazarlığı ve teklif değerlendirme stratejileri"
         ],
-        nextStep: "Choose an action or type your question details."
+        nextStep: "Yukarıdaki konulardan birini yazabilir veya sorunuzu detaylandırabilirsiniz."
       };
     }
 
-    if (msg.includes("experience") || msg.includes("bullet") || msg.includes("job") || msg.includes("deneyim")) {
-      const latestJob = cv.experience[0];
+    if (msg.includes("deneyim") || msg.includes("bullet") || msg.includes("yazım|madd") || msg.includes("refactor")) {
+      const oldBullet = lastJob && lastJob.description && lastJob.description[0] 
+        ? lastJob.description[0] 
+        : "Proje kodladım ve hataları çözdüm.";
       return {
-        category: "Bullet Point Refactoring",
-        response: `Let's work on your experience descriptions, ${name}. Bullet points should describe business outcomes and metrics, not just duties. Use the format: strong action verb + what you built + technologies used + measurable impact.`,
+        category: "CV Madde İyileştirme",
+        response: [
+          `Özgeçmişindeki **${lastTitle}** pozisyonuna ait başarı maddelerini inceledim.`,
+          `Mevcut maddelerin görev listesi gibi kalıyor. Bunları etki-odaklı hale getirmeliyiz.`,
+          `\n**Örnek STAR Revizyonu:**`,
+          `- ❌ **Eski Hali:** *"${oldBullet}"*`,
+          `-  **Yeni Hali:** *"**${lastCompany}** bünyesinde, **${skillsList}** mimarisiyle performans optimizasyonu yaptım; sayfa yüklenme sürelerini **%35 düşürerek** kullanıcı dönüşüm oranını **%14 artırdım**."*`
+        ].join("\n"),
         actionableTips: [
-          `Weak: "Worked as a ${latestJob?.position || title} doing frontend tasks."`,
-          `Strong: "Architected modern frontend interfaces using React & TypeScript, resulting in a 40% page load improvement and 15% increase in user retention."`,
-          "Ensure every bullet point includes at least one quantitative metric (%, ms, saved hours)."
+          "Deneyim maddelerine ölçülebilir yüzdeler veya süreler ekle",
+          "Her maddeye güçlü bir yönetim/tasarım fiiliyle başla",
+          "Teknik stack isimlerini cümle içinde doğal kullan"
         ],
-        nextStep: "Paste one of your current bullet points below and let's rewrite it."
+        nextStep: "Analiz etmemi istediğin bir başarı maddeni yapıştırabilirsin."
       };
     }
 
-    if (msg.includes("interview") || msg.includes("question") || msg.includes("mülakat")) {
-      const topSkill = cv.skills[0] || "core skills";
+    if (msg.includes("mülakat") || msg.includes("interview") || msg.includes("soru") || msg.includes("görüşme")) {
+      const skill = cv.skills[0] || "TypeScript";
       return {
-        category: "Interview Prep",
-        response: `I've prepared 3 common interview questions tailored to your ${title} background. Focus on sharing STAR stories, especially concerning your work with ${topSkill}.`,
+        category: "Mülakat Hazırlığı",
+        response: [
+          `**${name}**, bir **${title}** adayı olarak mülakatlarda karşına çıkabilecek en önemli sorulardan birini ve STAR formatında cevap planını çıkardım.`,
+          `\n**Örnek Soru:** *"**${lastCompany}** bünyesinde **${skill}** kullanarak aldığınız en zor teknik karar neydi?"*`,
+          `- **Situation (Durum):** Yüksek yük altında çalışan modülümüz bellek sızıntıları yaşıyordu.`,
+          `- **Task (Görev):** Kod bloklarını optimize edip verimli bir state mimarisi kurmam gerekiyordu.`,
+          `- **Action (Aksiyon):** **${skill}** kütüphaneleriyle bellek profili çıkarıp gereksiz render'ları engelledim.`,
+          `- **Result (Sonuç):** CPU tüketimini **%25 düşürdüm** ve kod okunabilirliğini artırdım.`
+        ].join("\n"),
         actionableTips: [
-          "1. 'Walk me through your CV.' (Highlight transition points and metric achievements)",
-          `2. 'What is the most challenging technical project you built with ${topSkill}?' (Describe trade-offs)`,
-          "3. 'How do you handle scope creep and deadlines?' (Explain MVP prioritizations)"
+          "Teknik mülakatlarda aldığın kararların trade-off'larını açıkla",
+          "STAR (Situation-Task-Action-Result) formatını kullan",
+          "Başarısızlık hikayelerini suçlama yapmadan, öğrenim odaklı anlat"
         ],
-        nextStep: "Type your draft answer to one of these questions, and I'll review it for you!"
+        nextStep: "Bu mülakat sorusuna kendi cevabını yaz, hemen değerlendirelim."
       };
     }
 
-    // Fallback English
-    return {
-      category: "Career Strategy",
-      response: `I hear you, ${name}. As a ${title}, leveraging your ${cv.skills.length} skills and ${cv.experience.length} experiences is key to landing interviews. Let's dig deeper into your question.`,
-      actionableTips: [
-        "Optimize my professional summary",
-        "Explain how to bypass ATS keyword checks",
-        "Give me salary negotiation tips"
-      ],
-      nextStep: "Let me know what you want to work on next."
-    };
-  }
+    if (msg.includes("ats") || msg.includes("uyum") || msg.includes("keywords") || msg.includes("anahtar")) {
+      return {
+        category: "ATS Geçiş Filtresi",
+        response: [
+          `Mevcut profilini hedef **${title}** ilanlarıyla eşleştirdiğimde kritik anahtar kelimelerin eksik olduğunu görüyorum.`,
+          `\n**Eksik Olan Kritik Kelimeler:** Docker, AWS Cloud, CI/CD pipelines, Unit testing (Jest).`,
+          `ATS tarayıcılarından geçmek için başlıkları sade (Deneyim, Beceriler, Eğitim) tutmalı, tablolar ve iki sütunlu tasarımlardan kaçınmalısın.`
+        ].join("\n"),
+        actionableTips: [
+          "Beceriler bölümünü virgülle ayrılmış sade metin olarak listele",
+          "İlandaki eylem kelimelerini deneyim maddelerine entegre et",
+          "Özgeçmişini PDF olarak dışa aktarırken yazıları seçilebilir formatta tut"
+        ],
+        nextStep: "CV'nin en son ATS skorunu görmek için ATS sekmesine tıklayabilirsin."
+      };
+    }
 
-  // Fallback Turkish (Predefined)
-  const latestJob = cv.experience[0];
-  const jobTitle = latestJob ? latestJob.position : title;
-  const company = latestJob ? latestJob.company : "son şirketiniz";
-  
-  if (msg.includes("merhaba") || msg.includes("selam") || msg.includes("hello") || msg.includes("hi")) {
+    // Fallback TR
     return {
       category: "Kariyer Stratejisi",
-      response: `Merhaba ${name}! Ben senin CareerForge yapay zeka kariyer koçunum. CV'ni inceledim ve ${title} hedefin doğrultusunda sana rehberlik etmek için sabırsızlanıyorum. Bugün ne üzerine çalışalım?`,
+      response: `Anlıyorum **${name}**. Bir **${title}** olarak, özgeçmişinde listelediğin **${cv.skills.length} beceri** ve **${cv.experience.length} iş deneyimini** en iyi şekilde pazarlamak için buradayım. Sorunu detaylandırabilir misin?`,
       actionableTips: [
-        "1. Son iş deneyimimi güçlendirmeme yardım et",
-        "2. Bu özgeçmiş ile mülakat soruları hazırlayalım",
-        "3. CV'mi bir iş ilanına (JD) göre optimize et"
+        "Özgeçmişimin özet kısmını yeniden yazmama yardım et",
+        "Kariyer hedeflerime göre iş eşleşmesi önerisi yap",
+        "Maaş pazarlığı stratejileri ver"
       ],
-      nextStep: "Ne yapmak istediğini yaz veya yukarıdaki önerilerden birini seç."
+      nextStep: "Sorunuzu detaylandırın veya hazır yönlendirmelerden birini yazın."
     };
   }
 
-  if (msg.includes("deneyim") || msg.includes("maddi") || msg.includes("bullet") || msg.includes("tecrübe")) {
+  // ----------------------------------------------------
+  // ENGLISH RESPONSES
+  // ----------------------------------------------------
+  if (msg.includes("hello") || msg.includes("hi") || msg.includes("hey") || msg.includes("merhaba")) {
     return {
-      category: "Deneyim Güçlendirme",
-      response: `Deneyim maddelerini güçlendirelim ${name}. Özgeçmişinde "${jobTitle} - ${company}" olarak listelediğin görevleri basit bir liste gibi değil, etki-odaklı yazmalısın. Her madde: güçlü bir fiil + ne yaptın + hangi teknolojiyi kullandın + ulaştığın sayısal metrik formatında olmalıdır.`,
+      category: "Career Strategy",
+      response: `Hello **${name}**! I'm your CareerForge AI Career Coach. I've reviewed your experience as **${lastTitle} @ ${lastCompany}**. What career goals should we work on today?`,
       actionableTips: [
-        `Kötü: "${jobTitle} olarak kod yazdım."`,
-        `İyi: "TypeScript ve Next.js kullanarak web arayüz performansını iyileştirdim; sayfa yüklenme sürelerini %35 kısaltarak dönüşüm oranını %8 artırdım."`,
-        "Her iş deneyimi maddesine en az bir adet sayısal metrik (%, MS, TL, Adet) ekle."
+        "Optimize summary and resume bullet points",
+        "Prepare mock interview questions (STAR method)",
+        "Salary negotiation scripts and strategies"
       ],
-      nextStep: "Son rolündeki maddelerden birini buraya yaz, birlikte güçlendirelim!"
+      nextStep: "Choose an action or type your question below."
     };
   }
 
-  if (msg.includes("mülakat") || msg.includes("interview") || msg.includes("soru") || msg.includes("görüşme")) {
-    const topSkill = cv.skills[0] || "teknik becerilerin";
+  if (msg.includes("experience") || msg.includes("bullet") || msg.includes("refactor") || msg.includes("rewrite")) {
+    const oldBullet = lastJob && lastJob.description && lastJob.description[0] 
+      ? lastJob.description[0] 
+      : "Developed features and fixed application bugs.";
     return {
-      category: "Mülakat Hazırlığı",
-      response: `${title} pozisyonu için mülakatlarda en sık sorulan 3 soru tipini senin için hazırladım. Özellikle ${topSkill} konusundaki kararlarını ve STAR metodunu (Durum-Görev-Aksiyon-Sonuç) kullanarak hikayelendirme pratiği yapmalıyız.`,
+      category: "Bullet Point Optimization",
+      response: [
+        `Let's analyze the experience bullets for your **${lastTitle}** role.`,
+        `Your points currently describe daily duties. We want to convert them into business outcomes.`,
+        `\n**STAR Refactoring Example:**`,
+        `- ❌ **Before:** *"${oldBullet}"*`,
+        `-  **After:** *"Optimized core application modules at **${lastCompany}** using **${skillsList}**, reducing page load latency by **35%** and increasing user conversion rates by **14%**."*`
+      ].join("\n"),
       actionableTips: [
-        `1. "Kendinizi tanıtın ve neden bu rol?" (Deneyimlerini doğrudan ilan hedefleriyle bağdaştır)`,
-        `2. "${topSkill} ile üretim (production) ortamında aldığınız en zor teknik karar neydi?" (Trade-off'ları belirt)`,
-        `3. "Takım içinde yaşadığınız bir fikir ayrılığını nasıl yönettiniz?" (Ego yerine veri/metrik odaklılığı vurgula)`
+        "Add quantitative metrics (%, ms, team size, budget) to bullets",
+        "Open every bullet with a strong action verb",
+        "Directly align tool stacks with your target job description"
       ],
-      nextStep: "Bu sorulardan birine vereceğin cevabı yaz, hemen koçluk yorumu yapayım."
+      nextStep: "Paste one of your current bullet points below and let's rewrite it."
     };
   }
 
-  if (msg.includes("ats") || msg.includes("uyum") || msg.includes("keywords") || msg.includes("anahtar")) {
-    const skillsList = cv.skills.slice(0, 4).join(", ");
+  if (msg.includes("interview") || msg.includes("question") || msg.includes("mock") || msg.includes("STAR")) {
+    const skill = cv.skills[0] || "TypeScript";
     return {
-      category: "ATS İyileştirme",
-      response: `ATS (Aday Takip Sistemleri) filtrelerini aşmak için özgeçmiş taslağının sade ve taranabilir olması gerekir. İlanda geçen anahtar kelimelerin (örneğin: ${skillsList || "hedef teknolojiler"}) CV metninde doğal bir şekilde yer aldığından emin olmalısın.`,
+      category: "Interview Prep",
+      response: [
+        `**${name}**, here is a key interview question tailored for a **${title}** role, along with a STAR response plan:`,
+        `\n**Question:** *"Describe a complex technical challenge you solved using ${skill} at ${lastCompany}."*`,
+        `- **Situation:** Our primary data tables were experiencing rendering lags under heavy data loads.`,
+        `- **Task:** Identify memory leak origins and reconstruct client-side state handling.`,
+        `- **Action:** Profiling with **${skill}** memory tools, optimizing lifecycle cycles, and refactoring selectors.`,
+        `- **Result:** Lowered memory usage by **25%** and stabilized LCP metrics.`
+      ].join("\n"),
       actionableTips: [
-        "İkonlar, tablolar veya görsel grafikler kullanmaktan kaçın (ATS okuyucusunu bozar)",
-        "Tarihleri ve bölüm başlıklarını standart ve tutarlı yaz (deneyim, eğitim, beceriler)",
-        "Beceriler bölümünü virgülle ayrılmış sade metin yap"
+        "Explain tech decisions using clear engineering trade-offs",
+        "Leverage the STAR (Situation-Task-Action-Result) format",
+        "Present failure examples focused on systemic learning outcomes"
       ],
-      nextStep: "CV'nin en son ATS skorunu görmek için ATS sekmesine tıklayabilirsin."
+      nextStep: "Type your draft answer to this question, and I'll review it for you!"
     };
   }
 
+  // Fallback English
   return {
-    category: "Kariyer Stratejisi",
-    response: `Anlıyorum ${name}. ${title} hedefin doğrultusunda, özgeçmişinde listelediğin ${cv.skills.length} beceri ve ${cv.experience.length} iş deneyimini en iyi şekilde pazarlamak için buradayım. Sorunu detaylandırabilir misin?`,
+    category: "Career Strategy",
+    response: `I hear you, **${name}**. As a **${title}**, leveraging your **${cv.skills.length} skills** and **${cv.experience.length} experiences** is key to landing interviews. Let's dig deeper into your question.`,
     actionableTips: [
-      "Özgeçmişimin özet kısmını yeniden yazmamıza yardım et",
-      "Kariyer tavsiyeleri ver",
-      "İş görüşmesi için teknik soru hazırlığı yap"
+      "Optimize my professional summary statement",
+      "Check my ATS keyword alignment score",
+      "Salary negotiation templates"
     ],
-    nextStep: "Sorunuzu detaylandırın veya hazır yönlendirmelerden birini yazın."
+    nextStep: "Let me know what you want to work on next."
   };
 }
 
