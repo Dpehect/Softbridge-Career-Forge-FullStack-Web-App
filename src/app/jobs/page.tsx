@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { jobs } from "@/data/jobs";
 import { JobCard } from "@/components/JobCard";
@@ -25,6 +25,19 @@ export default function JobsPage() {
   const [mode, setMode] = useState<(typeof workModes)[number]>("All");
   const [level, setLevel] = useState<(typeof seniorities)[number]>("All");
   const { t, lang } = useTranslation();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-cosmic-teal border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   const getModeLabel = (m: string) => {
     if (lang === "tr") {

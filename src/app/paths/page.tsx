@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { careerPaths } from "@/data/paths";
 import { PathCard } from "@/components/PathCard";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +8,19 @@ import { useTranslation } from "@/lib/forge/i18n";
 
 export default function PathsPage() {
   const { t, lang } = useTranslation();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-cosmic-teal border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 md:px-8 pb-20 pt-6">

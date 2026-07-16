@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -35,6 +36,19 @@ export default function DashboardPage() {
   } = useCareerStore();
 
   const { t, lang } = useTranslation();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-cosmic-teal border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   const savedJobs = jobs.filter((j) => savedJobIds.includes(j.id));
   const appliedJobs = jobs.filter((j) => appliedJobIds.includes(j.id));

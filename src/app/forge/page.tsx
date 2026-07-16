@@ -79,6 +79,7 @@ export default function ForgePage() {
   const [editorTab, setEditorTab] = useState<EditorTabId>("raw");
   const [previewTab, setPreviewTab] = useState<PreviewTabId>("preview");
 
+  const [mounted, setMounted] = useState(false);
   const [optimized, setOptimized] = useState<OptimizedCV | null>(null);
   const [cover, setCover] = useState<CoverLetterResult | null>(null);
   const [interview, setInterview] = useState<InterviewResult | null>(null);
@@ -89,8 +90,9 @@ export default function ForgePage() {
   const [parseBanner, setParseBanner] = useState<string | null>(null);
   const [lastCvFileName, setLastCvFileName] = useState<string | null>(null);
 
-  // Sync tab hash routing
+  // Sync tab hash routing & hydration mounting
   useEffect(() => {
+    setMounted(true);
     if (typeof window !== "undefined") {
       const hash = window.location.hash.replace("#", "");
       if (hash === "history") {
@@ -98,6 +100,14 @@ export default function ForgePage() {
       }
     }
   }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-cosmic-teal border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   const cvText = forgeCvText;
   const jdText = forgeJdText;

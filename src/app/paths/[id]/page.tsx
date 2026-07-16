@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Check, Circle, Clock } from "lucide-react";
@@ -19,6 +19,19 @@ export default function PathDetailPage({ params }: { params: Promise<{ id: strin
 
   const { enrolledPathIds, completedModuleIds, enrollPath, toggleModule } = useCareerStore();
   const { t, lang } = useTranslation();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-cosmic-teal border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   const enrolled = enrolledPathIds.includes(path.id);
   const doneCount = path.modules.filter((m) => completedModuleIds.includes(m.id)).length;
