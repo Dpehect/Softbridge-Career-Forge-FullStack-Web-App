@@ -20,6 +20,7 @@ const emptyResume = (): ResumeProfile => ({
   skills: [],
   experience: [],
   education: [],
+  photoDataUrl: null,
 });
 
 const defaultResume: ResumeProfile = emptyResume();

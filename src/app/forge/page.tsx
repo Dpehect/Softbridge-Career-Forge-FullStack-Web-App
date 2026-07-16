@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ElementType } from "react";
+import { useMemo, useState, useEffect, type ElementType } from "react";
 import { toast } from "sonner";
 import {
   Anvil,
@@ -20,6 +20,8 @@ import {
   Briefcase,
   ExternalLink,
   FileDown,
+  Camera,
+  Code2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -120,6 +122,29 @@ export default function ForgePage() {
   const [lastCvFileName, setLastCvFileName] = useState<string | null>(null);
   const [jobRecs, setJobRecs] = useState<JobRecommendation[]>([]);
   const [jobNote, setJobNote] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash.replace("#", "");
+      if (
+        hash &&
+        [
+          "parse",
+          "create",
+          "analyze",
+          "optimize",
+          "coverletter",
+          "ats",
+          "jobs",
+          "chatbot",
+          "interview",
+          "history",
+        ].includes(hash)
+      ) {
+        setTab(hash as any);
+      }
+    }
+  }, []);
 
   const cvText = forgeCvText;
   const jdText = forgeJdText;
@@ -476,6 +501,14 @@ export default function ForgePage() {
               <Button variant="outline" disabled={busy || !forgeParsedCv} onClick={() => void onExportPdf()}>
                 <FileDown className="w-4 h-4" /> Export PDF
               </Button>
+              <a
+                href="https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-semibold border border-black/8 bg-star-white text-midnight-void hover:bg-cosmic-teal transition-colors shadow-sm"
+              >
+                <Code2 className="w-3.5 h-3.5" /> View Source on GitHub
+              </a>
             </div>
           </div>
           <p className="text-sm text-muted-steel">
@@ -643,14 +676,58 @@ export default function ForgePage() {
                       <FileDown className="w-4 h-4" /> Export PDF
                     </Button>
                   </div>
-                  {forgeParsedCv.photoDataUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={forgeParsedCv.photoDataUrl}
-                      alt=""
-                      className="w-16 h-16 rounded-2xl object-cover border border-black/8"
-                    />
-                  )}
+                  <div className="flex items-center gap-3">
+                    <div className="w-16 h-16 rounded-xl border border-black/8 bg-abyss-panel overflow-hidden flex items-center justify-center shrink-0 relative">
+                      {forgeParsedCv.photoDataUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={forgeParsedCv.photoDataUrl}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Camera className="w-6 h-6 text-muted-steel" />
+                      )}
+                      <input
+                        type="file"
+                        id="forge-photo-upload"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              setForgeParsedCv({
+                                ...forgeParsedCv,
+                                photoDataUrl: reader.result as string
+                              });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => document.getElementById("forge-photo-upload")?.click()}
+                      >
+                        <Camera className="w-3 h-3 mr-1" /> Photo
+                      </Button>
+                      {forgeParsedCv.photoDataUrl && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-sunset-coral"
+                          onClick={() => setForgeParsedCv({ ...forgeParsedCv, photoDataUrl: null })}
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     <StatPill label="Name" value={forgeParsedCv.name} />
                     <StatPill label="Title" value={forgeParsedCv.title} />
@@ -728,7 +805,15 @@ export default function ForgePage() {
           )}
 
           {tab === "create" && (
-            <CvWizard onComplete={onWizardComplete} />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-black/5 pb-2">
+                <h2 className="font-semibold text-lg">Build CV from Scratch</h2>
+                <Button size="sm" variant="ghost" onClick={() => setTab("parse")}>
+                  ✕ Back to workspace
+                </Button>
+              </div>
+              <CvWizard onComplete={onWizardComplete} />
+            </div>
           )}
 
           {tab === "jobs" && (

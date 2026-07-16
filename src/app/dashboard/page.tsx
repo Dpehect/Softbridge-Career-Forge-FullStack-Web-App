@@ -257,7 +257,7 @@ export default function DashboardPage() {
                 <History className="w-4 h-4 text-cosmic-teal" />
                 Past analyses
               </h2>
-              <Link href="/forge" className="text-xs font-semibold text-cosmic-teal">
+              <Link href="/forge#history" className="text-xs font-semibold text-cosmic-teal">
                 Open Forge history
               </Link>
             </div>

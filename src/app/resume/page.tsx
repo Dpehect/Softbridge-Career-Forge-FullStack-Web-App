@@ -3,13 +3,14 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Download, Plus, Trash2, RotateCcw, FileText } from "lucide-react";
+import { Download, Plus, Trash2, RotateCcw, FileText, Camera, Code2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FilePickButton } from "@/components/FilePickButton";
 import { CvFeedbackPanel } from "@/components/CvFeedbackPanel";
+import { CvWizard } from "@/components/CvWizard";
 import { useCareerStore } from "@/store/useCareerStore";
 import {
   parseCV,
@@ -31,6 +32,7 @@ function parsedToResume(cv: ParsedCV): ResumeProfile {
     location: cv.location || "",
     summary: cv.summary || "",
     skills: cv.skills,
+    photoDataUrl: cv.photoDataUrl || null,
     experience: cv.experience.map((e, i) => ({
       id: `exp-${Date.now()}-${i}`,
       role: e.position,
@@ -57,6 +59,7 @@ function resumeToParsed(resume: ResumeProfile): ParsedCV {
     location: resume.location || null,
     summary: resume.summary || null,
     skills: resume.skills,
+    photoDataUrl: resume.photoDataUrl || null,
     experience: resume.experience.map((e) => ({
       company: e.company,
       position: e.role,
@@ -78,6 +81,7 @@ export default function ResumePage() {
   const [pasteText, setPasteText] = useState("");
   const [banner, setBanner] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
 
   const hasContent =
     Boolean(resume.fullName || resume.headline || resume.summary || resume.skills.length) ||
@@ -194,48 +198,77 @@ export default function ResumePage() {
             <Button variant="ghost" onClick={onClear}>
               <RotateCcw className="w-4 h-4" /> Clear / Reset CV
             </Button>
+            <a
+              href="https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-semibold border border-black/8 bg-star-white text-midnight-void hover:bg-cosmic-teal transition-colors shadow-sm"
+            >
+              <Code2 className="w-3.5 h-3.5" /> View Source on GitHub
+            </a>
           </div>
         </div>
 
-        {/* Import strip */}
-        <div className="glass-panel rounded-2xl p-5 mb-6 space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <FilePickButton
-              label="Upload PDF or TXT"
-              variant="accent"
-              size="default"
-              silentSuccess
-              onText={(text, name) => onFileText(text, name)}
-            />
-            <Link href="/forge">
-              <Button variant="outline">Build CV from Scratch</Button>
-            </Link>
-            <Button variant="soft" onClick={onParsePaste} disabled={!pasteText.trim()}>
-              Analyze pasted text
-            </Button>
-            <Button variant="ghost" onClick={onClear}>
-              <RotateCcw className="w-4 h-4" /> Clear / Reset CV
-            </Button>
-          </div>
-          <p className="text-[11px] text-muted-steel">
-            <strong>Paste CV Text</strong> below, or upload PDF/TXT. Clean extraction only. Scanned
-            PDFs: export as searchable text or paste manually.
-          </p>
-          <Textarea
-            value={pasteText}
-            onChange={(e) => setPasteText(e.target.value)}
-            placeholder="Paste CV Text here…"
-            className="min-h-[110px] font-mono text-xs"
-          />
-          {banner && (
-            <div className="rounded-xl border border-cosmic-teal/25 bg-cosmic-teal/10 px-4 py-3">
-              <p className="text-sm font-semibold">{READY_MSG}</p>
-              <p className="text-xs text-muted-steel mt-1">
-                Structured fields and deep feedback are below.
-              </p>
+        {/* CV Builder options */}
+        {showWizard ? (
+          <div className="glass-panel rounded-2xl p-5 mb-6 space-y-4 border border-cosmic-teal/20 relative">
+            <div className="absolute top-4 right-4 flex gap-2 z-10">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs"
+                onClick={() => setShowWizard(false)}
+              >
+                ✕ Cancel Wizard
+              </Button>
             </div>
-          )}
-        </div>
+            <CvWizard
+              onComplete={(cv) => {
+                applyParsed(cv, "Wizard");
+                setShowWizard(false);
+              }}
+            />
+          </div>
+        ) : (
+          <div className="glass-panel rounded-2xl p-5 mb-6 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <FilePickButton
+                label="Upload PDF or TXT"
+                variant="accent"
+                size="default"
+                silentSuccess
+                onText={(text, name) => onFileText(text, name)}
+              />
+              <Button variant="outline" onClick={() => setShowWizard(true)}>
+                Build CV from Scratch
+              </Button>
+              <Button variant="soft" onClick={onParsePaste} disabled={!pasteText.trim()}>
+                Analyze pasted text
+              </Button>
+              <Button variant="ghost" onClick={onClear}>
+                <RotateCcw className="w-4 h-4" /> Clear / Reset CV
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-steel">
+              <strong>Paste CV Text</strong> below, or upload PDF/TXT. Clean extraction only. Scanned
+              PDFs: export as searchable text or paste manually.
+            </p>
+            <Textarea
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+              placeholder="Paste CV Text here…"
+              className="min-h-[110px] font-mono text-xs"
+            />
+            {banner && (
+              <div className="rounded-xl border border-cosmic-teal/25 bg-cosmic-teal/10 px-4 py-3">
+                <p className="text-sm font-semibold">{READY_MSG}</p>
+                <p className="text-xs text-muted-steel mt-1">
+                  Structured fields and deep feedback are below.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {feedback && (
           <div className="mb-6">
@@ -249,6 +282,56 @@ export default function ResumePage() {
               <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-steel">
                 Profile
               </h2>
+              <div className="flex items-center gap-4 p-3 bg-panel-elevated/40 rounded-xl border border-black/5">
+                <div className="w-16 h-16 rounded-xl border border-black/8 bg-abyss-panel overflow-hidden flex items-center justify-center shrink-0">
+                  {resume.photoDataUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={resume.photoDataUrl} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <Camera className="w-6 h-6 text-muted-steel" />
+                  )}
+                </div>
+                <div className="flex flex-col gap-1.5 w-full">
+                  <span className="text-xs font-semibold text-muted-steel uppercase tracking-wider">Profile Photo</span>
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      id="profile-photo-upload"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            updateResume({ photoDataUrl: reader.result as string });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      type="button"
+                      onClick={() => document.getElementById("profile-photo-upload")?.click()}
+                    >
+                      <Camera className="w-3.5 h-3.5 mr-1.5" /> Upload Photo
+                    </Button>
+                    {resume.photoDataUrl && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        type="button"
+                        className="text-sunset-coral hover:text-sunset-coral/80"
+                        onClick={() => updateResume({ photoDataUrl: null })}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
               <Input
                 value={resume.fullName}
                 onChange={(e) => updateResume({ fullName: e.target.value })}

@@ -1,253 +1,319 @@
-/**
- * Professional CV PDF export without external packages.
- * Builds a real PDF (Helvetica text + optional JPEG photo) and downloads it.
- */
-
 import type { ParsedCV } from "./types";
 
-function pdfEscape(s: string) {
-  return s
-    .replace(/\\/g, "\\\\")
-    .replace(/\(/g, "\\(")
-    .replace(/\)/g, "\\)")
-    .replace(/[\r\n]/g, " ");
-}
-
-function wrapLine(text: string, max = 88): string[] {
-  const words = text.split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let cur = "";
-  for (const w of words) {
-    const next = cur ? `${cur} ${w}` : w;
-    if (next.length > max) {
-      if (cur) lines.push(cur);
-      cur = w.length > max ? w.slice(0, max) : w;
-    } else cur = next;
-  }
-  if (cur) lines.push(cur);
-  return lines.length ? lines : [""];
-}
-
-async function photoToJpeg(
-  dataUrl: string
-): Promise<{ bytes: Uint8Array; w: number; h: number } | null> {
-  try {
-    const img = new Image();
-    const loaded = new Promise<void>((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = () => reject(new Error("img"));
-    });
-    img.src = dataUrl;
-    await loaded;
-    const max = 320;
-    const scale = Math.min(1, max / Math.max(img.width, img.height, 1));
-    const w = Math.max(1, Math.round(img.width * scale));
-    const h = Math.max(1, Math.round(img.height * scale));
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return null;
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, w, h);
-    ctx.drawImage(img, 0, 0, w, h);
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob((b) => resolve(b), "image/jpeg", 0.9)
-    );
-    if (!blob) return null;
-    return { bytes: new Uint8Array(await blob.arrayBuffer()), w, h };
-  } catch {
-    return null;
-  }
-}
-
-function buildContentStream(
-  cv: ParsedCV,
-  image?: { w: number; h: number } | null
-): string {
-  const ops: string[] = [];
-  let y = 800;
-  const left = 50;
-  const right = 545;
-
-  const textAt = (str: string, size: number, bold: boolean, x: number, yy: number) => {
-    ops.push("BT");
-    ops.push(`/${bold ? "F2" : "F1"} ${size} Tf`);
-    ops.push(`${x} ${yy} Td`);
-    ops.push(`(${pdfEscape(str)}) Tj`);
-    ops.push("ET");
-  };
-
-  if (image) {
-    const iw = 70;
-    const ih = (image.h / Math.max(image.w, 1)) * iw;
-    const ix = right - iw;
-    const iy = 842 - 48 - ih;
-    ops.push("q");
-    ops.push(`${iw.toFixed(2)} 0 0 ${ih.toFixed(2)} ${ix.toFixed(2)} ${iy.toFixed(2)} cm`);
-    ops.push("/Im1 Do");
-    ops.push("Q");
-  }
-
-  textAt(cv.name || "Candidate", 20, true, left, y);
-  y -= 26;
-  textAt(cv.title || "Professional", 12, false, left, y);
-  y -= 18;
-
-  const contact = [cv.email, cv.phone, cv.location].filter(Boolean).join("   ·   ");
-  if (contact) {
-    textAt(contact, 9, false, left, y);
-    y -= 16;
-  }
-
-  // accent rule
-  ops.push("0.91 0.36 0.23 RG");
-  ops.push("1.2 w");
-  ops.push(`${left} ${y} m ${right} ${y} l S`);
-  ops.push("0 0 0 RG");
-  y -= 22;
-
-  const section = (title: string) => {
-    y -= 4;
-    textAt(title.toUpperCase(), 10, true, left, y);
-    y -= 8;
-    ops.push("0.91 0.36 0.23 RG");
-    ops.push("0.9 w");
-    ops.push(`${left} ${y + 4} m ${left + 72} ${y + 4} l S`);
-    ops.push("0 0 0 RG");
-    y -= 6;
-  };
-
-  if (cv.summary) {
-    section("Summary");
-    for (const ln of wrapLine(cv.summary, 92)) {
-      textAt(ln, 9, false, left, y);
-      y -= 12;
-    }
-    y -= 6;
-  }
-
-  if (cv.experience.length) {
-    section("Experience");
-    for (const exp of cv.experience) {
-      textAt(`${exp.position}  |  ${exp.company}`, 10, true, left, y);
-      y -= 13;
-      textAt(exp.duration, 8, false, left, y);
-      y -= 12;
-      for (const d of exp.description) {
-        for (const ln of wrapLine(`•  ${d}`, 90)) {
-          textAt(ln, 9, false, left, y);
-          y -= 12;
-        }
-      }
-      y -= 6;
-      if (y < 60) break;
-    }
-  }
-
-  if (cv.skills.length && y > 80) {
-    section("Skills");
-    for (const ln of wrapLine(cv.skills.join("  ·  "), 92)) {
-      textAt(ln, 9, false, left, y);
-      y -= 12;
-    }
-    y -= 6;
-  }
-
-  if (cv.education.length && y > 80) {
-    section("Education");
-    for (const ed of cv.education) {
-      textAt(ed.school, 10, true, left, y);
-      y -= 13;
-      textAt(`${ed.degree}  ·  ${ed.year}`, 9, false, left, y);
-      y -= 14;
-    }
-  }
-
-  // footer
-  textAt("SoftBridge CareerForge", 7, false, left, 36);
-
-  return ops.join("\n");
-}
-
-function assemblePdf(
-  stream: string,
-  image?: { bytes: Uint8Array; w: number; h: number }
-): Uint8Array {
-  const bin: number[] = [];
-  const wstr = (s: string) => {
-    for (let i = 0; i < s.length; i++) bin.push(s.charCodeAt(i) & 0xff);
-  };
-  const wbytes = (u: Uint8Array) => {
-    for (let i = 0; i < u.length; i++) bin.push(u[i]!);
-  };
-
-  const hasImg = Boolean(image);
-  const res = hasImg
-    ? "<< /Font << /F1 4 0 R /F2 5 0 R >> /XObject << /Im1 7 0 R >> >>"
-    : "<< /Font << /F1 4 0 R /F2 5 0 R >> >>";
-
-  wstr("%PDF-1.4\n");
-  const offsets: number[] = [0];
-
-  const obj = (num: number, body: string, binary?: Uint8Array) => {
-    offsets[num] = bin.length;
-    wstr(`${num} 0 obj\n`);
-    wstr(body);
-    if (binary) {
-      wbytes(binary);
-      wstr("\nendstream\nendobj\n");
-    } else {
-      wstr("\nendobj\n");
-    }
-  };
-
-  obj(1, "<< /Type /Catalog /Pages 2 0 R >>");
-  obj(2, "<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
-  obj(
-    3,
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 6 0 R /Resources ${res} >>`
-  );
-  obj(4, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
-  obj(5, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>");
-  obj(6, `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
-  if (hasImg && image) {
-    obj(
-      7,
-      `<< /Type /XObject /Subtype /Image /Width ${image.w} /Height ${image.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${image.bytes.length} >>\nstream\n`,
-      image.bytes
-    );
-  }
-
-  const xrefPos = bin.length;
-  const size = hasImg ? 8 : 7;
-  wstr(`xref\n0 ${size}\n`);
-  wstr("0000000000 65535 f \n");
-  for (let i = 1; i < size; i++) {
-    wstr(`${String(offsets[i] ?? 0).padStart(10, "0")} 00000 n \n`);
-  }
-  wstr(`trailer\n<< /Size ${size} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF\n`);
-
-  return new Uint8Array(bin);
-}
-
+/**
+ * Modern HTML/CSS Print-based PDF generation.
+ * Renders a gorgeous A4 layout in a temporary window, opens the browser print prompt,
+ * and automatically closes. Supports all Unicode/Turkish characters, formatting, and images.
+ */
 export async function exportCvAsPdf(cv: ParsedCV, filename?: string) {
-  let image: { bytes: Uint8Array; w: number; h: number } | undefined;
-  if (cv.photoDataUrl) {
-    const jpg = await photoToJpeg(cv.photoDataUrl);
-    if (jpg) image = jpg;
+  if (typeof window === "undefined") return;
+
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    alert("Please allow popups to export your CV as PDF.");
+    return;
   }
-  const stream = buildContentStream(cv, image ? { w: image.w, h: image.h } : null);
-  const pdf = assemblePdf(stream, image);
-  const copy = new Uint8Array(pdf.byteLength);
-  copy.set(pdf);
-  const blob = new Blob([copy], { type: "application/pdf" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download =
-    filename ||
-    `${(cv.name || "cv").replace(/[^\w\-]+/g, "-").toLowerCase()}-careerforge.pdf`;
-  a.click();
-  URL.revokeObjectURL(url);
+
+  // Set document title so the browser default PDF filename is clean
+  const cleanName = (cv.name || "Resume").replace(/[^\w\s\-]+/g, "").trim();
+  const fileTitle = filename 
+    ? filename.replace(/\.pdf$/i, "") 
+    : `${cleanName.replace(/\s+/g, "-")}-CareerForge`;
+
+  printWindow.document.title = fileTitle;
+
+  const photoHtml = cv.photoDataUrl
+    ? `<img src="${cv.photoDataUrl}" alt="Profile Photo" class="profile-photo" />`
+    : "";
+
+  const summaryHtml = cv.summary
+    ? `
+      <div class="section">
+        <h2 class="section-title">Özet / Summary</h2>
+        <p class="summary-text">${cv.summary}</p>
+      </div>
+    `
+    : "";
+
+  const experienceHtml = cv.experience && cv.experience.length > 0
+    ? `
+      <div class="section">
+        <h2 class="section-title">Deneyim / Experience</h2>
+        ${cv.experience.map(exp => {
+          const bullets = exp.description && exp.description.length > 0
+            ? `<ul class="bullets">
+                ${exp.description.map(bullet => `<li>${bullet}</li>`).join("")}
+               </ul>`
+            : "";
+          return `
+            <div class="item">
+              <div class="item-header">
+                <span class="item-title">${exp.position}</span>
+                <span class="item-date">${exp.duration}</span>
+              </div>
+              <div class="item-subtitle">${exp.company}</div>
+              ${bullets}
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `
+    : "";
+
+  const skillsHtml = cv.skills && cv.skills.length > 0
+    ? `
+      <div class="section">
+        <h2 class="section-title">Beceriler / Skills</h2>
+        <div class="skills-grid">
+          ${cv.skills.map(skill => `<span class="skill-badge">${skill}</span>`).join("")}
+        </div>
+      </div>
+    `
+    : "";
+
+  const educationHtml = cv.education && cv.education.length > 0
+    ? `
+      <div class="section">
+        <h2 class="section-title">Eğitim / Education</h2>
+        ${cv.education.map(edu => `
+          <div class="item">
+            <div class="item-header">
+              <span class="item-title">${edu.school}</span>
+              <span class="item-date">${edu.year}</span>
+            </div>
+            <div class="item-subtitle">${edu.degree}</div>
+          </div>
+        `).join("")}
+      </div>
+    `
+    : "";
+
+  const contactItems: string[] = [];
+  if (cv.email) contactItems.push(`<span>✉ ${cv.email}</span>`);
+  if (cv.phone) contactItems.push(`<span>📞 ${cv.phone}</span>`);
+  if (cv.location) contactItems.push(`<span>📍 ${cv.location}</span>`);
+  const contactHtml = contactItems.length > 0
+    ? `<div class="contact-info">${contactItems.join("  ·  ")}</div>`
+    : "";
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="tr">
+    <head>
+      <meta charset="UTF-8">
+      <title>${fileTitle}</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        @page {
+          size: A4;
+          margin: 20mm 15mm 20mm 15mm;
+        }
+        
+        * {
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: 'Inter', system-ui, -apple-system, sans-serif;
+          margin: 0;
+          padding: 0;
+          color: #1e293b;
+          background-color: #ffffff;
+          line-height: 1.5;
+          font-size: 13px;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        .container {
+          max-width: 100%;
+        }
+
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 2.5px solid #d94820; /* Brand Accent Orange */
+          padding-bottom: 16px;
+          margin-bottom: 20px;
+        }
+
+        .header-content {
+          flex: 1;
+        }
+
+        .name {
+          font-size: 26px;
+          font-weight: 700;
+          color: #1e293b;
+          margin: 0 0 4px 0;
+          letter-spacing: -0.5px;
+        }
+
+        .headline {
+          font-size: 15px;
+          font-weight: 600;
+          color: #d94820;
+          margin: 0 0 10px 0;
+        }
+
+        .contact-info {
+          font-size: 12px;
+          color: #64748b;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+
+        .profile-photo {
+          width: 85px;
+          height: 85px;
+          object-fit: cover;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+          margin-left: 20px;
+        }
+
+        .section {
+          margin-bottom: 22px;
+          page-break-inside: avoid;
+        }
+
+        .section-title {
+          font-size: 13px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          color: #d94820;
+          border-bottom: 1px solid #e2e8f0;
+          padding-bottom: 5px;
+          margin: 0 0 12px 0;
+        }
+
+        .summary-text {
+          font-size: 13px;
+          color: #334155;
+          margin: 0;
+          text-align: justify;
+        }
+
+        .item {
+          margin-bottom: 16px;
+          page-break-inside: avoid;
+        }
+
+        .item:last-child {
+          margin-bottom: 0;
+        }
+
+        .item-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          margin-bottom: 2px;
+        }
+
+        .item-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: #0f172a;
+        }
+
+        .item-date {
+          font-size: 12px;
+          color: #64748b;
+          font-weight: 500;
+        }
+
+        .item-subtitle {
+          font-size: 13px;
+          color: #475569;
+          font-weight: 500;
+          margin-bottom: 6px;
+        }
+
+        .bullets {
+          margin: 0;
+          padding-left: 20px;
+          color: #334155;
+        }
+
+        .bullets li {
+          margin-bottom: 4px;
+        }
+
+        .skills-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+
+        .skill-badge {
+          background-color: #f1f5f9;
+          border: 1px solid #e2e8f0;
+          color: #334155;
+          padding: 4px 10px;
+          border-radius: 6px;
+          font-size: 11px;
+          font-weight: 500;
+        }
+
+        .footer {
+          margin-top: 40px;
+          border-top: 1px solid #f1f5f9;
+          padding-top: 8px;
+          text-align: center;
+          font-size: 10px;
+          color: #94a3b8;
+        }
+
+        @media print {
+          body {
+            background-color: #ffffff;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .no-print {
+            display: none;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="header-content">
+            <h1 class="name">${cv.name || "Aday"}</h1>
+            <div class="headline">${cv.title || "Profesyonel"}</div>
+            ${contactHtml}
+          </div>
+          ${photoHtml}
+        </div>
+
+        ${summaryHtml}
+        ${experienceHtml}
+        ${skillsHtml}
+        ${educationHtml}
+
+        <div class="footer">
+          SoftBridge CareerForge (SoftBridge Solutions) tarafından üretilmiştir.
+        </div>
+      </div>
+
+      <script>
+        window.addEventListener('load', () => {
+          setTimeout(() => {
+            window.print();
+            window.close();
+          }, 350);
+        });
+      </script>
+    </body>
+    </html>
+  `;
+
+  printWindow.document.open();
+  printWindow.document.write(html);
+  printWindow.document.close();
 }

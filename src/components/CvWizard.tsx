@@ -335,9 +335,24 @@ export function CvWizard({ onComplete }: { onComplete: (cv: ParsedCV, text: stri
       </div>
 
       <div className="flex flex-wrap justify-between gap-2">
-        <Button variant="ghost" disabled={step === 0} onClick={back}>
-          <ChevronLeft className="w-4 h-4" /> Back
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="ghost" disabled={step === 0} onClick={back}>
+            <ChevronLeft className="w-4 h-4" /> Back
+          </Button>
+          <Button
+            variant="ghost"
+            type="button"
+            className="text-sunset-coral hover:text-sunset-coral/80"
+            onClick={() => {
+              if (window.confirm("Are you sure you want to clear this draft?")) {
+                setDraft(emptyDraft());
+                setStep(0);
+              }
+            }}
+          >
+            Clear Draft
+          </Button>
+        </div>
         {step < STEPS.length - 1 ? (
           <Button variant="accent" onClick={next}>
             Continue <ChevronRight className="w-4 h-4" />

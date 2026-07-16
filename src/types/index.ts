@@ -64,6 +64,7 @@ export interface ResumeProfile {
   skills: string[];
   experience: ResumeExperience[];
   education: ResumeEducation[];
+  photoDataUrl?: string | null;
 }
 
 export interface ResumeExperience {

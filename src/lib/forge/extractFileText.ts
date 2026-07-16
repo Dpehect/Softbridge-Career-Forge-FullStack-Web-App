@@ -336,6 +336,74 @@ export function extractTextFromPdfBytes(bytes: Uint8Array): {
   return { text, likelyScanned: false };
 }
 
+async function loadPdfJS(): Promise<any> {
+  if (typeof window === "undefined") {
+    throw new Error("Window not defined");
+  }
+  if ((window as any).pdfjsLib) {
+    return (window as any).pdfjsLib;
+  }
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "/pdfjs/pdf.min.js";
+    script.onload = () => {
+      const pdfjsLib = (window as any).pdfjsLib;
+      if (pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.js";
+        resolve(pdfjsLib);
+      } else {
+        reject(new Error("pdfjsLib not found on window"));
+      }
+    };
+    script.onerror = (e) => reject(e);
+    document.head.appendChild(script);
+  });
+}
+
+export async function extractTextWithPdfJS(bytes: Uint8Array): Promise<string> {
+  const pdfjsLib = await loadPdfJS();
+  const loadingTask = pdfjsLib.getDocument({ data: bytes });
+  const pdf = await loadingTask.promise;
+  const numPages = pdf.numPages;
+  const pageTexts: string[] = [];
+
+  for (let i = 1; i <= numPages; i++) {
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+    const items = textContent.items as any[];
+    if (items.length === 0) continue;
+
+    const itemsWithY = items.map(item => ({
+      str: item.str,
+      x: item.transform[4],
+      y: item.transform[5]
+    }));
+
+    // Sort: top to bottom (Y descending), then left to right (X ascending)
+    itemsWithY.sort((a, b) => {
+      if (Math.abs(a.y - b.y) < 4) {
+        return a.x - b.x;
+      }
+      return b.y - a.y;
+    });
+
+    let pageText = "";
+    let lastY = -1;
+    for (const item of itemsWithY) {
+      if (lastY !== -1 && Math.abs(item.y - lastY) >= 4) {
+        pageText += "\n";
+      } else if (pageText.length > 0 && !pageText.endsWith("\n") && !pageText.endsWith(" ")) {
+        pageText += " ";
+      }
+      pageText += item.str;
+      lastY = item.y;
+    }
+    pageTexts.push(pageText);
+  }
+
+  return pageTexts.join("\n\n");
+}
+
 export async function extractTextFromFile(
   file: File
 ): Promise<{ text: string; kind: "text" | "pdf" }> {
@@ -349,6 +417,18 @@ export async function extractTextFromFile(
     const buf = new Uint8Array(await file.arrayBuffer());
     // magic header
     const magic = String.fromCharCode(buf[0] || 0, buf[1] || 0, buf[2] || 0, buf[3] || 0);
+    
+    // Try PDF.js first
+    try {
+      const pdfjsText = await extractTextWithPdfJS(buf);
+      const cleaned = cleanExtractedText(pdfjsText);
+      if (cleaned.trim().length > 20 && !looksLikeRawPdf(cleaned)) {
+        return { text: cleaned, kind: "pdf" };
+      }
+    } catch (e) {
+      console.warn("PDF.js loading/parsing failed, falling back to manual extractor:", e);
+    }
+
     const { text, likelyScanned } = extractTextFromPdfBytes(buf);
     if (!text.trim()) {
       throw new Error(likelyScanned || magic.startsWith("%PDF") ? "PDF_SCANNED" : "PDF_NO_TEXT");
@@ -369,6 +449,17 @@ export async function extractTextFromFile(
   let text = await file.text();
   if (text.trimStart().startsWith("%PDF") || looksLikeRawPdf(text)) {
     const buf = new Uint8Array(await file.arrayBuffer());
+    // Try PDF.js first
+    try {
+      const pdfjsText = await extractTextWithPdfJS(buf);
+      const cleaned = cleanExtractedText(pdfjsText);
+      if (cleaned.trim().length > 20 && !looksLikeRawPdf(cleaned)) {
+        return { text: cleaned, kind: "pdf" };
+      }
+    } catch (e) {
+      console.warn("PDF.js loading/parsing failed, falling back to manual extractor:", e);
+    }
+
     const { text: pdfText, likelyScanned } = extractTextFromPdfBytes(buf);
     if (!pdfText.trim()) throw new Error(likelyScanned ? "PDF_SCANNED" : "PDF_NO_TEXT");
     if (looksLikeRawPdf(pdfText)) throw new Error("PDF_SCANNED");

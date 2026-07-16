@@ -2,10 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Anvil, Code2, Menu, X } from "lucide-react";
+import { Anvil, Code2, Menu, X, FileDown, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useCareerStore } from "@/store/useCareerStore";
+import { exportCvAsPdf } from "@/lib/forge";
+import { toast } from "sonner";
 
 const GITHUB_REPO =
   "https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main";
@@ -22,6 +26,67 @@ const links = [
 export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { resume, resetResume, forgeParsedCv, clearForgeCv } = useCareerStore();
+
+  const hasContent =
+    Boolean(forgeParsedCv) ||
+    Boolean(
+      resume.fullName ||
+        resume.headline ||
+        resume.summary ||
+        resume.skills.length > 0 ||
+        resume.experience.length > 0
+    );
+
+  const handleClearAll = () => {
+    if (window.confirm("Are you sure you want to clear your current CV and reset?")) {
+      resetResume();
+      clearForgeCv();
+      toast.success("CV cleared. You can start fresh.");
+    }
+  };
+
+  const handleExport = async () => {
+    let cvToExport = forgeParsedCv;
+    if (!cvToExport) {
+      if (resume.fullName || resume.headline || resume.summary) {
+        cvToExport = {
+          name: resume.fullName || "Candidate",
+          title: resume.headline || "Professional",
+          email: resume.email,
+          phone: null,
+          location: resume.location || null,
+          summary: resume.summary || null,
+          skills: resume.skills,
+          experience: resume.experience.map((e) => ({
+            company: e.company,
+            position: e.role,
+            duration: [e.start, e.end].filter(Boolean).join(" – ") || "—",
+            description: e.highlights,
+          })),
+          education: resume.education.map((e) => ({
+            school: e.school,
+            degree: e.degree,
+            year: e.year,
+          })),
+          rawLength: 0,
+          photoDataUrl: resume.photoDataUrl || null,
+        };
+      }
+    }
+
+    if (!cvToExport) {
+      toast.error("Please load, build or paste a CV first before exporting.");
+      return;
+    }
+
+    try {
+      await exportCvAsPdf(cvToExport);
+      toast.success("Professional PDF exported!");
+    } catch {
+      toast.error("Could not export PDF.");
+    }
+  };
 
   return (
     <motion.header
@@ -67,14 +132,38 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {hasContent && (
+            <div className="hidden sm:inline-flex items-center gap-1.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearAll}
+                className="h-9 text-xs text-sunset-coral hover:text-sunset-coral hover:bg-sunset-coral/5 gap-1"
+                title="Clear current CV"
+              >
+                <RotateCcw className="w-3.5 h-3.5" /> Clear CV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExport}
+                className="h-9 text-xs gap-1"
+                title="Export PDF"
+              >
+                <FileDown className="w-3.5 h-3.5" /> Export PDF
+              </Button>
+            </div>
+          )}
           <a
             href={GITHUB_REPO}
             target="_blank"
             rel="noreferrer"
-            className="hidden md:inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold border border-black/8 bg-star-white text-midnight-void hover:bg-cosmic-teal transition-colors shadow-sm"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl px-2 sm:px-3 text-xs font-semibold border border-black/8 bg-star-white text-midnight-void hover:bg-cosmic-teal transition-colors shadow-sm"
+            title="View Source on GitHub"
           >
             <Code2 className="w-3.5 h-3.5" />
-            View Source on GitHub
+            <span className="hidden sm:inline">View Source on GitHub</span>
+            <span className="sm:hidden">GitHub</span>
           </a>
           <Link
             href="/forge"
@@ -120,10 +209,36 @@ export function Header() {
               target="_blank"
               rel="noreferrer"
               onClick={() => setOpen(false)}
-              className="mt-1 px-3 py-2.5 rounded-xl text-sm font-semibold border border-black/8 inline-flex items-center gap-2"
+              className="mt-1 px-3 py-2.5 rounded-xl text-sm font-semibold border border-black/8 inline-flex items-center gap-2 bg-star-white text-midnight-void"
             >
               <Code2 className="w-4 h-4" /> View Source on GitHub
             </a>
+            {hasContent && (
+              <div className="flex gap-2 border-t border-black/5 mt-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    handleClearAll();
+                    setOpen(false);
+                  }}
+                  className="flex-1 text-xs text-sunset-coral hover:bg-sunset-coral/5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 mr-1" /> Clear CV
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    handleExport();
+                    setOpen(false);
+                  }}
+                  className="flex-1 text-xs"
+                >
+                  <FileDown className="w-3.5 h-3.5 mr-1" /> Export PDF
+                </Button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
