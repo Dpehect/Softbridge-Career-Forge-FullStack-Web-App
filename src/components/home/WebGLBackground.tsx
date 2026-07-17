@@ -1,182 +1,159 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-function ParticleField() {
-  const pointsRef = useRef<THREE.Points>(null);
-  const count = 1200;
-  
-  // Create randomized positions & velocities
-  const [positions, velocities] = useMemo(() => {
+/** Soft rising particle orbs — warm, not cyber-dark */
+function WarmParticles({ count = 80 }: { count?: number }) {
+  const ref = useRef<THREE.Points>(null);
+  const { positions, colors, speeds } = useMemo(() => {
     const pos = new Float32Array(count * 3);
-    const vels = new Float32Array(count * 3);
+    const col = new Float32Array(count * 3);
+    const spd = new Float32Array(count);
+    const palette = [
+      new THREE.Color("#3B82F6"), // blue
+      new THREE.Color("#F97316"), // orange
+      new THREE.Color("#22C55E"), // green
+      new THREE.Color("#A855F7"), // soft purple
+      new THREE.Color("#FBBF24"), // warm gold
+    ];
     for (let i = 0; i < count; i++) {
-      // Position range: -10 to +10
-      pos[i * 3] = (Math.random() - 0.5) * 20;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 20;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 20;
-
-      // Small velocities
-      vels[i * 3] = (Math.random() - 0.5) * 0.01;
-      vels[i * 3 + 1] = (Math.random() - 0.5) * 0.01;
-      vels[i * 3 + 2] = (Math.random() - 0.5) * 0.01;
+      pos[i * 3] = (Math.random() - 0.5) * 16;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 12;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 8;
+      const c = palette[i % palette.length]!;
+      col[i * 3] = c.r;
+      col[i * 3 + 1] = c.g;
+      col[i * 3 + 2] = c.b;
+      spd[i] = 0.15 + Math.random() * 0.35;
     }
-    return [pos, vels];
-  }, []);
+    return { positions: pos, colors: col, speeds: spd };
+  }, [count]);
 
-  // Track mouse coordinates
-  const mouse = useRef({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
-
-  useFrame((state) => {
-    if (!pointsRef.current) return;
-    
-    const geom = pointsRef.current.geometry;
-    const posAttr = geom.attributes.position as THREE.BufferAttribute;
-
-    // Slowly rotate overall field
-    pointsRef.current.rotation.y = state.clock.getElapsedTime() * 0.03;
-    pointsRef.current.rotation.x = state.clock.getElapsedTime() * 0.015;
-
-    // Adjust particle positions based on velocities and mouse gravity
+  useFrame((_, delta) => {
+    if (!ref.current) return;
+    const attr = ref.current.geometry.attributes.position as THREE.BufferAttribute;
     for (let i = 0; i < count; i++) {
-      let x = posAttr.getX(i);
-      let y = posAttr.getY(i);
-      let z = posAttr.getZ(i);
-
-      // Move particle
-      x += velocities[i * 3];
-      y += velocities[i * 3 + 1];
-      z += velocities[i * 3 + 2];
-
-      // Pull towards mouse slightly
-      x += (mouse.current.x * 2 - x) * 0.002;
-      y += (mouse.current.y * 2 - y) * 0.002;
-
-      // Boundary reset
-      if (Math.abs(x) > 10) x = (Math.random() - 0.5) * 15;
-      if (Math.abs(y) > 10) y = (Math.random() - 0.5) * 15;
-      if (Math.abs(z) > 10) z = (Math.random() - 0.5) * 15;
-
-      posAttr.setXYZ(i, x, y, z);
+      let y = attr.getY(i) + speeds[i]! * delta;
+      if (y > 6) y = -6;
+      attr.setY(i, y);
     }
-    
-    posAttr.needsUpdate = true;
+    attr.needsUpdate = true;
+    ref.current.rotation.y += delta * 0.04;
   });
 
   return (
-    <points ref={pointsRef}>
+    <points ref={ref}>
       <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[positions, 3]}
-        />
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="attributes-color" args={[colors, 3]} />
       </bufferGeometry>
       <pointsMaterial
-        color="#3b82f6"
-        size={0.065}
-        sizeAttenuation={true}
-        transparent={true}
-        opacity={0.65}
-        blending={THREE.AdditiveBlending}
+        size={0.12}
+        vertexColors
+        transparent
+        opacity={0.55}
+        sizeAttenuation
         depthWrite={false}
+        blending={THREE.AdditiveBlending}
       />
     </points>
   );
 }
 
-function LineNetwork() {
-  const lineRef = useRef<THREE.LineSegments>(null);
-  const count = 40;
-
-  const [positions, indices] = useMemo(() => {
-    const pos = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 12;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 12;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 12;
-    }
-
-    const inds: number[] = [];
-    for (let i = 0; i < count; i++) {
-      for (let j = i + 1; j < count; j++) {
-        const dx = pos[i * 3] - pos[j * 3];
-        const dy = pos[i * 3 + 1] - pos[j * 3 + 1];
-        const dz = pos[i * 3 + 2] - pos[j * 3 + 2];
-        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        if (dist < 4.5) {
-          inds.push(i, j);
-        }
-      }
-    }
-    return [pos, new Uint16Array(inds)];
-  }, []);
-
+function GlowingOrb({
+  color,
+  position,
+  scale = 1,
+  speed = 1,
+}: {
+  color: string;
+  position: [number, number, number];
+  scale?: number;
+  speed?: number;
+}) {
+  const ref = useRef<THREE.Mesh>(null);
   useFrame((state) => {
-    if (!lineRef.current) return;
-    lineRef.current.rotation.y = state.clock.getElapsedTime() * 0.05;
-    lineRef.current.rotation.z = state.clock.getElapsedTime() * 0.02;
+    if (!ref.current) return;
+    const t = state.clock.elapsedTime * speed;
+    ref.current.position.y = position[1] + Math.sin(t) * 0.35;
+    ref.current.position.x = position[0] + Math.cos(t * 0.7) * 0.2;
   });
 
   return (
-    <lineSegments ref={lineRef}>
+    <mesh ref={ref} position={position} scale={scale}>
+      <sphereGeometry args={[1, 32, 32]} />
+      <meshBasicMaterial color={color} transparent opacity={0.22} />
+    </mesh>
+  );
+}
+
+function ConnectionLines() {
+  const ref = useRef<THREE.LineSegments>(null);
+  const count = 28;
+  const { positions, indices } = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 14;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 10;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 6;
+    }
+    const inds: number[] = [];
+    for (let i = 0; i < count; i++) {
+      for (let j = i + 1; j < count; j++) {
+        const dx = pos[i * 3]! - pos[j * 3]!;
+        const dy = pos[i * 3 + 1]! - pos[j * 3 + 1]!;
+        const dz = pos[i * 3 + 2]! - pos[j * 3 + 2]!;
+        if (Math.sqrt(dx * dx + dy * dy + dz * dz) < 3.8) inds.push(i, j);
+      }
+    }
+    return { positions: pos, indices: new Uint16Array(inds) };
+  }, []);
+
+  useFrame((state) => {
+    if (!ref.current) return;
+    ref.current.rotation.y = state.clock.elapsedTime * 0.03;
+  });
+
+  return (
+    <lineSegments ref={ref}>
       <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[positions, 3]}
-        />
-        <bufferAttribute
-          attach="index"
-          args={[indices, 1]}
-        />
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="index" args={[indices, 1]} />
       </bufferGeometry>
-      <lineBasicMaterial
-        color="#a855f7"
-        transparent={true}
-        opacity={0.25}
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-      />
+      <lineBasicMaterial color="#FB923C" transparent opacity={0.18} depthWrite={false} />
     </lineSegments>
   );
 }
 
-// React 19 / Fiber helper
-import { useMemo } from "react";
-
 export function WebGLBackground() {
   const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
+  useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
   return (
-    <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden select-none bg-[#030712]">
-      {/* Glow overlays */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.12)_0%,transparent_70%)] blur-[100px]" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.12)_0%,transparent_70%)] blur-[100px]" />
-      
+    <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none select-none">
+      {/* Warm gradient base — NOT near-black cyber */}
+      <div className="absolute inset-0 bg-gradient-to-br from-sky-50 via-orange-50/80 to-violet-50 dark:from-slate-950 dark:via-violet-950/40 dark:to-slate-900" />
+      <div className="absolute -top-24 -left-20 h-[420px] w-[420px] rounded-full bg-sky-300/30 blur-3xl" />
+      <div className="absolute top-1/3 -right-16 h-[380px] w-[380px] rounded-full bg-orange-300/25 blur-3xl" />
+      <div className="absolute -bottom-20 left-1/3 h-[360px] w-[360px] rounded-full bg-emerald-300/20 blur-3xl" />
+      <div className="absolute top-1/2 left-1/4 h-[280px] w-[280px] rounded-full bg-violet-300/20 blur-3xl" />
+
       <Canvas
-        camera={{ position: [0, 0, 8], fov: 60 }}
+        camera={{ position: [0, 0, 9], fov: 55 }}
+        dpr={[1, 1.5]}
+        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
         style={{ width: "100%", height: "100%" }}
-        gl={{ antialias: true, alpha: true }}
       >
-        <ambientLight intensity={0.5} />
-        <ParticleField />
-        <LineNetwork />
+        <ambientLight intensity={0.9} />
+        <WarmParticles count={90} />
+        <ConnectionLines />
+        <GlowingOrb color="#60A5FA" position={[-3.5, 1.2, -2]} scale={1.4} speed={0.8} />
+        <GlowingOrb color="#FB923C" position={[3.2, -0.8, -1.5]} scale={1.1} speed={1.1} />
+        <GlowingOrb color="#34D399" position={[0.5, 2.2, -3]} scale={0.9} speed={0.9} />
+        <GlowingOrb color="#C084FC" position={[-1.5, -2, -2.5]} scale={1.2} speed={1.05} />
       </Canvas>
     </div>
   );
