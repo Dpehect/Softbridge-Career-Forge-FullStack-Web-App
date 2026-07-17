@@ -18,11 +18,11 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { resumeToParsed, useCareerStore } from "@/store/useCareerStore";
 import { exportCvAsPdf } from "@/lib/forge";
-import { JourneyStepper } from "@/components/JourneyStepper";
 import { AuthControl } from "@/components/auth/AuthControl";
 import { useMessages } from "@/i18n/useMessages";
 
@@ -34,6 +34,12 @@ const NAV_ITEMS = [
   { path: "/coach", label: "coach", shortLabel: "shortCoach", icon: MessagesSquare },
   { path: "/paths", label: "roadmap", shortLabel: "shortRoadmap", icon: Route },
 ] as const;
+
+const PUBLIC_ROUTES = ["/login", "/privacy", "/terms", "/auth/callback", "/auth"];
+
+function isPublicRoute(pathname: string): boolean {
+  return PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+}
 
 export function Header() {
   const pathname = usePathname();
@@ -50,6 +56,15 @@ export function Header() {
     resetResume,
     clearForgeCv,
   } = useCareerStore();
+
+  const { scrollY } = useScroll();
+  const headerHeight = useTransform(scrollY, [0, 60], [64, 56]);
+  const headerBg = useTransform(
+    scrollY,
+    [0, 40],
+    ["var(--bg-surface)", "var(--bg-surface)"]
+  );
+  const borderOpacity = useTransform(scrollY, [0, 40], [0.5, 1]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -69,6 +84,11 @@ export function Header() {
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   const hasResume = Boolean(
     forgeParsedCv ||
       resume.fullName ||
@@ -81,7 +101,6 @@ export function Header() {
     forgeParsedCv?.name?.split(" ")[0] || resume.fullName.trim().split(" ")[0] || messages.header.profile;
   const exportResume = async () => {
     const cv = forgeParsedCv ?? (hasResume ? resumeToParsed(resume) : null);
-
     if (!cv) {
       toast.error(messages.header.createFirst);
       return;
@@ -99,10 +118,52 @@ export function Header() {
     setProfileOpen(false);
   };
 
+  const publicRoute = isPublicRoute(pathname);
+
+  // Simplified public/auth layout
+  if (publicRoute) {
+    return (
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-surface">
+        <div className="mx-auto flex h-16 w-[min(100%-2rem,80rem)] items-center justify-between">
+          <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label={messages.header.home}>
+            <span className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] bg-ink text-[0.6875rem] font-bold text-background transition-transform duration-200 group-hover:-rotate-3">
+              CF
+            </span>
+            <span className="text-[0.9375rem] font-semibold text-ink">CareerForge</span>
+          </Link>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setLang(locale === "tr" ? "en" : "tr")}
+              className="inline-flex h-11 items-center gap-1.5 rounded-[var(--radius-control)] px-2 text-xs font-semibold text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
+              aria-label={messages.languageAction}
+              title={messages.languageAction}
+            >
+              <Languages className="h-4 w-4" />
+              <span>{locale.toUpperCase()}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="grid h-11 w-11 place-items-center rounded-[var(--radius-control)] text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
+              aria-label={theme === "dark" ? messages.header.lightTheme : messages.header.darkTheme}
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  // Full app header for workspace pages
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-surface">
-        <div className="mx-auto flex h-16 w-[min(100%-2rem,80rem)] items-center gap-4">
+      <motion.header
+        className="fixed inset-x-0 top-0 z-50 border-b border-line bg-surface"
+        style={{ height: headerHeight }}
+      >
+        <div className="mx-auto flex h-full w-[min(100%-2rem,80rem)] items-center gap-4">
           <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label={messages.header.home}>
             <span className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] bg-ink text-[0.6875rem] font-bold text-background transition-transform duration-200 group-hover:-rotate-3">
               CF
@@ -121,6 +182,7 @@ export function Header() {
                     "relative flex items-center px-2 text-xs font-medium transition-colors duration-150",
                     active ? "text-ink" : "text-ink-3 hover:text-ink"
                   )}
+                  aria-current={active ? "page" : undefined}
                 >
                   {messages.nav[item.label]}
                   {active && <span className="absolute inset-x-2 bottom-0 h-0.5 bg-brand" />}
@@ -205,8 +267,6 @@ export function Header() {
           </div>
         </div>
 
-        <JourneyStepper className="hidden border-t border-line bg-background xl:block" />
-
         {mobileOpen && (
           <nav className="border-t border-line bg-surface px-4 py-3 xl:hidden" aria-label={messages.nav.mobile}>
             <div className="grid grid-cols-2 gap-1">
@@ -220,8 +280,9 @@ export function Header() {
                     onClick={() => setMobileOpen(false)}
                     className={cn(
                       "flex items-center gap-2 rounded-[var(--radius-control)] px-3 py-2.5 text-sm",
-                      active ? "bg-[var(--accent-wash)] text-brand-strong" : "text-ink-2 hover:bg-surface-2"
+                      active ? "bg-[var(--accent-wash)] text-brand-strong font-medium" : "text-ink-2 hover:bg-surface-2"
                     )}
+                    aria-current={active ? "page" : undefined}
                   >
                     <Icon className="h-4 w-4" /> {messages.nav[item.label]}
                   </Link>
@@ -233,28 +294,34 @@ export function Header() {
             </div>
           </nav>
         )}
-      </header>
+      </motion.header>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-6 border-t border-line bg-surface px-1 pb-[env(safe-area-inset-bottom)] xl:hidden" aria-label={messages.nav.quick}>
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const active = pathname === item.path || pathname.startsWith(`${item.path}/`);
-          return (
-            <Link
-              key={item.path}
-              href={item.path}
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                "flex min-w-0 flex-col items-center justify-center gap-1 text-[0.625rem] font-medium",
-                active ? "text-brand-strong" : "text-ink-3"
-              )}
-              aria-current={active ? "page" : undefined}
-            >
-              <Icon className="h-4 w-4" />
-              <span className="truncate">{messages.nav[item.shortLabel]}</span>
-            </Link>
-          );
-        })}
+      {/* Mobile bottom navigation — 4 primary items + overflow */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] xl:hidden"
+        aria-label={messages.nav.quick}
+      >
+        <div className="grid h-16 grid-cols-4 px-1">
+          {NAV_ITEMS.slice(0, 4).map((item) => {
+            const Icon = item.icon;
+            const active = pathname === item.path || pathname.startsWith(`${item.path}/`);
+            return (
+              <Link
+                key={item.path}
+                href={item.path}
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "flex min-w-0 flex-col items-center justify-center gap-1 text-[0.625rem] font-medium transition-colors",
+                  active ? "text-brand-strong" : "text-ink-3 hover:text-ink-2"
+                )}
+                aria-current={active ? "page" : undefined}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="truncate">{messages.nav[item.shortLabel]}</span>
+              </Link>
+            );
+          })}
+        </div>
       </nav>
     </>
   );

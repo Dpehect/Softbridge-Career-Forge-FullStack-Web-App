@@ -358,3 +358,67 @@ body {
     padding-block-start: var(--space-12);
   }
 }
+
+/* ============================================================
+   Homepage utilities
+   ============================================================ */
+
+.home-hero-gradient {
+  background:
+    radial-gradient(ellipse 80% 50% at 60% -10%, rgba(53, 106, 120, 0.07) 0%, transparent 70%),
+    var(--bg-canvas);
+}
+
+.dark .home-hero-gradient {
+  background:
+    radial-gradient(ellipse 80% 50% at 60% -10%, rgba(111, 165, 181, 0.06) 0%, transparent 70%),
+    var(--bg-canvas);
+}
+
+.home-section-divider {
+  width: 2.5rem;
+  height: 2px;
+  background: var(--action-primary);
+  border-radius: var(--radius-round);
+  margin-bottom: var(--space-6);
+}
+
+/* Scanning animation for product preview */
+@keyframes hero-scan {
+  0%   { transform: translateY(-1rem); opacity: 0; }
+  8%   { opacity: 0.8; }
+  92%  { opacity: 0.8; }
+  100% { transform: translateY(18rem); opacity: 0; }
+}
+
+.hero-scan-line {
+  animation: hero-scan 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Typing cursor for interview coach */
+.typing-cursor-active::after {
+  content: "▋";
+  margin-left: 0.0625rem;
+  color: var(--action-primary);
+  animation: blink 0.85s step-end infinite;
+}
+
+/* Roadmap SVG path draw animation */
+@keyframes draw-path {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+
+/* Touch target minimum size enforcement */
+.touch-target {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+}
+
+/* Ensure homepage sections don't cause overflow */
+.home-section {
+  overflow-x: hidden;
+  position: relative;
+}
+
