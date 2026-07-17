@@ -199,7 +199,7 @@ export default function DashboardPage() {
             <h1 className="font-display text-3xl md:text-4xl font-extrabold tracking-tighter text-star-white">
               {firstName ? `Kariyer kokpitin, ${firstName} 👋` : "Kariyer Kokpiti"}
             </h1>
-            <p className="text-slate-500 mt-2 max-w-xl leading-relaxed">
+            <p className="text-slate-700 dark:text-slate-300 mt-2 max-w-xl leading-relaxed">
               Bugün neyi iyileştirmelisin? Analiz bitti demiyoruz — hedefe giden bir sonraki adımı
               gösteriyoruz.
             </p>

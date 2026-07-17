@@ -149,7 +149,7 @@ export default function HomePage() {
               {
                 icon: Cpu,
                 title: "Yerel AI Gücü",
-                body: "İnternetsiz, 7/24 kesintisiz çalışır (Ollama).",
+                body: "İnternetsiz, 7/24 kesintisiz çalışır (Tarayıcı tabanlı yapay zeka).",
                 color: "#4ADE80",
               },
             ].map((v) => (
@@ -161,7 +161,7 @@ export default function HomePage() {
                   <v.icon className="w-5 h-5" style={{ color: v.color }} />
                 </div>
                 <h3 className="font-extrabold tracking-tighter text-star-white">{v.title}</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">{v.body}</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{v.body}</p>
               </div>
             ))}
           </motion.div>
@@ -177,7 +177,7 @@ export default function HomePage() {
               <div key={s.label} className={`${glassCard} p-5 text-center space-y-2`}>
                 <s.icon className="w-4 h-4 text-purple-600 mx-auto" />
                 <p className="font-extrabold tracking-tighter text-sm text-star-white">{s.label}</p>
-                <p className="text-[11px] text-slate-500">{s.sub}</p>
+                <p className="text-[11px] text-slate-700 dark:text-slate-300">{s.sub}</p>
               </div>
             ))}
           </motion.div>
@@ -197,7 +197,7 @@ export default function HomePage() {
                   <f.icon className="w-5 h-5" style={{ color: f.color }} />
                 </div>
                 <h2 className="font-extrabold tracking-tighter text-star-white">{f.title}</h2>
-                <p className="text-sm text-slate-500 mt-2 leading-relaxed">{f.body}</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300 mt-2 leading-relaxed">{f.body}</p>
               </Link>
             ))}
           </motion.div>

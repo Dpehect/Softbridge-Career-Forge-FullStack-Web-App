@@ -158,7 +158,7 @@ export function CvDropZone({
       <p className="font-bold tracking-tight text-base md:text-lg text-slate-900 dark:text-white">
         {loading ? "Özgeçmişiniz işleniyor..." : "Özgeçmiş Dosyası Yükleyin"}
       </p>
-      <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed">
+      <p className="text-xs text-slate-700 dark:text-slate-300 max-w-xs leading-relaxed">
         {loading
           ? "Lütfen bekleyin..."
           : "Sürükleyip bırakın veya tıklayıp PDF/TXT seçin"}

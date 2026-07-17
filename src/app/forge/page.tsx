@@ -890,7 +890,7 @@ export default function ForgePage() {
                               "flex-1 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer",
                               active
                                 ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10"
-                                : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-100 disabled:opacity-40 disabled:hover:text-slate-600/40"
+                                : "text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                             )}
                           >
                             {label}
