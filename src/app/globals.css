@@ -29,42 +29,42 @@
 
 /* ─── Light Mode ─────────────────────────────────────────────────────────── */
 :root {
-  --background:    #FFFFFF;   /* Clean white background */
-  --panel:         #F8FAFC;   /* Slate-50 panel for hierarchy */
+  --background:    #F8FAFC;   /* Premium light background */
+  --panel:         #FFFFFF;   /* Pure white card surface */
   --text-primary:  #0F172A;   /* slate-900 */
-  --text-secondary:#334155;   /* slate-700 */
-  --text-muted:    #64748B;   /* slate-500 */
-  --accent:        #6B21A8;   /* Deep Purple/Magenta */
-  --accent-hover:  #581C87;
-  --accent-dark:   #4C1D95;
-  --accent-2:      #F97316;   /* Vibrant Orange/Coral */
-  --accent-3:      #10B981;   /* Soft Green */
-  --grid-line:     rgba(15, 23, 42, 0.05);
+  --text-secondary:#475569;   /* slate-600 */
+  --text-muted:    #94A3B8;   /* slate-400 */
+  --accent:        #3B82F6;   /* Primary Blue */
+  --accent-hover:  #2563EB;
+  --accent-dark:   #1D4ED8;
+  --accent-2:      #8B5CF6;   /* Secondary Violet/Purple */
+  --accent-3:      #06B6D4;   /* Accent Cyan */
+  --grid-line:     rgba(15, 23, 42, 0.04);
   --glass-bg:      rgba(255, 255, 255, 0.85);
-  --border-color:  rgba(15, 23, 42, 0.08);
-  --glow-purple:   rgba(107, 33, 168, 0.12);
-  --glow-coral:    rgba(249, 115, 22, 0.15);
-  --glow-green:    rgba(16, 185, 129, 0.15);
+  --border-color:  #E2E8F0;
+  --glow-purple:   rgba(59, 130, 246, 0.08);
+  --glow-coral:    rgba(139, 92, 246, 0.1);
+  --glow-green:    rgba(6, 182, 212, 0.1);
 }
 
 /* ─── Dark Mode — Utopian Cosmic Violet ─────────────────────────────────── */
 .dark {
   --background:    #020617;   /* Slate-950 cosmic void */
-  --panel:         #0F172A;   /* slate-900 mystic panel */
+  --panel:         #0B1329;   /* Deep slate-900 card surface */
   --text-primary:  #F8FAFC;   /* slate-50 */
   --text-secondary:#CBD5E1;   /* slate-300 */
-  --text-muted:    #94A3B8;   /* slate-400 */
-  --accent:        #C084FC;   /* Electric violet */
-  --accent-hover:  #A855F7;
-  --accent-dark:   #7C3AED;
-  --accent-2:      #FF6B35;   /* Vivid cosmic orange */
-  --accent-3:      #34D399;   /* Neon mint-green */
+  --text-muted:    #64748B;   /* slate-500 */
+  --accent:        #60A5FA;   /* Light Blue */
+  --accent-hover:  #3B82F6;
+  --accent-dark:   #2563EB;
+  --accent-2:      #A78BFA;   /* Light Purple */
+  --accent-3:      #22D3EE;   /* Light Cyan */
   --grid-line:     rgba(248, 250, 252, 0.04);
-  --glass-bg:      rgba(15, 23, 42, 0.9);    /* High-contrast dark glass */
-  --border-color:  rgba(248, 250, 252, 0.1);
-  --glow-purple:   rgba(192, 132, 252, 0.2);
-  --glow-coral:    rgba(255, 107, 53, 0.2);
-  --glow-green:    rgba(52, 211, 153, 0.15);
+  --glass-bg:      rgba(11, 19, 41, 0.9);    /* High-contrast dark glass */
+  --border-color:  #334155;
+  --glow-purple:   rgba(96, 165, 250, 0.15);
+  --glow-coral:    rgba(167, 139, 250, 0.15);
+  --glow-green:    rgba(34, 211, 238, 0.15);
 }
 
 /* ─── Base ────────────────────────────────────────────────────────────────── */

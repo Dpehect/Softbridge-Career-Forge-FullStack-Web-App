@@ -411,7 +411,7 @@ export default function DashboardPage() {
                       className="h-full rounded-full transition-all duration-700"
                       style={{
                         width: `${journey.progressPct}%`,
-                        background: "linear-gradient(90deg, #6B21A8, #A855F7, #F97316)",
+                        background: "linear-gradient(90deg, #3B82F6, #8B5CF6, #06B6D4)",
                       }}
                     />
                   </div>
@@ -456,20 +456,20 @@ export default function DashboardPage() {
                   value={cvScore}
                   label={`${cvScore}%`}
                   sub="Özgeçmiş Gücü"
-                  color="#8B5CF6"
+                  color="#3B82F6"
                 />
                 <RadialGauge
                   value={atsScore}
                   label={`${atsScore}%`}
                   sub="ATS Skoru"
-                  color="#EC4899"
+                  color="#8B5CF6"
                 />
                 {totalModules > 0 && (
                   <RadialGauge
                     value={pathProgress}
                     label={`${pathProgress}%`}
                     sub="Yol İlerlemesi"
-                    color="#10B981"
+                    color="#06B6D4"
                   />
                 )}
               </div>

@@ -134,6 +134,7 @@ interface CareerState {
   saveForgeBackup: (label?: string) => CvBackup | null;
   restoreForgeBackup: (id: string) => boolean;
   deleteForgeBackup: (id: string) => void;
+  loadDemoProfile: () => void;
 }
 
 export const useCareerStore = create<CareerState>()(
@@ -304,6 +305,86 @@ export const useCareerStore = create<CareerState>()(
       },
       deleteForgeBackup: (id) =>
         set({ forgeBackups: get().forgeBackups.filter((b) => b.id !== id) }),
+      loadDemoProfile: () => {
+        const demoResume: ResumeProfile = {
+          fullName: "Yusuf Demir",
+          headline: "Senior Frontend Engineer",
+          email: "yusuf@demir.dev",
+          location: "İstanbul, Türkiye",
+          summary: "SoftBridge üzerinde 4 yıllık frontend geliştirme deneyimine sahip, Next.js ve TypeScript konularında uzmanlaşmış yazılım mühendisi. Sayfa yüklenme hızlarını %35 optimize etme ve kullanıcı arayüzlerini ölçekleme konularında kanıtlanmış başarı.",
+          skills: ["React", "JavaScript", "CSS", "Git", "REST APIs", "TypeScript", "Next.js", "System Design"],
+          photoDataUrl: null,
+          experience: [
+            {
+              id: "exp-demo-1",
+              role: "Senior Frontend Developer",
+              company: "SoftBridge",
+              start: "2022",
+              end: "Devam Ediyor",
+              highlights: [
+                "12k aktif kullanıcısı olan analitik panel arayüzünü sıfırdan Next.js ile kodladı.",
+                "Sayfa yüklenme hızlarını code-splitting ve resim optimizasyonlarıyla %35 iyileştirdi.",
+                "Ekipler arası entegrasyonu hızlandıran reusable UI kütüphanesini yayına aldı."
+              ]
+            }
+          ],
+          education: [
+            {
+              id: "edu-demo-1",
+              school: "Boğaziçi Üniversitesi",
+              degree: "Bilgisayar Mühendisliği",
+              year: "2018 - 2022"
+            }
+          ]
+        };
+
+        const demoParsedCV: ParsedCV = {
+          name: "Yusuf Demir",
+          title: "Senior Frontend Engineer",
+          email: "yusuf@demir.dev",
+          phone: "+90 555 123 4567",
+          location: "İstanbul, Türkiye",
+          summary: "SoftBridge üzerinde 4 yıllık frontend geliştirme deneyimine sahip, Next.js ve TypeScript konularında uzmanlaşmış yazılım mühendisi. Sayfa yüklenme hızlarını %35 optimize etme ve kullanıcı arayüzlerini ölçekleme konularında kanıtlanmış başarı.",
+          skills: ["React", "JavaScript", "CSS", "Git", "REST APIs", "TypeScript", "Next.js", "System Design"],
+          photoDataUrl: null,
+          experience: [
+            {
+              company: "SoftBridge",
+              position: "Senior Frontend Developer",
+              duration: "2022 – Devam Ediyor",
+              description: [
+                "12k aktif kullanıcısı olan analitik panel arayüzünü sıfırdan Next.js ile kodladı.",
+                "Sayfa yüklenme hızlarını code-splitting ve resim optimizasyonlarıyla %35 iyileştirdi.",
+                "Ekipler arası entegrasyonu hızlandıran reusable UI kütüphanesini yayına aldı."
+              ]
+            }
+          ],
+          education: [
+            {
+              school: "Boğaziçi Üniversitesi",
+              degree: "Bilgisayar Mühendisliği",
+              year: "2022"
+            }
+          ],
+          rawLength: 500
+        };
+
+        set({
+          resume: demoResume,
+          forgeParsedCv: demoParsedCV,
+          forgeCvText: "Yusuf Demir — Full Stack Developer\nIstanbul | yusuf@demir.dev\n\nSUMMARY\nDeveloper with 4 years building web apps in React and Node.js.\n\nEXPERIENCE\nSoftBridge — Frontend Developer (2022–Present)\n- Built dashboard features used by 12k monthly users\n- Reduced page load time by 35% via code-splitting\n\nSKILLS\nJavaScript, React, CSS, Git, REST",
+          forgeJdText: "Senior Frontend Engineer\nRequirements: TypeScript, Next.js, React, testing, CI/CD, system design basics.",
+          careerGoalId: "frontend",
+          enrolledPathIds: ["path-frontend"],
+          completedModuleIds: ["fe-1", "fe-2"],
+          lastAnalysisMeta: {
+            at: new Date().toISOString(),
+            candidateName: "Yusuf Demir",
+            targetTitle: "Senior Frontend Engineer",
+            fileName: "yusuf_demir_cv.pdf"
+          }
+        });
+      },
     }),
     { name: "softbridge-careerforge" }
   )
