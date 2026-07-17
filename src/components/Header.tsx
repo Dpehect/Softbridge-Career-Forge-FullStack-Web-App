@@ -29,7 +29,7 @@ import { JourneyStepper } from "@/components/JourneyStepper";
 
 /** Sadece 2 ana rota — geri kalanı profil menüsünde */
 const MAIN_NAV = [
-  { path: "/forge", label: "Analiz Et" },
+  { path: "/forge", label: "Analiz" },
   { path: "/resume", label: "Özgeçmişim" },
 ] as const;
 
@@ -162,7 +162,7 @@ export function Header() {
               </div>
             </Link>
 
-            {/* Ana menü — sadece 2 öğe, bol boşluk */}
+            {/* Ana menü: Analiz · Özgeçmişim (+ Başla CTA sağda) */}
             <nav
               className="hidden items-center gap-8 md:flex"
               aria-label="Ana menü"
@@ -174,10 +174,10 @@ export function Header() {
                     key={item.path}
                     href={item.path}
                     className={cn(
-                      "text-sm font-semibold tracking-tight transition-colors",
+                      "text-sm font-medium tracking-tight transition-colors",
                       active
                         ? "text-indigo-600"
-                        : "text-slate-700 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400"
+                        : "text-slate-600 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400"
                     )}
                   >
                     {item.label}
@@ -202,7 +202,7 @@ export function Header() {
                 href="/forge"
                 className="inline-flex h-10 items-center rounded-full bg-indigo-600 px-5 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:bg-indigo-500 hover:shadow-indigo-500/40 active:scale-[0.98]"
               >
-                Analiz Başlat
+                Başla
               </Link>
 
               {/* Profil menüsü — diğer sayfalar burada */}

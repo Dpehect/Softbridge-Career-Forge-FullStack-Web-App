@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { FilePickButton } from "@/components/FilePickButton";
+import { CvDropZone } from "@/components/CvDropZone";
 import { useCareerStore } from "@/store/useCareerStore";
 import {
   parseCV,
@@ -589,76 +590,115 @@ export default function ForgePage() {
           <div className="flex flex-col gap-4">
             
             {/* Editor Tabs Navigation */}
-            <div className="flex gap-1 p-1 rounded-2xl" style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.12)" }}>
-              {([
-                ["raw",      "📝", "Import / Paste"],
-                ["form",     "✍️",  "Structured Editor"],
-                ["versions", "📂", `Backups (${forgeBackups.length})`],
-              ] as const).map(([id, emoji, label]) => (
-                <button key={id}
+            <div className="flex gap-1 p-1 rounded-2xl bg-indigo-50/80 border border-indigo-100 dark:bg-indigo-500/10 dark:border-indigo-500/20">
+              {(
+                [
+                  ["raw", "Yükle"],
+                  ["form", "Düzenle"],
+                  ["versions", `Yedekler (${forgeBackups.length})`],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
                   onClick={() => setEditorTab(id as EditorTabId)}
                   disabled={id === "form" && !forgeParsedCv}
-                  className="flex-1 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer disabled:opacity-40"
-                  style={editorTab === id
-                    ? { background: "linear-gradient(135deg,#6B21A8,#A855F7)", color: "white", boxShadow: "0 4px 12px rgba(107,33,168,0.3)" }
-                    : { color: "var(--text-muted)" }}
+                  className={cn(
+                    "flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all cursor-pointer disabled:opacity-40",
+                    editorTab === id
+                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/25"
+                      : "text-slate-600 hover:text-indigo-600 dark:text-slate-300"
+                  )}
                 >
-                  {emoji} {label}
+                  {label}
                 </button>
               ))}
             </div>
 
             {/* Editor Content Area */}
-            <div className="glass-panel rounded-3xl p-5 min-h-[460px]"
-              style={{ border: "1px solid rgba(168,85,247,0.12)" }}>
+            <div className="glass-panel rounded-3xl p-5 min-h-[460px] border border-slate-200/80 dark:border-white/10">
               
-              {/* Tab 1: Raw Text & File Pickers */}
+              {/* Tab 1: Drop zone + paste */}
               {editorTab === "raw" && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-sm">{t("workspaceSub")}</h3>
-                    <FilePickButton
-                      label={t("uploadBtn")}
-                      variant="accent"
-                      size="sm"
-                      silentSuccess
-                      onText={(text, fileName) => handleCvFile(text, fileName)}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-steel leading-relaxed">{t("pasteTitle")}</p>
-                  <Textarea
-                    value={cvText}
-                    onChange={(e) => {
-                      setForgeCvText(e.target.value);
-                      setParseBanner(null);
-                    }}
-                    placeholder="Paste CV text here (e.g. John Doe, Software Engineer, React)..."
-                    className="min-h-[220px] font-mono text-xs leading-relaxed"
-                  />
-                  <Button
-                    variant="primary"
-                    className={cn("w-full font-bold", busy && "opacity-60")}
-                    disabled={busy || !cvText.trim()}
-                    onClick={onParse}
-                  >
-                    {busy ? (
-                      <>
-                        <LoadingSpinner /> {t("analyzingLabel")}
-                      </>
-                    ) : (
-                      t("analyzePasteBtn")
-                    )}
-                  </Button>
-                  {lastCvFileName && (
-                    <p className="text-xs text-muted-steel">
-                      {t("lastFileLabel")} <strong className="text-star-white">{lastCvFileName}</strong>
-                    </p>
+                <div className="space-y-5">
+                  {!forgeParsedCv ? (
+                    <>
+                      <div className="text-center space-y-1 pb-1">
+                        <h3 className="font-bold tracking-tight text-base text-star-white">
+                          İlk analizinle kariyerini güçlendir
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          CV&apos;ni yükle — yapay zeka tarayıcında çalışır, verin sunucuya gitmez.
+                        </p>
+                      </div>
+                      <CvDropZone
+                        redirectTo={null}
+                        compact
+                        onParsed={(_p, _text, fileName) => {
+                          setLastCvFileName(fileName);
+                          setParseBanner("CV yüklendi. Sağ panelden analiz sonuçlarını inceleyin.");
+                          setEditorTab("form");
+                          setPreviewTab("feedback");
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
+                      <p className="font-semibold">
+                        CV yüklendi{lastCvFileName ? `: ${lastCvFileName}` : ""}
+                      </p>
+                      <p className="text-xs mt-1 opacity-90">
+                        Sağda yolculuk sonuçlarını gör · “Düzenle” ile alanları güncelle.
+                      </p>
+                    </div>
                   )}
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-semibold text-sm text-slate-700 dark:text-slate-200">
+                        veya metin yapıştır
+                      </h3>
+                      <FilePickButton
+                        label="Dosya seç"
+                        variant="outline"
+                        size="sm"
+                        silentSuccess
+                        onText={(text, fileName) => handleCvFile(text, fileName)}
+                      />
+                    </div>
+                    <Textarea
+                      value={cvText}
+                      onChange={(e) => {
+                        setForgeCvText(e.target.value);
+                        setParseBanner(null);
+                      }}
+                      placeholder="CV metnini buraya yapıştırın…"
+                      className="min-h-[140px] font-mono text-xs leading-relaxed"
+                    />
+                    <Button
+                      variant="primary"
+                      className={cn("w-full font-bold shadow-lg", busy && "opacity-60")}
+                      disabled={busy || !cvText.trim()}
+                      onClick={onParse}
+                    >
+                      {busy ? (
+                        <>
+                          <LoadingSpinner /> Analiz ediliyor…
+                        </>
+                      ) : (
+                        "Yapıştırılan metni analiz et"
+                      )}
+                    </Button>
+                  </div>
+
                   {parseBanner && (
-                    <div className="rounded-xl p-3 text-xs"
-                      style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.2)" }}>
-                      <p className="font-semibold" style={{ color: "#A855F7" }}>{parseBanner}</p>
-                      <p className="mt-0.5 text-muted-steel">Switch to <strong>Structured Form</strong> to edit fields!</p>
+                    <div className="rounded-xl border border-indigo-200 bg-indigo-50/90 p-3 text-xs dark:border-indigo-500/30 dark:bg-indigo-500/10">
+                      <p className="font-semibold text-indigo-800 dark:text-indigo-200">
+                        {parseBanner}
+                      </p>
+                      <p className="mt-0.5 text-slate-600 dark:text-slate-400">
+                        Alanları düzenlemek için <strong>Düzenle</strong> sekmesine geç.
+                      </p>
                     </div>
                   )}
                 </div>

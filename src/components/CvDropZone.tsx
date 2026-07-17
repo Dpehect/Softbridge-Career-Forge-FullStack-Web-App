@@ -10,19 +10,28 @@ import {
   extractTextFromFile,
   looksLikeRawPdf,
   parseCV,
+  type ParsedCV,
 } from "@/lib/forge";
 import { useCareerStore } from "@/store/useCareerStore";
 
 type Props = {
   className?: string;
-  /** After success go to resume editor (golden path) */
-  redirectTo?: string;
+  /** null = sayfada kal; string = yönlendir */
+  redirectTo?: string | null;
+  onParsed?: (parsed: ParsedCV, text: string, fileName: string) => void;
+  /** Daha kompakt varyant (panel içi) */
+  compact?: boolean;
 };
 
 /**
- * Primary PLG entry: drag & drop CV → parse → resume editor.
+ * Sürükle-bırak CV yükleme — 100% tarayıcıda, sunucuya gitmez.
  */
-export function CvDropZone({ className, redirectTo = "/resume?from=analiz" }: Props) {
+export function CvDropZone({
+  className,
+  redirectTo = "/resume?from=analiz",
+  onParsed,
+  compact = false,
+}: Props) {
   const router = useRouter();
   const {
     setForgeCvText,
@@ -41,7 +50,7 @@ export function CvDropZone({ className, redirectTo = "/resume?from=analiz" }: Pr
         const cleaned = cleanExtractedText(text);
         if (!cleaned.trim() || looksLikeRawPdf(cleaned) || looksLikeRawPdf(text)) {
           toast.error(
-            "Bu PDF taranmış veya okunamıyor görünüyor. Lütfen metin olarak dışa aktarın veya yapıştırın."
+            "Bu PDF taranmış veya okunamıyor. Metin içeren PDF/TXT deneyin."
           );
           return;
         }
@@ -59,17 +68,18 @@ export function CvDropZone({ className, redirectTo = "/resume?from=analiz" }: Pr
           candidateName: parsed.name,
           targetTitle: parsed.title,
         });
-        toast.success("CV yüklendi. Sizi düzenleyiciye alıyoruz — hataları birlikte kapatacağız.");
-        router.push(redirectTo);
+        onParsed?.(parsed, cleaned, file.name);
+        toast.success("CV yüklendi. Analiz için hazırsınız.");
+        if (redirectTo) router.push(redirectTo);
       } catch (err) {
         const code = err instanceof Error ? err.message : "";
         if (code === "PDF_SCANNED" || code === "PDF_NO_TEXT") {
-          toast.error("Taranmış PDF desteklenmiyor. Metin içeren PDF veya TXT deneyin.");
+          toast.error("Taranmış PDF desteklenmiyor. Metin içeren PDF veya TXT kullanın.");
         } else if (code === "UNSUPPORTED") {
           toast.error("Desteklenen formatlar: PDF ve TXT.");
         } else {
           toast.error(
-            "Dosya okunamadı. Yerel AI / PDF ayrıştırıcı yanıt vermiyor olabilir — tekrar deneyin."
+            "Dosya okunamadı. Bağlantını kontrol et veya başka bir dosya dene."
           );
         }
       } finally {
@@ -83,15 +93,9 @@ export function CvDropZone({ className, redirectTo = "/resume?from=analiz" }: Pr
       setForgeParsedCv,
       pushForgeHistory,
       setLastAnalysisMeta,
+      onParsed,
     ]
   );
-
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) void processFile(file);
-  };
 
   return (
     <div
@@ -99,7 +103,7 @@ export function CvDropZone({ className, redirectTo = "/resume?from=analiz" }: Pr
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
-          document.getElementById("cv-drop-input")?.click();
+          document.getElementById("cv-drop-input-main")?.click();
         }
       }}
       onDragOver={(e) => {
@@ -107,20 +111,26 @@ export function CvDropZone({ className, redirectTo = "/resume?from=analiz" }: Pr
         setDragging(true);
       }}
       onDragLeave={() => setDragging(false)}
-      onDrop={onDrop}
-      onClick={() => document.getElementById("cv-drop-input")?.click()}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragging(false);
+        const file = e.dataTransfer.files?.[0];
+        if (file) void processFile(file);
+      }}
+      onClick={() => document.getElementById("cv-drop-input-main")?.click()}
       className={cn(
-        "relative cursor-pointer rounded-3xl border-2 border-dashed p-8 md:p-12 text-center transition-all",
-        "bg-white/60 backdrop-blur-sm shadow-sm dark:bg-white/5",
+        "relative cursor-pointer rounded-2xl border-2 border-dashed text-center transition-all",
+        compact ? "p-8 md:p-10" : "p-10 md:p-14",
+        "bg-white/50 backdrop-blur-sm dark:bg-white/[0.03]",
         dragging
-          ? "border-indigo-500 bg-indigo-50/80 scale-[1.01]"
-          : "border-indigo-300/70 hover:border-indigo-500 hover:bg-indigo-50/40",
+          ? "border-indigo-500 bg-indigo-50/80 scale-[1.01] shadow-lg"
+          : "border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/40 dark:border-slate-600",
         loading && "pointer-events-none opacity-70",
         className
       )}
     >
       <input
-        id="cv-drop-input"
+        id="cv-drop-input-main"
         type="file"
         accept=".pdf,.txt,.md,application/pdf,text/plain"
         className="sr-only"
@@ -131,25 +141,35 @@ export function CvDropZone({ className, redirectTo = "/resume?from=analiz" }: Pr
         }}
       />
 
-      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg">
+      <div
+        className={cn(
+          "mx-auto mb-4 flex items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-500/30",
+          compact ? "h-12 w-12" : "h-14 w-14"
+        )}
+      >
         {loading ? (
-          <Loader2 className="h-7 w-7 animate-spin" />
+          <Loader2 className="h-6 w-6 animate-spin" />
         ) : (
-          <FileUp className="h-7 w-7" />
+          <FileUp className={compact ? "h-6 w-6" : "h-7 w-7"} />
         )}
       </div>
 
-      <p className="font-extrabold tracking-tighter text-xl text-star-white">
-        {loading ? "CV okunuyor…" : "CV’nizi buraya sürükleyin"}
+      <p
+        className={cn(
+          "font-bold tracking-tight text-star-white",
+          compact ? "text-lg" : "text-xl"
+        )}
+      >
+        {loading ? "Kariyer asistanı hazırlanıyor…" : "PDF / TXT dosyanı buraya sürükle"}
       </p>
       <p className="mt-2 text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
         {loading
-          ? "Metin çıkarılıyor ve yapılandırılıyor — lütfen bekleyin."
-          : "veya tıklayarak PDF / TXT seçin. Analiz bitince sizi Özgeçmiş Düzenleyici’ye alacağız."}
+          ? "Metin çıkarılıyor, lütfen bekleyin."
+          : "veya tıklayarak dosya seç. İlk analizinle kariyerini güçlendir."}
       </p>
 
       {!loading && (
-        <span className="mt-5 inline-flex h-11 items-center rounded-2xl bg-indigo-600 px-5 text-sm font-bold text-white shadow-lg">
+        <span className="mt-5 inline-flex h-11 items-center rounded-full bg-indigo-600 px-6 text-sm font-bold text-white shadow-lg">
           Dosya seç
         </span>
       )}

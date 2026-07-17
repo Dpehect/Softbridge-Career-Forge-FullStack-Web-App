@@ -150,19 +150,19 @@ export default function HomePage() {
 
           {/* Primary PLG: drag & drop — first thing users see to act */}
           <motion.div {...fadeUp(0.22)} className="max-w-3xl">
-            <CvDropZone />
-            <div className="mt-4 flex flex-wrap gap-3">
+            <CvDropZone redirectTo="/forge" />
+            <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href="/forge"
-                className="inline-flex h-11 items-center gap-2 rounded-2xl px-5 text-sm font-bold text-white bg-indigo-600 shadow-lg hover:bg-indigo-700"
+                className="inline-flex h-11 items-center gap-2 rounded-full px-6 text-sm font-bold text-white bg-indigo-600 shadow-lg hover:bg-indigo-500"
               >
-                Gelişmiş analiz (Forge) <ArrowRight className="w-4 h-4" />
+                Analiz sayfasına git <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
-                href="/dashboard"
-                className="inline-flex h-11 items-center gap-2 rounded-2xl px-5 text-sm font-semibold border-2 border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-500 dark:text-slate-200"
+                href="/resume"
+                className="inline-flex h-11 items-center gap-2 rounded-full px-6 text-sm font-semibold border-2 border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-500 dark:text-slate-200"
               >
-                Kariyer Kokpiti
+                Özgeçmişim
               </Link>
             </div>
           </motion.div>
