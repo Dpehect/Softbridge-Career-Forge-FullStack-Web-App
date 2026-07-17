@@ -51,8 +51,8 @@
 .dark {
   --background:    #020617;   /* Slate-950 cosmic void */
   --panel:         #0B1329;   /* Deep slate-900 card surface */
-  --text-primary:  #F8FAFC;   /* slate-50 */
-  --text-secondary:#CBD5E1;   /* slate-300 */
+  --text-primary:  #E2E8F0;   /* Soft slate-200 off-white */
+  --text-secondary:#CBD5E1;   /* Soft slate-300 */
   --text-muted:    #64748B;   /* slate-500 */
   --accent:        #60A5FA;   /* Light Blue */
   --accent-hover:  #3B82F6;
@@ -207,4 +207,17 @@ body::before {
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0; }
+}
+
+/* Redefine text-white and light-gray typography selectors to use a soft off-white slate color */
+.text-white,
+.dark\:text-white,
+.dark .dark\:text-white,
+.text-slate-50,
+.dark\:text-slate-50,
+.dark .dark\:text-slate-50,
+.text-gray-50,
+.dark\:text-gray-50,
+.dark .dark\:text-gray-50 {
+  color: #E2E8F0 !important;
 }
