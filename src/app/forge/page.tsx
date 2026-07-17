@@ -342,7 +342,7 @@ export default function ForgePage() {
       } catch (e) {
         setModelBanner(null);
         toast.error(
-          e instanceof Error ? e.message : "Analiz tamamlanamadı — model indirmeyi kontrol edin."
+          "Analiz şu an yapılamıyor. Bağlantını kontrol et veya birkaç saniye sonra tekrar dene."
         );
       }
     });
@@ -447,7 +447,9 @@ export default function ForgePage() {
         setPreviewTab("feedback");
       } catch (e) {
         setModelBanner(null);
-        toast.error(e instanceof Error ? e.message : "ATS taraması tamamlanamadı.");
+        toast.error(
+          "ATS taraması şu an yapılamıyor. Bağlantını kontrol et — sistem birazdan tekrar denenebilir."
+        );
       }
     });
 

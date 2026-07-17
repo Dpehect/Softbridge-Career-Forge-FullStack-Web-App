@@ -133,17 +133,17 @@ export default function HomePage() {
               çizgisi değil — SoftBridge kariyer asistanınızın ilk adımı.
             </motion.p>
 
-            {/* Güven mesajı — USP (büyük ve belirgin) */}
+            {/* Güven mesajı — USP */}
             <motion.div
               {...fadeUp(0.18)}
-              className="inline-flex flex-col sm:flex-row sm:items-center gap-2 rounded-2xl border-2 border-emerald-400/60 bg-emerald-50 px-5 py-3 text-sm font-bold text-emerald-900 shadow-md dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-200"
+              className="inline-flex flex-col sm:flex-row sm:items-center gap-2 rounded-2xl border-2 border-emerald-400/60 bg-emerald-50 px-5 py-3.5 text-sm font-bold text-emerald-900 shadow-md dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-200"
             >
               <span className="inline-flex items-center gap-2">
                 <Lock className="w-5 h-5 shrink-0" />
-                Verileriniz Cihazınızda Kalır.
+                🚀 Verileriniz Cihazınızda Kalır.
               </span>
               <span className="font-semibold opacity-90">
-                %100 Gizli · %100 Yerel İşleme · API anahtarı yok
+                Sunucuya Gönderilmez · %100 Yerel İşleme
               </span>
             </motion.div>
           </motion.div>

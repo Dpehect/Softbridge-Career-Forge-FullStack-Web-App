@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Anvil,
   Menu,
   X,
   FileDown,
@@ -15,10 +14,12 @@ import {
   Sun,
   Moon,
   Zap,
-  FileText,
+  User,
+  ChevronDown,
+  LogOut,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useCareerStore } from "@/store/useCareerStore";
 import { exportCvAsPdf } from "@/lib/forge";
@@ -26,19 +27,24 @@ import { toast } from "sonner";
 import { AiStatusDot } from "@/components/AiStatusDot";
 import { JourneyStepper } from "@/components/JourneyStepper";
 
-/** Tek düz, profesyonel navigasyon — hepsi görünür, bitişik değil */
-const NAV = [
-  { path: "/forge", label: "Forge", icon: Anvil },
-  { path: "/resume", label: "Özgeçmiş", icon: FileText },
-  { path: "/dashboard", label: "Kokpit", icon: LayoutDashboard },
-  { path: "/coach", label: "Koç", icon: MessageSquare },
-  { path: "/jobs", label: "İlanlar", icon: Briefcase },
-  { path: "/paths", label: "Yollar", icon: GitCompare },
+/** Sadece 2 ana rota — geri kalanı profil menüsünde */
+const MAIN_NAV = [
+  { path: "/forge", label: "Analiz Et" },
+  { path: "/resume", label: "Özgeçmişim" },
+] as const;
+
+const PROFILE_LINKS = [
+  { path: "/dashboard", label: "Kariyer Kokpiti", icon: LayoutDashboard },
+  { path: "/coach", label: "AI Koç", icon: MessageSquare },
+  { path: "/jobs", label: "İş İlanları", icon: Briefcase },
+  { path: "/paths", label: "Kariyer Yolları", icon: GitCompare },
 ] as const;
 
 export function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
   const { resume, resetResume, forgeParsedCv, clearForgeCv, theme, setTheme } =
     useCareerStore();
 
@@ -48,7 +54,18 @@ export function Header() {
 
   useEffect(() => {
     setMobileOpen(false);
+    setProfileOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
 
   const hasContent =
     Boolean(forgeParsedCv) ||
@@ -60,6 +77,13 @@ export function Header() {
         resume.experience.length > 0
     );
 
+  const displayName =
+    forgeParsedCv?.name &&
+    forgeParsedCv.name !== "Candidate" &&
+    forgeParsedCv.name !== "Aday"
+      ? forgeParsedCv.name.split(" ")[0]
+      : resume.fullName?.trim().split(" ")[0] || "Profil";
+
   const handleClearAll = () => {
     if (
       window.confirm(
@@ -69,6 +93,7 @@ export function Header() {
       resetResume();
       clearForgeCv();
       toast.success("CV temizlendi. Sıfırdan başlayabilirsiniz.");
+      setProfileOpen(false);
     }
   };
 
@@ -116,44 +141,43 @@ export function Header() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50">
-        {/* Üst cam bar */}
-        <div className="border-b border-white/10 bg-white/75 backdrop-blur-xl dark:bg-[#0c0614]/90 dark:border-white/5">
-          <div className="max-w-6xl mx-auto h-16 px-4 sm:px-6 flex items-center justify-between gap-6">
+        <div className="border-b border-slate-200/70 bg-white/80 backdrop-blur-xl dark:bg-[#0a0612]/92 dark:border-white/5">
+          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-8 px-4 sm:px-6">
             {/* Logo */}
             <Link
               href="/"
-              className="flex items-center gap-3 shrink-0 group"
+              className="group flex shrink-0 items-center gap-3"
               onClick={() => setMobileOpen(false)}
             >
-              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 via-violet-600 to-orange-500 shadow-lg shadow-indigo-500/25 transition-transform group-hover:scale-105">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 via-violet-600 to-orange-500 shadow-lg shadow-indigo-500/25 transition-transform group-hover:scale-105">
                 <Zap className="h-4 w-4 text-white" />
               </div>
-              <div className="hidden sm:block leading-none">
+              <div className="hidden leading-none sm:block">
                 <p className="font-display text-[15px] font-bold tracking-tight text-slate-900 dark:text-white">
                   CareerForge
                 </p>
-                <p className="mt-1 text-[10px] font-medium tracking-wide text-slate-500">
-                  SoftBridge
+                <p className="mt-1 text-[10px] font-medium text-slate-500">
+                  SoftBridge Solutions
                 </p>
               </div>
             </Link>
 
-            {/* Desktop nav — geniş aralıklı, modern pill active */}
+            {/* Ana menü — sadece 2 öğe, bol boşluk */}
             <nav
-              className="hidden lg:flex items-center gap-1"
+              className="hidden items-center gap-8 md:flex"
               aria-label="Ana menü"
             >
-              {NAV.map((item) => {
+              {MAIN_NAV.map((item) => {
                 const active = isActive(item.path);
                 return (
                   <Link
                     key={item.path}
                     href={item.path}
                     className={cn(
-                      "relative px-4 py-2 rounded-full text-[13px] font-semibold tracking-tight transition-all duration-200",
+                      "text-sm font-semibold tracking-tight transition-colors",
                       active
-                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
-                        : "text-slate-600 hover:text-indigo-600 hover:bg-slate-100/80 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-indigo-300"
+                        ? "text-indigo-600"
+                        : "text-slate-700 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400"
                     )}
                   >
                     {item.label}
@@ -162,152 +186,230 @@ export function Header() {
               })}
             </nav>
 
-            {/* Sağ aksiyonlar */}
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-              {hasContent && (
-                <div className="hidden xl:flex items-center gap-1 mr-1">
-                  <button
-                    type="button"
-                    onClick={handleClearAll}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors dark:hover:bg-rose-500/10"
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" />
-                    Temizle
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleExport}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors dark:text-slate-300 dark:hover:bg-white/5"
-                  >
-                    <FileDown className="h-3.5 w-3.5" />
-                    PDF
-                  </button>
-                </div>
-              )}
-
-              <div className="hidden sm:flex items-center gap-2 pl-1 border-l border-slate-200/80 dark:border-white/10">
-                <button
-                  type="button"
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-indigo-600 transition-colors dark:hover:bg-white/5 cursor-pointer"
-                  title={theme === "dark" ? "Açık tema" : "Koyu tema"}
-                >
-                  {theme === "dark" ? (
-                    <Sun className="h-4 w-4" />
-                  ) : (
-                    <Moon className="h-4 w-4" />
-                  )}
-                </button>
+            {/* Sağ: durum + CTA + profil */}
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="hidden items-center gap-3 sm:flex">
                 <AiStatusDot />
+                <span className="hidden text-xs font-medium text-slate-500 lg:inline">
+                  AI:{" "}
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    Yerel
+                  </span>
+                </span>
               </div>
 
               <Link
                 href="/forge"
-                className="inline-flex h-9 sm:h-10 items-center rounded-full bg-indigo-600 px-4 sm:px-5 text-[12px] sm:text-[13px] font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:bg-indigo-500 hover:shadow-indigo-500/40 active:scale-[0.98]"
+                className="inline-flex h-10 items-center rounded-full bg-indigo-600 px-5 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:bg-indigo-500 hover:shadow-indigo-500/40 active:scale-[0.98]"
               >
                 Analiz Başlat
               </Link>
 
+              {/* Profil menüsü — diğer sayfalar burada */}
+              <div className="relative" ref={profileRef}>
+                <button
+                  type="button"
+                  onClick={() => setProfileOpen((v) => !v)}
+                  className={cn(
+                    "flex h-10 items-center gap-2 rounded-full border border-slate-200 bg-white pl-1.5 pr-2.5 transition-colors hover:border-indigo-200 hover:bg-indigo-50/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 cursor-pointer",
+                    profileOpen && "border-indigo-300 bg-indigo-50/80 dark:bg-indigo-500/10"
+                  )}
+                  aria-expanded={profileOpen}
+                  aria-haspopup="menu"
+                >
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-orange-500 text-white">
+                    <User className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="hidden max-w-[72px] truncate text-xs font-semibold text-slate-700 dark:text-slate-200 sm:inline">
+                    {displayName}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-3.5 w-3.5 text-slate-400 transition-transform",
+                      profileOpen && "rotate-180"
+                    )}
+                  />
+                </button>
+
+                <AnimatePresence>
+                  {profileOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      role="menu"
+                      className="absolute right-0 top-[calc(100%+8px)] z-50 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10 dark:border-white/10 dark:bg-[#12081f]"
+                    >
+                      <div className="border-b border-slate-100 px-4 py-3 dark:border-white/5">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                          {displayName}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-slate-500">
+                          Verileriniz cihazınızda · %100 gizli
+                        </p>
+                      </div>
+
+                      <div className="p-1.5">
+                        {PROFILE_LINKS.map((item) => {
+                          const Icon = item.icon;
+                          const active = isActive(item.path);
+                          return (
+                            <Link
+                              key={item.path}
+                              href={item.path}
+                              role="menuitem"
+                              className={cn(
+                                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                                active
+                                  ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300"
+                                  : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"
+                              )}
+                            >
+                              <Icon className="h-4 w-4 opacity-70" />
+                              {item.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+
+                      <div className="border-t border-slate-100 p-1.5 dark:border-white/5">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setTheme(theme === "dark" ? "light" : "dark")
+                          }
+                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5 cursor-pointer"
+                        >
+                          {theme === "dark" ? (
+                            <Sun className="h-4 w-4 opacity-70" />
+                          ) : (
+                            <Moon className="h-4 w-4 opacity-70" />
+                          )}
+                          {theme === "dark" ? "Açık tema" : "Koyu tema"}
+                        </button>
+                        {hasContent && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={handleExport}
+                              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5 cursor-pointer"
+                            >
+                              <FileDown className="h-4 w-4 opacity-70" />
+                              PDF indir
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleClearAll}
+                              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 cursor-pointer"
+                            >
+                              <RotateCcw className="h-4 w-4 opacity-70" />
+                              Verileri temizle
+                            </button>
+                          </>
+                        )}
+                        <Link
+                          href="/"
+                          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5"
+                        >
+                          <LogOut className="h-4 w-4 opacity-70" />
+                          Ana sayfa
+                        </Link>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
               <button
                 type="button"
-                className="lg:hidden flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 dark:border-white/10 dark:text-slate-300 cursor-pointer"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 md:hidden dark:border-white/10 dark:text-slate-300 cursor-pointer"
                 onClick={() => setMobileOpen((v) => !v)}
-                aria-label={mobileOpen ? "Menüyü kapat" : "Menüyü aç"}
-                aria-expanded={mobileOpen}
+                aria-label="Menü"
               >
-                {mobileOpen ? (
-                  <X className="h-4 w-4" />
-                ) : (
-                  <Menu className="h-4 w-4" />
-                )}
+                {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
               </button>
             </div>
           </div>
 
-          {/* Yol haritası şeridi — navbar ile bütünleşik */}
-          <div className="border-t border-slate-100/80 dark:border-white/5">
+          {/* Stepper şeridi */}
+          <div className="border-t border-slate-100 dark:border-white/5">
             <JourneyStepper className="!border-0 !bg-transparent" />
           </div>
         </div>
 
-        {/* Mobil panel */}
+        {/* Mobil menü */}
         <AnimatePresence>
           {mobileOpen && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden overflow-hidden border-b border-slate-200/80 bg-white/95 backdrop-blur-xl dark:bg-[#0c0614]/95 dark:border-white/10"
+              className="overflow-hidden border-b border-slate-200 bg-white/95 backdrop-blur-xl md:hidden dark:border-white/10 dark:bg-[#0a0612]/95"
             >
-              <nav className="max-w-6xl mx-auto px-4 py-4 grid grid-cols-2 gap-2">
-                {NAV.map((item) => {
-                  const Icon = item.icon;
-                  const active = isActive(item.path);
-                  return (
-                    <Link
-                      key={item.path}
-                      href={item.path}
-                      className={cn(
-                        "flex items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-semibold transition-colors",
-                        active
-                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20"
-                          : "bg-slate-50 text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-indigo-500/10"
-                      )}
-                    >
-                      <Icon className="h-4 w-4 shrink-0 opacity-80" />
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </nav>
-              <div className="max-w-6xl mx-auto px-4 pb-4 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 text-sm font-semibold text-slate-600 dark:border-white/10 dark:text-slate-300"
-                >
-                  {theme === "dark" ? (
-                    <Sun className="h-4 w-4" />
-                  ) : (
-                    <Moon className="h-4 w-4" />
-                  )}
-                  Tema
-                </button>
-                <div className="flex h-10 items-center rounded-2xl border border-slate-200 px-3 dark:border-white/10">
-                  <AiStatusDot />
-                </div>
+              <div className="space-y-1 px-4 py-4">
+                {MAIN_NAV.map((item) => (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    className={cn(
+                      "block rounded-xl px-4 py-3 text-sm font-semibold",
+                      isActive(item.path)
+                        ? "bg-indigo-600 text-white"
+                        : "text-slate-700 hover:bg-slate-50 dark:text-slate-200"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+                <p className="px-4 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Diğer
+                </p>
+                {PROFILE_LINKS.map((item) => (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    className={cn(
+                      "block rounded-xl px-4 py-3 text-sm font-medium",
+                      isActive(item.path)
+                        ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15"
+                        : "text-slate-600 hover:bg-slate-50 dark:text-slate-300"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </header>
 
-      {/* Mobil alt bar — ferah 4 ana rota */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-slate-200/80 bg-white/90 backdrop-blur-xl pb-[env(safe-area-inset-bottom)] dark:bg-[#0c0614]/95 dark:border-white/10">
+      {/* Mobil alt nav — 3 ana odak */}
+      <nav className="fixed bottom-0 inset-x-0 z-40 border-t border-slate-200/80 bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden dark:border-white/10 dark:bg-[#0a0612]/95">
         <div className="flex items-stretch justify-around px-2 py-2">
-          {NAV.slice(0, 4).map((item) => {
-            const Icon = item.icon;
+          {[
+            { path: "/forge", label: "Analiz" },
+            { path: "/resume", label: "Özgeçmiş" },
+            { path: "/dashboard", label: "Kokpit" },
+          ].map((item) => {
             const active = isActive(item.path);
             return (
               <Link
                 key={item.path}
                 href={item.path}
                 className={cn(
-                  "flex flex-1 flex-col items-center gap-1 rounded-xl py-2 transition-colors",
+                  "flex flex-1 flex-col items-center gap-1 rounded-xl py-2 text-[11px] font-semibold transition-colors",
                   active ? "text-indigo-600" : "text-slate-500"
                 )}
               >
                 <span
                   className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
-                    active && "bg-indigo-50 dark:bg-indigo-500/15"
+                    "h-1 w-6 rounded-full transition-colors",
+                    active ? "bg-indigo-600" : "bg-transparent"
                   )}
-                >
-                  <Icon className="h-4 w-4" />
-                </span>
-                <span className="text-[10px] font-semibold tracking-tight">
-                  {item.label}
-                </span>
+                />
+                {item.label}
               </Link>
             );
           })}

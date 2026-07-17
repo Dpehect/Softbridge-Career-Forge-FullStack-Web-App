@@ -50,10 +50,10 @@ export function AiStatusDot({ className }: { className?: string }) {
         {loading
           ? "Hazırlanıyor…"
           : ready
-            ? "AI hazır"
+            ? "AI Durumu: Aktif"
             : error
-              ? "Analiz yok"
-              : "AI"}
+              ? "AI Durumu: Beklemede"
+              : "AI Durumu"}
       </span>
     </div>
   );
