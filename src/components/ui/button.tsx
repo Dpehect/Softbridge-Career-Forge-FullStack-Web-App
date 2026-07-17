@@ -14,11 +14,11 @@ const buttonVariants = cva(
         primary:
           "bg-gradient-to-r from-[#6B21A8] to-[#A855F7] text-white shadow-lg hover:opacity-95 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 rounded-xl",
         outline:
-          "border border-black/10 bg-transparent text-star-white hover:border-cosmic-teal/40 hover:text-cosmic-teal",
-        ghost: "bg-transparent text-muted-steel hover:bg-black/[0.04] hover:text-star-white",
+          "border border-slate-300 bg-transparent text-slate-800 hover:bg-slate-50 hover:border-slate-400 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-white/5 dark:hover:border-slate-600",
+        ghost: "bg-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white",
         ghostBorder:
-          "border-2 border-slate-200 bg-transparent text-slate-700 hover:bg-slate-50 dark:border-slate-500 dark:text-slate-200 dark:hover:bg-white/5",
-        soft: "bg-abyss-panel text-star-white hover:bg-black/[0.06]",
+          "border border-slate-300 bg-transparent text-slate-800 hover:bg-slate-50 hover:border-slate-400 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-white/5 dark:hover:border-slate-600",
+        soft: "bg-slate-100 text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700",
       },
       size: {
         default: "h-10 px-4 py-2",
