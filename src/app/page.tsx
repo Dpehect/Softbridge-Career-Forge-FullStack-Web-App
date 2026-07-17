@@ -127,20 +127,7 @@ export default function HomePage() {
           {/* Primary PLG: drag & drop — first thing users see to act */}
           <motion.div {...fadeUp(0.22)} className="max-w-3xl">
             <CvDropZone redirectTo="/forge" />
-            <div className="mt-6 flex items-center gap-6 text-sm">
-              <Link
-                href="/forge"
-                className="font-bold text-purple-600 dark:text-[#C084FC] hover:underline flex items-center gap-1.5"
-              >
-                Analiz çalışma alanına geç <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                href="/resume"
-                className="font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
-              >
-                Özgeçmişim
-              </Link>
-            </div>
+            {/* Single Action Focus: Drop zone handles launch; navbar handles navigation */}
           </motion.div>
 
 
