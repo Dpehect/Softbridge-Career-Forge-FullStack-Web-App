@@ -45,6 +45,25 @@
   --glow-purple:   rgba(59, 130, 246, 0.08);
   --glow-coral:    rgba(139, 92, 246, 0.1);
   --glow-green:    rgba(6, 182, 212, 0.1);
+
+  /* Spacing Tokens (8px system) */
+  --space-xs:      0.25rem;   /* 4px */
+  --space-sm:      0.5rem;    /* 8px */
+  --space-md:      1rem;      /* 16px */
+  --space-lg:      1.5rem;    /* 24px */
+  --space-xl:      2rem;      /* 32px */
+
+  /* Radius Tokens */
+  --radius-sm:     0.375rem;  /* 6px */
+  --radius-md:     0.75rem;   /* 12px */
+  --radius-lg:     1.25rem;   /* 20px */
+  --radius-xl:     2rem;      /* 32px */
+
+  /* Elevation (Shadow) Tokens */
+  --shadow-s1:     none;
+  --shadow-s2:     0 1px 3px 0 rgba(15, 23, 42, 0.03), 0 1px 2px 0 rgba(15, 23, 42, 0.01);
+  --shadow-s3:     0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.02);
+  --shadow-s4:     0 10px 15px -3px rgba(15, 23, 42, 0.06), 0 4px 6px -2px rgba(15, 23, 42, 0.02);
 }
 
 /* ─── Dark Mode — Utopian Cosmic Violet ─────────────────────────────────── */
@@ -65,6 +84,13 @@
   --glow-purple:   rgba(96, 165, 250, 0.15);
   --glow-coral:    rgba(167, 139, 250, 0.15);
   --glow-green:    rgba(34, 211, 238, 0.15);
+
+  /* Spacing Tokens remain mapped relative to REM scale */
+  /* Elevation (Shadow) Tokens - High Contrast Dark Depth */
+  --shadow-s1:     none;
+  --shadow-s2:     0 1px 3px 0 rgba(0, 0, 0, 0.25), 0 1px 2px 0 rgba(0, 0, 0, 0.15);
+  --shadow-s3:     0 4px 6px -1px rgba(0, 0, 0, 0.35), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-s4:     0 10px 15px -3px rgba(0, 0, 0, 0.45), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
 }
 
 /* ─── Base ────────────────────────────────────────────────────────────────── */
@@ -112,7 +138,7 @@ body::before {
   background-color: var(--glass-bg) !important;
   color: var(--text-primary) !important;
   border: 1px solid var(--border-color) !important;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08) !important;
+  box-shadow: var(--shadow-s2) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
 }
@@ -121,7 +147,7 @@ body::before {
   background-color: var(--glass-bg) !important;
   color: var(--text-primary) !important;
   border: 1px solid var(--border-color) !important;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08) !important;
+  box-shadow: var(--shadow-s2) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
 }
