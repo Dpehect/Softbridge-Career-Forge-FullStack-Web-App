@@ -1,15 +1,16 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles, Check, Shield, Cpu } from "lucide-react";
 
 import { useMessages } from "@/i18n/useMessages";
 import { useCareerStore } from "@/store/useCareerStore";
 import { FilePickButton } from "@/components/FilePickButton";
 import { AnimatedProductPreview } from "@/components/home/AnimatedProductPreview";
+import { WebGLBackground } from "./WebGLBackground";
 import { cleanExtractedText, parseCV } from "@/lib/forge";
 import { staggerContainer, fadeUp } from "@/motion/variants";
 import { AnimatedNumber } from "@/motion/AnimatedNumber";
@@ -20,6 +21,7 @@ export function HomeHero() {
   const { locale, messages, page } = useMessages();
   const copy = page.home;
   const prefersReduced = useReducedMotionPreference();
+  const isTr = locale === "tr";
 
   const {
     loadDemoProfile,
@@ -45,18 +47,18 @@ export function HomeHero() {
         pushForgeHistory({
           action: "parse",
           summary:
-            locale === "tr"
+            isTr
               ? `${parsed.name} CV'si içe aktarıldı`
               : `${parsed.name}'s resume was imported`,
           payload: parsed,
         });
-        toast.success(locale === "tr" ? "CV'niz çalışma alanına alındı." : "Your resume was added to the workspace.");
+        toast.success(isTr ? "CV'niz çalışma alanına alındı." : "Your resume was added to the workspace.");
         router.push("/forge");
       } catch {
-        toast.error(locale === "tr" ? "Belge okunamadı. Metin içeren PDF, DOCX veya TXT deneyin." : "The document could not be read. Try a text-based PDF, DOCX, or TXT file.");
+        toast.error(isTr ? "Belge okunamadı. Metin içeren PDF, DOCX veya TXT deneyin." : "The document could not be read. Try a text-based PDF, DOCX, or TXT file.");
       }
     },
-    [locale, copy, router, setForgeCvText, setForgeParsedCv, setLastAnalysisMeta, pushForgeHistory]
+    [isTr, router, setForgeCvText, setForgeParsedCv, setLastAnalysisMeta, pushForgeHistory]
   );
 
   const openDemo = useCallback(() => {
@@ -65,78 +67,121 @@ export function HomeHero() {
     router.push("/dashboard");
   }, [loadDemoProfile, messages, router]);
 
+  // Highlighting key brand word "Forge" in title
+  const highlightedHeadline = useMemo(() => {
+    const text = copy.heroHeadline;
+    if (text.includes("Forge")) {
+      const parts = text.split("Forge");
+      return (
+        <>
+          {parts[0]}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3b82f6] to-[#a855f7] drop-shadow-[0_0_20px_rgba(168,85,247,0.55)] font-extrabold px-1">
+            Forge
+          </span>
+          {parts[1]}
+        </>
+      );
+    }
+    return text;
+  }, [copy.heroHeadline]);
+
   return (
-    <section className="home-hero-gradient home-section">
-      <div className="max-w-[80rem] mx-auto px-4 sm:px-8 py-20 lg:py-28">
+    <section className="relative overflow-hidden min-h-[90vh] flex items-center justify-center py-20 lg:py-28">
+      {/* WebGL Canvas Background */}
+      <WebGLBackground />
+
+      {/* Floating Elements */}
+      <div className="absolute right-[8%] top-[15%] hidden xl:block z-10">
         <motion.div
-          className="grid lg:grid-cols-[1fr_1fr] gap-12 xl:gap-20 items-center"
+          animate={{ y: [0, -12, 0] }}
+          transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
+          className="rounded-xl border border-line bg-surface/50 backdrop-blur-md px-4 py-2.5 text-xs font-semibold text-brand flex items-center gap-2 shadow-2xl"
+        >
+          <Sparkles className="h-4 w-4 text-brand-strong" />
+          <span>ATS Optimized</span>
+        </motion.div>
+      </div>
+
+      <div className="absolute left-[38%] bottom-[20%] hidden xl:block z-10">
+        <motion.div
+          animate={{ y: [0, 10, 0] }}
+          transition={{ repeat: Infinity, duration: 6, ease: "easeInOut", delay: 1 }}
+          className="rounded-xl border border-line bg-surface/50 backdrop-blur-md px-4 py-2.5 text-xs font-semibold text-positive flex items-center gap-2 shadow-2xl"
+        >
+          <Check className="h-4 w-4 text-positive" />
+          <span>AI Coaching Active</span>
+        </motion.div>
+      </div>
+
+      <div className="max-w-[80rem] mx-auto px-4 sm:px-8 w-full relative z-20">
+        <motion.div
+          className="grid lg:grid-cols-[1fr_1.1fr] gap-12 xl:gap-20 items-center"
           variants={staggerContainer}
           initial={prefersReduced ? "visible" : "hidden"}
           animate="visible"
         >
-          {/* Left Column */}
-          <div className="flex flex-col items-start">
-            {/* Brand kicker */}
-            <motion.div variants={fadeUp} className="mb-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[var(--action-primary)]" />
-                <span className="font-mono text-[0.6875rem] font-semibold text-[var(--fg-tertiary)] tracking-wide uppercase">
-                  CareerForge
+          {/* Left Column: Headline and actions */}
+          <div className="flex flex-col items-start space-y-6">
+            {/* Monospace brand kicker */}
+            <motion.div variants={fadeUp}>
+              <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full border border-line bg-surface/40 backdrop-blur-sm">
+                <span className="h-2 w-2 rounded-full bg-brand animate-ping" />
+                <span className="font-mono text-[10px] font-bold text-brand-strong tracking-wider uppercase">
+                  AI CAREER SUITE
                 </span>
               </div>
             </motion.div>
 
-            {/* Headline */}
+            {/* Glowing Headline */}
             <motion.h1
               variants={fadeUp}
-              className="text-[2.75rem] sm:text-5xl lg:text-[3.5rem] xl:text-[4rem] font-bold leading-[1.05] tracking-tight text-[var(--fg-primary)] max-w-[16ch] text-balance"
+              className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.08] tracking-tight text-[var(--fg-primary)] max-w-[18ch] text-balance"
             >
-              {copy.heroHeadline}
+              {highlightedHeadline}
             </motion.h1>
 
-            {/* Supporting text */}
+            {/* Sub text */}
             <motion.p
               variants={fadeUp}
-              className="text-base sm:text-lg text-[var(--fg-secondary)] max-w-[50ch] leading-relaxed mt-6"
+              className="text-base sm:text-lg text-[var(--fg-secondary)] max-w-[50ch] leading-relaxed"
             >
               {copy.heroSub}
             </motion.p>
 
-            {/* Stats row */}
+            {/* Monospace stats dashboard */}
             <motion.div
               variants={fadeUp}
-              className="flex flex-wrap items-center gap-6 mt-8 pb-8 border-b border-[var(--border-default)] w-full"
+              className="flex flex-wrap items-center gap-6 py-5 border-y border-line w-full text-xs"
             >
-              <div className="flex flex-col">
-                <span className="text-[1.75rem] font-bold text-[var(--fg-primary)] font-mono tabular-nums leading-none">
-                  <AnimatedNumber value={6} />
-                </span>
-                <span className="text-xs text-[var(--fg-tertiary)] mt-1">
-                  {locale === "tr" ? "ATS kategorisi" : "ATS categories"}
-                </span>
+              <div className="flex items-center gap-2.5">
+                <Cpu className="h-4 w-4 text-brand" />
+                <div>
+                  <span className="font-bold text-ink block text-sm">
+                    <AnimatedNumber value={6} /> ATS
+                  </span>
+                  <span className="text-[10px] text-ink-3 uppercase font-semibold">
+                    {isTr ? "KATEGORİSİ" : "CATEGORIES"}
+                  </span>
+                </div>
               </div>
-              <div className="h-8 w-px bg-[var(--border-default)]" aria-hidden="true" />
-              <div className="flex flex-col">
-                <span className="text-[1.75rem] font-bold text-[var(--fg-primary)] font-mono tabular-nums leading-none">
-                  <AnimatedNumber value={2} />
-                </span>
-                <span className="text-xs text-[var(--fg-tertiary)] mt-1">
-                  {locale === "tr" ? "dil desteği" : "languages"}
-                </span>
-              </div>
-              <div className="h-8 w-px bg-[var(--border-default)]" aria-hidden="true" />
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-[var(--fg-primary)] leading-none">
-                  {locale === "tr" ? "Tarayıcıda" : "Browser-only"}
-                </span>
-                <span className="text-xs text-[var(--fg-tertiary)] mt-1">
-                  {locale === "tr" ? "analiz" : "analysis"}
-                </span>
+              
+              <div className="h-8 w-px bg-line hidden sm:block" />
+
+              <div className="flex items-center gap-2.5">
+                <Shield className="h-4 w-4 text-positive" />
+                <div>
+                  <span className="font-bold text-ink block text-sm">
+                    {isTr ? "%100 Güvenli" : "100% Secure"}
+                  </span>
+                  <span className="text-[10px] text-ink-3 uppercase font-semibold">
+                    {isTr ? "CİHAZ İÇİ DESTEK" : "ON-DEVICE CONTROL"}
+                  </span>
+                </div>
               </div>
             </motion.div>
 
-            {/* CTA row */}
-            <motion.div variants={fadeUp} className="flex flex-wrap gap-3 mt-8">
+            {/* Call To Actions */}
+            <motion.div variants={fadeUp} className="flex flex-wrap gap-3.5 pt-2">
               <FilePickButton
                 label={copy.heroUpload}
                 variant="primary"
@@ -147,30 +192,35 @@ export function HomeHero() {
               <button
                 type="button"
                 onClick={openDemo}
-                className="inline-flex min-h-12 items-center gap-2 rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-transparent px-5 text-sm font-semibold text-[var(--fg-primary)] transition-colors hover:bg-[var(--bg-surface-subtle)] focus-visible:outline-none focus-visible:shadow-[var(--focus-ring)]"
+                className="inline-flex min-h-12 items-center gap-2 rounded-[var(--radius-control)] border border-line bg-surface/20 backdrop-blur-sm px-6 text-sm font-semibold text-[var(--fg-primary)] hover:bg-surface-2 transition-all hover:scale-[1.02] active:scale-[0.98] duration-200 focus:outline-none"
               >
                 {copy.heroDemo}
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                <ArrowRight className="h-4 w-4" />
               </button>
             </motion.div>
 
-            {/* Privacy note */}
+            {/* Dynamic disclaimer */}
             <motion.p
               variants={fadeUp}
-              className="mt-6 text-[0.6875rem] text-[var(--fg-tertiary)] leading-5"
+              className="text-[10px] text-[var(--fg-tertiary)] flex items-center gap-1.5 pt-2"
             >
-              {locale === "tr"
-                ? "Standart analiz tarayıcıda çalışır; düzenlenmiş çalışma alanınız hesabınıza güvenli şekilde kaydedilir."
-                : "Standard analysis runs in your browser; your edited workspace is securely saved to your account."}
+              <span className="text-brand">●</span>
+              {isTr
+                ? "Tarayıcı tabanlı analiz: Dosyalarınız izniniz olmadan sunucuya kaydedilmez."
+                : "Browser-based auditing: Files are never saved to a server without account synchronization."}
             </motion.p>
           </div>
 
-          {/* Right Column: Product Preview */}
+          {/* Right Column: Floating Product Interactive Mockup */}
           <motion.div
             variants={fadeUp}
-            className="w-full flex justify-center lg:justify-end"
+            className="w-full flex justify-center lg:justify-end relative"
           >
-            <AnimatedProductPreview />
+            <div className="relative w-full max-w-[500px]">
+              {/* Backglow behind product preview */}
+              <div className="absolute inset-0 bg-[#3b82f6]/10 rounded-2xl blur-3xl -z-10" />
+              <AnimatedProductPreview />
+            </div>
           </motion.div>
         </motion.div>
       </div>
