@@ -4,7 +4,9 @@ import {
   ATS_SYSTEM_PROMPT,
   analyzeWithOllama,
   checkOllamaServer,
+  LOCAL_AI_UNAVAILABLE,
   OLLAMA_MODEL,
+  parseOllamaJson,
 } from "@/lib/ollama";
 
 export type AtsAnalysis = {
@@ -17,19 +19,20 @@ export type AnalyzeResult =
   | { ok: true; analysis: AtsAnalysis; model: string }
   | { ok: false; error: string; offline?: boolean };
 
+/** Always resolves — safe for Header status pill on Vercel. */
 export async function getAiEngineStatus() {
-  return checkOllamaServer();
-}
-
-function parseJsonLoose<T>(raw: string): T {
-  const t = raw.trim();
   try {
-    return JSON.parse(t) as T;
+    return await checkOllamaServer();
   } catch {
-    const a = t.indexOf("{");
-    const b = t.lastIndexOf("}");
-    if (a >= 0 && b > a) return JSON.parse(t.slice(a, b + 1)) as T;
-    throw new Error("Failed to parse Ollama JSON output.");
+    return {
+      online: false as const,
+      baseUrl: "(error)",
+      model: OLLAMA_MODEL,
+      latencyMs: null,
+      models: [] as string[],
+      error: LOCAL_AI_UNAVAILABLE,
+      skipped: true,
+    };
   }
 }
 
@@ -48,50 +51,53 @@ function normalize(raw: Partial<AtsAnalysis>): AtsAnalysis {
 }
 
 export async function analyzeCvOffline(formData: FormData): Promise<AnalyzeResult> {
-  const cvText = String(formData.get("cvText") ?? "").trim();
-  const jobDescription = String(formData.get("jobDescription") ?? "").trim();
-
-  if (cvText.length < 40) {
-    return { ok: false, error: "CV text is too short for analysis." };
-  }
-
-  const status = await checkOllamaServer();
-  if (!status.online) {
-    return {
-      ok: false,
-      offline: true,
-      error:
-        "Kariyerinizi bekletmeyelim — yerel AI sunucumuz şu an yanıt vermiyor. Lütfen Ollama bağlantınızı kontrol edin.",
-    };
-  }
-
-  const prompt = [
-    "TASK: ATS analysis. JSON only.",
-    "",
-    "=== JOB DESCRIPTION ===",
-    jobDescription.replace(/\s+/g, " ").trim().slice(0, 4000) || "(none)",
-    "",
-    "=== CV TEXT ===",
-    cvText.replace(/\s+/g, " ").trim().slice(0, 10000),
-  ].join("\n");
-
   try {
-    const { response, model } = await analyzeWithOllama(prompt, {
+    const cvText = String(formData.get("cvText") ?? "").trim();
+    const jobDescription = String(formData.get("jobDescription") ?? "").trim();
+
+    if (cvText.length < 40) {
+      return { ok: false, error: "CV text is too short for analysis." };
+    }
+
+    const status = await checkOllamaServer();
+    if (!status.online) {
+      return {
+        ok: false,
+        offline: true,
+        error: LOCAL_AI_UNAVAILABLE,
+      };
+    }
+
+    const prompt = [
+      "TASK: ATS analysis. JSON only.",
+      "",
+      "=== JOB DESCRIPTION ===",
+      jobDescription.replace(/\s+/g, " ").trim().slice(0, 4000) || "(none)",
+      "",
+      "=== CV TEXT ===",
+      cvText.replace(/\s+/g, " ").trim().slice(0, 10000),
+    ].join("\n");
+
+    const result = await analyzeWithOllama(prompt, {
       model: OLLAMA_MODEL,
       system: ATS_SYSTEM_PROMPT,
       temperature: 0.2,
     });
-    const analysis = normalize(parseJsonLoose<Partial<AtsAnalysis>>(response));
-    return { ok: true, analysis, model };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    const offline = /fetch failed|ECONNREFUSED|timeout|offline|AbortError/i.test(message);
-    return {
-      ok: false,
-      offline,
-      error: offline
-        ? "Kariyerinizi bekletmeyelim — yerel AI sunucumuz şu an yanıt vermiyor. Lütfen bağlantınızı kontrol edin."
-        : `Analiz tamamlanamadı: ${message}`,
-    };
+
+    if (!result.ok) {
+      return { ok: false, offline: true, error: result.error || LOCAL_AI_UNAVAILABLE };
+    }
+
+    try {
+      const parsed = parseOllamaJson<Partial<AtsAnalysis>>(result.response);
+      return { ok: true, analysis: normalize(parsed), model: result.model };
+    } catch {
+      return {
+        ok: false,
+        error: "AI returned unreadable data. Try again or use browser analysis.",
+      };
+    }
+  } catch {
+    return { ok: false, offline: true, error: LOCAL_AI_UNAVAILABLE };
   }
 }

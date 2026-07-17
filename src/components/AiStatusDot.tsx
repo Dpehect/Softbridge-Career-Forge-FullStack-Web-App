@@ -37,13 +37,13 @@ export function AiStatusDot({ pollMs = 10000, className }: Props) {
       className={cn("inline-flex items-center gap-1.5 rounded-full px-1.5 py-1", className)}
       title={
         isUnknown
-          ? "Yerel AI kontrol ediliyor…"
+          ? "AI kontrol ediliyor…"
           : isOnline
-            ? "Yerel AI Hazır"
-            : "Bağlantı Yok — ollama serve"
+            ? "Local AI Ready"
+            : "Local AI unavailable (Vercel’de localhost Ollama yok)"
       }
       role="status"
-      aria-label={isOnline ? "Yerel AI Hazır" : "Bağlantı Yok"}
+      aria-label={isOnline ? "Local AI Ready" : "Local AI unavailable"}
     >
       <span
         className={cn(
@@ -54,7 +54,7 @@ export function AiStatusDot({ pollMs = 10000, className }: Props) {
         )}
       />
       <span className="hidden text-[10px] font-semibold tracking-wide text-slate-500 sm:inline">
-        {isUnknown ? "AI…" : isOnline ? "AI Hazır" : "Çevrimdışı"}
+        {isUnknown ? "AI…" : isOnline ? "AI Ready" : "AI offline"}
       </span>
     </div>
   );

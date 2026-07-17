@@ -21,40 +21,58 @@ export function generateCvFeedback(cv: ParsedCV, rawText = ""): CvDeepFeedback {
   const improvements: string[] = [];
   const careerAdvice: string[] = [];
 
-  const allBullets = cv.experience.flatMap((e) => e.description);
+  // Defensive: corrupted localStorage / partial CV must never crash the page
+  const experience = Array.isArray(cv?.experience) ? cv.experience : [];
+  const skills = Array.isArray(cv?.skills) ? cv.skills : [];
+  const allBullets = experience.flatMap((e) =>
+    Array.isArray(e?.description) ? e.description : []
+  );
   const metricBullets = allBullets.filter(hasMetrics);
-  const ats = analyzeAts(cv, rawText || cv.skills.join(" "));
+  const safeCv: ParsedCV = {
+    ...cv,
+    name: cv?.name || "Candidate",
+    title: cv?.title || "Professional",
+    email: cv?.email || "",
+    phone: cv?.phone ?? null,
+    location: cv?.location ?? null,
+    summary: cv?.summary ?? null,
+    experience,
+    skills,
+    education: Array.isArray(cv?.education) ? cv.education : [],
+    rawLength: cv?.rawLength ?? 0,
+  };
+  const ats = analyzeAts(safeCv, rawText || skills.join(" "));
 
   // —— Strengths ——
-  if (cv.name && cv.name !== "Candidate" && cv.name !== "Aday") {
-    strengths.push(`Clear candidate identity (“${cv.name}”) — recruiters can attribute the file quickly.`);
+  if (safeCv.name && safeCv.name !== "Candidate" && safeCv.name !== "Aday") {
+    strengths.push(`Clear candidate identity (“${safeCv.name}”) — recruiters can attribute the file quickly.`);
   }
-  if (cv.title && cv.title.length > 3) {
-    strengths.push(`Professional headline is present (“${cv.title}”), which helps both humans and ATS keyword matching.`);
+  if (safeCv.title && safeCv.title.length > 3) {
+    strengths.push(`Professional headline is present (“${safeCv.title}”), which helps both humans and ATS keyword matching.`);
   }
-  if (cv.email) {
+  if (safeCv.email) {
     strengths.push("Contact email is available — a basic but critical hire-path requirement.");
   }
-  if (cv.skills.length >= 6) {
-    strengths.push(`Solid skill surface area (${cv.skills.length} skills listed): ${cv.skills.slice(0, 6).join(", ")}${cv.skills.length > 6 ? "…" : ""}.`);
-  } else if (cv.skills.length >= 3) {
-    strengths.push(`Core skills are listed (${cv.skills.join(", ")}).`);
+  if (skills.length >= 6) {
+    strengths.push(`Solid skill surface area (${skills.length} skills listed): ${skills.slice(0, 6).join(", ")}${skills.length > 6 ? "…" : ""}.`);
+  } else if (skills.length >= 3) {
+    strengths.push(`Core skills are listed (${skills.join(", ")}).`);
   }
-  if (cv.experience.length >= 2) {
-    strengths.push(`Multiple experience blocks (${cv.experience.length}) give a career narrative beyond a single role.`);
-  } else if (cv.experience.length === 1) {
+  if (experience.length >= 2) {
+    strengths.push(`Multiple experience blocks (${experience.length}) give a career narrative beyond a single role.`);
+  } else if (experience.length === 1) {
     strengths.push("At least one experience block is structured — a foundation you can expand with stronger outcomes.");
   }
   if (metricBullets.length >= 2) {
     strengths.push(`${metricBullets.length} achievement lines already use numbers or measurable language — keep leaning into that.`);
   }
-  if (cv.summary && cv.summary.length > 80) {
+  if (safeCv.summary && safeCv.summary.length > 80) {
     strengths.push("Summary/profile text exists and can frame your positioning before the experience list.");
   }
-  if (cv.education.length > 0) {
+  if (safeCv.education.length > 0) {
     strengths.push("Education is present for screening filters that still check degree/school fields.");
   }
-  if (cv.photoDataUrl) {
+  if (safeCv.photoDataUrl) {
     strengths.push("Profile photo is attached for export-facing versions of the CV (keep ATS plain-text versions photo-free when needed).");
   }
   if (!strengths.length) {
@@ -62,22 +80,22 @@ export function generateCvFeedback(cv: ParsedCV, rawText = ""): CvDeepFeedback {
   }
 
   // —— Weaknesses ——
-  if (!cv.email) {
+  if (!safeCv.email) {
     weaknesses.push("No email detected — many ATS systems and recruiters will bounce incomplete contact blocks.");
   }
-  if (!cv.phone) {
+  if (!safeCv.phone) {
     weaknesses.push("Phone number missing — optional in some markets, but still useful for high-intent roles.");
   }
-  if (!cv.location) {
+  if (!safeCv.location) {
     weaknesses.push("Location not stated — hybrid/on-site filters may skip you without city/region or “Remote”.");
   }
-  if (!cv.summary || cv.summary.length < 60) {
+  if (!safeCv.summary || safeCv.summary.length < 60) {
     weaknesses.push("Summary is thin or missing — you lose a high-attention slot to state target role + proof + direction.");
   }
-  if (cv.skills.length < 5) {
+  if (skills.length < 5) {
     weaknesses.push("Skill list is short for technical hiring screens — aim for 8–14 real, role-relevant skills.");
   }
-  if (cv.experience.length === 0) {
+  if (experience.length === 0) {
     weaknesses.push("No experience blocks detected — even projects/internships should appear as structured roles.");
   }
   if (allBullets.length > 0 && metricBullets.length === 0) {
@@ -89,10 +107,10 @@ export function generateCvFeedback(cv: ParsedCV, rawText = ""): CvDeepFeedback {
   if (allBullets.some((b) => /responsible for|helped with|worked on/i.test(b))) {
     weaknesses.push("Passive duty language (“responsible for / helped with”) weakens impact versus ownership verbs.");
   }
-  if (cv.experience.some((e) => e.description.length < 2)) {
+  if (experience.some((e) => (Array.isArray(e?.description) ? e.description.length : 0) < 2)) {
     weaknesses.push("One or more roles have too few bullets — thin roles look unfinished in senior screens.");
   }
-  if (!cv.education.length) {
+  if (!safeCv.education.length) {
     weaknesses.push("Education section empty — add school/degree/year if relevant, or a certifications block.");
   }
   if (ats.atsScore < 60) {

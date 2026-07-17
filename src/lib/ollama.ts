@@ -1,18 +1,27 @@
 /**
- * Local Ollama client — native fetch only (offline-ready).
+ * CareerForge — environment-safe Ollama client (native fetch only).
+ * Never crashes the app when Ollama is missing or when deployed on Vercel.
  */
 
-/**
- * On Vercel, localhost Ollama is unreachable from serverless.
- * Leave OLLAMA_BASE_URL unset (or point to a public tunnel) in production.
- */
-const isVercel = process.env.VERCEL === "1";
+const isVercel =
+  process.env.VERCEL === "1" ||
+  process.env.NEXT_PUBLIC_VERCEL_ENV === "production" ||
+  process.env.NODE_ENV === "production";
 
-export const OLLAMA_BASE_URL =
-  process.env.OLLAMA_BASE_URL?.replace(/\/$/, "") ||
-  (isVercel ? "" : "http://localhost:11434");
+/** Explicit public URL only — never default to localhost on Vercel/production. */
+export const OLLAMA_BASE_URL = (() => {
+  const raw = process.env.OLLAMA_BASE_URL?.trim().replace(/\/$/, "") || "";
+  if (raw) return raw;
+  // Local dev convenience only
+  if (!isVercel && process.env.NODE_ENV === "development") {
+    return "http://localhost:11434";
+  }
+  return "";
+})();
 
 export const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3";
+
+export const LOCAL_AI_UNAVAILABLE = "Local AI unavailable";
 
 export type OllamaStatus = {
   online: boolean;
@@ -21,34 +30,54 @@ export type OllamaStatus = {
   latencyMs: number | null;
   models: string[];
   error?: string;
+  /** True when production has no Ollama endpoint configured */
+  skipped?: boolean;
 };
 
-export async function checkOllamaServer(timeoutMs = 2500): Promise<OllamaStatus> {
-  const baseUrl = OLLAMA_BASE_URL;
-  const model = OLLAMA_MODEL;
-  const started = Date.now();
+export function isLocalAiConfigured(): boolean {
+  return Boolean(OLLAMA_BASE_URL);
+}
 
-  if (!baseUrl) {
+/**
+ * Probe Ollama. Always resolves — never throws.
+ */
+export async function checkOllamaServer(timeoutMs = 2000): Promise<OllamaStatus> {
+  const model = OLLAMA_MODEL;
+
+  if (!OLLAMA_BASE_URL) {
     return {
       online: false,
       baseUrl: "(not configured)",
       model,
       latencyMs: 0,
       models: [],
-      error: isVercel
-        ? "Ollama is not configured on Vercel (set OLLAMA_BASE_URL to a public URL)"
-        : "OLLAMA_BASE_URL missing",
+      skipped: true,
+      error: LOCAL_AI_UNAVAILABLE,
     };
   }
 
+  // Extra safety: never hit bare localhost from a known serverless host
+  if (
+    isVercel &&
+    /localhost|127\.0\.0\.1/i.test(OLLAMA_BASE_URL)
+  ) {
+    return {
+      online: false,
+      baseUrl: OLLAMA_BASE_URL,
+      model,
+      latencyMs: 0,
+      models: [],
+      skipped: true,
+      error: LOCAL_AI_UNAVAILABLE,
+    };
+  }
+
+  const started = Date.now();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  console.log("[CareerForge/Ollama] Checking local engine…");
-  console.log(`[CareerForge/Ollama] GET ${baseUrl}/api/tags`);
-
   try {
-    const res = await fetch(`${baseUrl}/api/tags`, {
+    const res = await fetch(`${OLLAMA_BASE_URL}/api/tags`, {
       method: "GET",
       signal: controller.signal,
       cache: "no-store",
@@ -56,86 +85,112 @@ export async function checkOllamaServer(timeoutMs = 2500): Promise<OllamaStatus>
     const latencyMs = Date.now() - started;
 
     if (!res.ok) {
-      console.error(`[CareerForge/Ollama] OFFLINE — HTTP ${res.status}`);
-      console.error("[CareerForge/Ollama] Debug: run `ollama serve` then `curl http://localhost:11434/api/tags`");
       return {
         online: false,
-        baseUrl,
+        baseUrl: OLLAMA_BASE_URL,
         model,
         latencyMs,
         models: [],
-        error: `HTTP ${res.status}`,
+        error: LOCAL_AI_UNAVAILABLE,
       };
     }
 
     const data = (await res.json()) as { models?: { name?: string }[] };
     const models = (data.models ?? []).map((m) => m.name || "").filter(Boolean);
 
-    console.log(
-      `[CareerForge/Ollama] ONLINE — ${latencyMs}ms — models: ${models.join(", ") || "(none)"}`
-    );
-
-    return { online: true, baseUrl, model, latencyMs, models };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("[CareerForge/Ollama] OFFLINE —", message);
-    console.error("[CareerForge/Ollama] Checklist: ollama serve · ollama list · curl localhost:11434/api/tags");
+    return {
+      online: true,
+      baseUrl: OLLAMA_BASE_URL,
+      model,
+      latencyMs,
+      models,
+    };
+  } catch {
     return {
       online: false,
-      baseUrl,
+      baseUrl: OLLAMA_BASE_URL,
       model,
       latencyMs: Date.now() - started,
       models: [],
-      error: message,
+      error: LOCAL_AI_UNAVAILABLE,
     };
   } finally {
     clearTimeout(timer);
   }
 }
 
+export type AnalyzeWithOllamaResult =
+  | { ok: true; response: string; model: string }
+  | { ok: false; error: string; offline: true };
+
+/**
+ * POST /api/generate. Never throws — returns { ok: false } when offline.
+ */
 export async function analyzeWithOllama(
   prompt: string,
-  options: { model?: string; system?: string; temperature?: number; timeoutMs?: number } = {}
-): Promise<{ response: string; model: string }> {
+  options: {
+    model?: string;
+    system?: string;
+    temperature?: number;
+    timeoutMs?: number;
+  } = {}
+): Promise<AnalyzeWithOllamaResult> {
   const model = options.model || OLLAMA_MODEL;
-  const timeoutMs = options.timeoutMs ?? 120_000;
-
-  if (!OLLAMA_BASE_URL) {
-    throw new Error(
-      "Yerel AI yapılandırılmadı. Vercel’de OLLAMA_BASE_URL ortam değişkenini ayarlayın veya tarayıcı içi analizi kullanın."
-    );
-  }
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timeoutMs = options.timeoutMs ?? 60_000;
 
   try {
-    const res = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      cache: "no-store",
-      signal: controller.signal,
-      body: JSON.stringify({
-        model,
-        prompt,
-        system: options.system,
-        stream: false,
-        format: "json",
-        options: { temperature: options.temperature ?? 0.2 },
-      }),
-    });
-
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(`Ollama generate failed (${res.status}): ${body.slice(0, 180)}`);
+    const status = await checkOllamaServer(Math.min(timeoutMs, 2500));
+    if (!status.online) {
+      return { ok: false, error: LOCAL_AI_UNAVAILABLE, offline: true };
     }
 
-    const data = (await res.json()) as { response?: string; model?: string };
-    const response = (data.response ?? "").trim();
-    if (!response) throw new Error("Ollama returned an empty response.");
-    return { response, model: data.model || model };
-  } finally {
-    clearTimeout(timer);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const res = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        signal: controller.signal,
+        body: JSON.stringify({
+          model,
+          prompt,
+          system: options.system,
+          stream: false,
+          format: "json",
+          options: { temperature: options.temperature ?? 0.2 },
+        }),
+      });
+
+      if (!res.ok) {
+        return { ok: false, error: LOCAL_AI_UNAVAILABLE, offline: true };
+      }
+
+      const data = (await res.json()) as { response?: string; model?: string };
+      const response = (data.response ?? "").trim();
+      if (!response) {
+        return { ok: false, error: LOCAL_AI_UNAVAILABLE, offline: true };
+      }
+
+      return { ok: true, response, model: data.model || model };
+    } finally {
+      clearTimeout(timer);
+    }
+  } catch {
+    return { ok: false, error: LOCAL_AI_UNAVAILABLE, offline: true };
+  }
+}
+
+export function parseOllamaJson<T>(raw: string): T {
+  const t = raw.trim();
+  try {
+    return JSON.parse(t) as T;
+  } catch {
+    const a = t.indexOf("{");
+    const b = t.lastIndexOf("}");
+    if (a >= 0 && b > a) return JSON.parse(t.slice(a, b + 1)) as T;
+    throw new Error("Failed to parse Ollama JSON output.");
   }
 }
 

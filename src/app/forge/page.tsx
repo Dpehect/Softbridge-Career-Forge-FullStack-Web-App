@@ -120,26 +120,32 @@ export default function ForgePage() {
   }, []);
 
   // Hooks must run every render — never below an early return
-  const cvText = forgeCvText;
-  const jdText = forgeJdText;
+  const cvText = forgeCvText ?? "";
+  const jdText = forgeJdText ?? "";
   const isLoading = busy || aiLoading;
 
-  const cvFeedback = useMemo(
-    () => (forgeParsedCv ? generateCvFeedback(forgeParsedCv, forgeCvText) : null),
-    [forgeParsedCv, forgeCvText]
-  );
+  const cvFeedback = useMemo(() => {
+    try {
+      if (!forgeParsedCv) return null;
+      return generateCvFeedback(forgeParsedCv, forgeCvText || "");
+    } catch {
+      return null;
+    }
+  }, [forgeParsedCv, forgeCvText]);
 
-  const journeyInsight = useMemo(
-    () =>
-      buildJourneyInsight({
+  const journeyInsight = useMemo(() => {
+    try {
+      return buildJourneyInsight({
         cv: forgeParsedCv,
-        goalId: careerGoalId,
+        goalId: careerGoalId ?? null,
         atsScore: ats?.atsScore ?? forgeAnalysis?.atsScore ?? cvFeedback?.atsScore,
         feedback: cvFeedback,
         missingFromMatch: forgeAnalysis?.missingSkills,
-      }),
-    [forgeParsedCv, careerGoalId, ats, forgeAnalysis, cvFeedback]
-  );
+      });
+    } catch {
+      return buildJourneyInsight({ cv: null, goalId: null });
+    }
+  }, [forgeParsedCv, careerGoalId, ats, forgeAnalysis, cvFeedback]);
 
   if (!mounted) {
     return (
@@ -156,10 +162,13 @@ export default function ForgePage() {
       await fn();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "";
-      const offline = /fetch failed|ECONNREFUSED|timeout|offline|Ollama/i.test(message);
+      const offline =
+        /fetch failed|ECONNREFUSED|timeout|offline|Ollama|Local AI unavailable/i.test(
+          message
+        );
       toast.error(
         offline
-          ? "Yerel yapay zeka motorumuz şu an yanıt vermiyor. Lütfen ollama serve komutunun çalıştığından emin olun."
+          ? "Local AI unavailable — tarayıcı içi analiz devam eder. (Vercel’de localhost Ollama yok.)"
           : message || "Bir sorun oluştu — tekrar deneyin."
       );
     } finally {
@@ -265,95 +274,126 @@ export default function ForgePage() {
 
   const onAnalyze = () =>
     run(async () => {
-      if (!forgeParsedCv) return;
-      if (!jdText.trim()) {
-        toast.error("Please paste the Job Description (JD) text first.");
-        return;
+      try {
+        if (!forgeParsedCv) return;
+        if (!jdText.trim()) {
+          toast.error("Önce iş ilanı (JD) metnini yapıştırın.");
+          return;
+        }
+        const analysis = await getJobMatch(forgeParsedCv, jdText);
+        setForgeAnalysis(analysis);
+        pushForgeHistory({
+          action: "analyze",
+          summary: `Match %${analysis.matchScore} · ATS %${analysis.atsScore}`,
+          payload: analysis,
+        });
+        toast.success(`Eşleşme skoru: %${analysis.matchScore}`);
+        setPreviewTab("match");
+      } catch (e) {
+        toast.error(
+          e instanceof Error && /Local AI|Ollama|offline/i.test(e.message)
+            ? "Local AI unavailable"
+            : "Eşleştirme yapılamadı — tarayıcı analiziyle devam edin."
+        );
       }
-      const analysis = await getJobMatch(forgeParsedCv, jdText);
-      setForgeAnalysis(analysis);
-      pushForgeHistory({
-        action: "analyze",
-        summary: `Match %${analysis.matchScore} · ATS %${analysis.atsScore}`,
-        payload: analysis,
-      });
-      toast.success(`Match Score: %${analysis.matchScore}`);
-      setPreviewTab("match");
     });
 
   const onOptimize = () =>
     run(async () => {
-      if (!forgeParsedCv) return;
-      const result = await getOptimization(forgeParsedCv, jdText);
-      setOptimized(result);
-      pushForgeHistory({
-        action: "optimize",
-        summary: `${result.optimizedSkills.length} skills optimized`,
-        payload: result,
-      });
-      toast.success("CV optimized successfully");
-      setPreviewTab("preview");
+      try {
+        if (!forgeParsedCv) return;
+        const result = await getOptimization(forgeParsedCv, jdText);
+        setOptimized(result);
+        pushForgeHistory({
+          action: "optimize",
+          summary: `${result.optimizedSkills.length} skills optimized`,
+          payload: result,
+        });
+        toast.success("CV optimize edildi");
+        setPreviewTab("preview");
+      } catch {
+        toast.error("Optimizasyon tamamlanamadı — sayfa çalışmaya devam ediyor.");
+      }
     });
 
   const onCover = () =>
     run(async () => {
-      if (!forgeParsedCv) return;
-      if (!jdText.trim()) {
-        toast.error("Please paste the JD text first.");
-        return;
+      try {
+        if (!forgeParsedCv) return;
+        if (!jdText.trim()) {
+          toast.error("Önce JD metnini yapıştırın.");
+          return;
+        }
+        const result = await getCoverLetter(forgeParsedCv, jdText, forgeTone);
+        setCover(result);
+        pushForgeHistory({
+          action: "coverletter",
+          summary: `${result.tone} tone cover letter`,
+          payload: result,
+        });
+        toast.success("Ön yazı oluşturuldu");
+        setPreviewTab("cover");
+      } catch {
+        toast.error("Local AI unavailable — ön yazı üretilemedi, sayfa açık kalır.");
       }
-      const result = await getCoverLetter(forgeParsedCv, jdText, forgeTone);
-      setCover(result);
-      pushForgeHistory({
-        action: "coverletter",
-        summary: `${result.tone} tone cover letter`,
-        payload: result,
-      });
-      toast.success("Cover letter generated");
-      setPreviewTab("cover");
     });
 
   const onAts = () =>
     run(async () => {
-      if (!forgeParsedCv) return;
-      await new Promise((r) => setTimeout(r, 600));
-      const result = analyzeAts(forgeParsedCv, jdText);
-      setAts(result);
-      pushForgeHistory({
-        action: "ats",
-        summary: `ATS score: %${result.atsScore}`,
-        payload: result,
-      });
-      toast.success(`ATS Score: %${result.atsScore}`);
-      setPreviewTab("feedback");
+      try {
+        if (!forgeParsedCv) return;
+        await new Promise((r) => setTimeout(r, 600));
+        const result = analyzeAts(forgeParsedCv, jdText);
+        setAts(result);
+        pushForgeHistory({
+          action: "ats",
+          summary: `ATS score: %${result.atsScore}`,
+          payload: result,
+        });
+        toast.success(`ATS Score: %${result.atsScore}`);
+        setPreviewTab("feedback");
+      } catch {
+        toast.error("ATS taraması tamamlanamadı — sayfa açık kalır.");
+      }
     });
 
   const onInterview = () =>
     run(async () => {
-      const parsed = forgeParsedCv || parseCV(cvText || "Aday\nSoftware Engineer\nReact");
-      if (!forgeParsedCv && cvText.trim()) setForgeParsedCv(parsed);
-      const result = await getInterviewPrep(parsed, jdText);
-      setInterview(result);
-      pushForgeHistory({
-        action: "interview",
-        summary: `${result.questions.length} questions ready`,
-        payload: result,
-      });
-      toast.success("Interview prep ready");
-      setPreviewTab("interview");
+      try {
+        const parsed = forgeParsedCv || parseCV(cvText || "Aday\nSoftware Engineer\nReact");
+        if (!forgeParsedCv && cvText.trim()) setForgeParsedCv(parsed);
+        const result = await getInterviewPrep(parsed, jdText);
+        setInterview(result);
+        pushForgeHistory({
+          action: "interview",
+          summary: `${result.questions.length} questions ready`,
+          payload: result,
+        });
+        toast.success("Mülakat soruları hazır");
+        setPreviewTab("interview");
+      } catch {
+        toast.error("Local AI unavailable — mülakat soruları üretilemedi.");
+      }
     });
 
   const onChat = () =>
     run(async () => {
-      if (!forgeParsedCv) return;
-      const result = await simulateAIResponse("chat", forgeParsedCv, { message: chatInput, jd: jdText });
-      setChatResult(result);
-      pushForgeHistory({
-        action: "chatbot",
-        summary: `${result.category}: ${result.response.slice(0, 45)}…`,
-        payload: result,
-      });
-      setPreviewTab("chat");
+      try {
+        if (!forgeParsedCv) return;
+        const result = await simulateAIResponse("chat", forgeParsedCv, {
+          message: chatInput,
+          jd: jdText,
+        });
+        setChatResult(result);
+        pushForgeHistory({
+          action: "chatbot",
+          summary: `${result.category}: ${result.response.slice(0, 45)}…`,
+          payload: result,
+        });
+        setPreviewTab("chat");
+      } catch {
+        toast.error("Local AI unavailable — sohbet yanıtı üretilemedi.");
+      }
     });
 
   // Form Editor Actions
