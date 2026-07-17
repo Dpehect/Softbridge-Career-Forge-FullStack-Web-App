@@ -20,9 +20,7 @@ const geistMono = Geist_Mono({
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  (process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "https://softbridge-career-forge-full-stack-brown.vercel.app");
+  "https://softbridge-career-forge-full-stack-brown.vercel.app";
 
 export const metadata: Metadata = {
   applicationName: "CareerForge",
