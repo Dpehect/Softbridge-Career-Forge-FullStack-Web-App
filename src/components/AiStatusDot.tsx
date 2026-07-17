@@ -1,60 +1,53 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { getAiEngineStatus } from "@/app/actions";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+  preloadBrowserAi,
+  subscribeClientAi,
+  type ClientAiStatus,
+} from "@/lib/clientAi";
 
-type Props = {
-  pollMs?: number;
-  className?: string;
-};
-
-/** Header: yeşil = Yerel AI Hazır, kırmızı = Bağlantı Yok */
-export function AiStatusDot({ pollMs = 10000, className }: Props) {
-  const [online, setOnline] = useState<boolean | null>(null);
-
-  const probe = useCallback(async () => {
-    try {
-      const s = await getAiEngineStatus();
-      setOnline(s.online);
-    } catch {
-      setOnline(false);
-    }
-  }, []);
+/**
+ * Header pill for browser AI (Transformers.js) — no server calls.
+ */
+export function AiStatusDot({ className }: { className?: string }) {
+  const [status, setStatus] = useState<ClientAiStatus>("idle");
+  const [message, setMessage] = useState("Browser AI");
 
   useEffect(() => {
-    void probe();
-    if (!pollMs) return;
-    const id = window.setInterval(() => void probe(), pollMs);
-    return () => window.clearInterval(id);
-  }, [probe, pollMs]);
+    const unsub = subscribeClientAi((p) => {
+      setStatus(p.status);
+      setMessage(p.message);
+    });
+    preloadBrowserAi();
+    return () => {
+      unsub();
+    };
+  }, []);
 
-  const isOnline = online === true;
-  const isUnknown = online === null;
+  const ready = status === "ready";
+  const loading = status === "loading";
+  const error = status === "error";
 
   return (
     <div
       className={cn("inline-flex items-center gap-1.5 rounded-full px-1.5 py-1", className)}
-      title={
-        isUnknown
-          ? "AI kontrol ediliyor…"
-          : isOnline
-            ? "Local AI Ready"
-            : "Local AI unavailable (Vercel’de localhost Ollama yok)"
-      }
+      title={message}
       role="status"
-      aria-label={isOnline ? "Local AI Ready" : "Local AI unavailable"}
+      aria-label={message}
     >
       <span
         className={cn(
           "h-2 w-2 shrink-0 rounded-full",
-          isUnknown && "bg-slate-400 animate-pulse",
-          isOnline && "bg-green-500",
-          !isUnknown && !isOnline && "bg-red-500"
+          loading && "bg-amber-400 animate-pulse",
+          ready && "bg-green-500",
+          error && "bg-red-500",
+          status === "idle" && "bg-slate-400"
         )}
       />
       <span className="hidden text-[10px] font-semibold tracking-wide text-slate-500 sm:inline">
-        {isUnknown ? "AI…" : isOnline ? "AI Ready" : "AI offline"}
+        {loading ? "AI loading…" : ready ? "Browser AI" : error ? "AI error" : "AI"}
       </span>
     </div>
   );

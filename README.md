@@ -19,28 +19,24 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Client-side AI (no backend)
+
+- **Engine:** Transformers.js (`@xenova/transformers`)
+- **Model:** `Xenova/all-MiniLM-L6-v2` (embeddings, quantized)
+- **Where it runs:** User browser only (first visit downloads the model once)
+- **Service:** `src/lib/clientAi.ts` · hook: `src/hooks/useClientAi.ts`
+- **Removed:** Ollama, server actions for AI, API keys
+
 ## Deploy on Vercel
 
-1. Push this repo to GitHub (already: `Dpehect/Softbridge-Career-Forge-FullStack-Web-App`).
-2. [vercel.com/new](https://vercel.com/new) → **Import** the GitHub repo.
-3. Framework: **Next.js** (auto). Root directory: `.` · Node **20+**.
-4. **Environment Variables** (Project → Settings → Environment Variables):
-
-| Name | Value | Notes |
-| ---- | ----- | ----- |
-| `NEXT_PUBLIC_SITE_URL` | `https://your-domain.vercel.app` | Production URL (after first deploy, update) |
-| `OLLAMA_BASE_URL` | *(optional)* | Public HTTPS Ollama endpoint only. **Do not use localhost on Vercel.** |
-| `OLLAMA_MODEL` | `llama3` | Optional |
-
-5. Deploy. Client-side CV analysis works without Ollama. Header AI light will show **offline** on Vercel unless you expose a remote Ollama URL.
+1. Import GitHub repo on [vercel.com/new](https://vercel.com/new).
+2. Framework: **Next.js** · Node **20+**.
+3. Optional env: `NEXT_PUBLIC_SITE_URL=https://your-app.vercel.app`
+4. Deploy — **no AI keys required**. Model loads in the visitor’s browser.
 
 ```bash
-# CLI alternative
-npx vercel
 npx vercel --prod
 ```
-
-Config files: `vercel.json`, `.env.example`, `next.config.ts` (serverActions body limit).
 
 ## Scripts
 

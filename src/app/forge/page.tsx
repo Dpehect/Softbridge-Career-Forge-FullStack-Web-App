@@ -40,7 +40,6 @@ import {
   exportCvAsPdf,
   generateCvFeedback,
   simulateAIResponse,
-  useForgeAI,
   type CoverLetterTone,
   type OptimizedCV,
   type CoverLetterResult,
@@ -48,6 +47,7 @@ import {
   type ChatbotResult,
   type AtsResult,
   type ParsedCV,
+  type MatchAnalysis,
 } from "@/lib/forge";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/forge/i18n";
@@ -55,6 +55,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { JourneyResults } from "@/components/JourneyResults";
 import { buildJourneyInsight } from "@/lib/forge/journey";
+import { useClientAi } from "@/hooks/useClientAi";
 
 type EditorTabId = "raw" | "form" | "versions";
 type PreviewTabId = "preview" | "feedback" | "match" | "cover" | "interview" | "chat";
@@ -98,15 +99,17 @@ export default function ForgePage() {
   const [busy, setBusy] = useState(false);
   const [parseBanner, setParseBanner] = useState<string | null>(null);
   const [lastCvFileName, setLastCvFileName] = useState<string | null>(null);
+  const [modelBanner, setModelBanner] = useState<string | null>(null);
 
+  // 100% browser AI (Transformers.js) — no server fetch
   const {
-    loading: aiLoading,
-    error: aiError,
-    getJobMatch,
-    getOptimization,
-    getCoverLetter,
-    getInterviewPrep
-  } = useForgeAI();
+    analyze: analyzeInBrowser,
+    analyzing,
+    statusMessage,
+    isLoadingModel,
+    error: clientAiError,
+    ensureReady,
+  } = useClientAi();
 
   // Sync tab hash routing & hydration mounting
   useEffect(() => {
@@ -117,12 +120,16 @@ export default function ForgePage() {
         setEditorTab("versions");
       }
     }
-  }, []);
+    // Warm embedding model once on first Forge visit
+    void ensureReady().catch(() => {
+      /* status shown via statusMessage */
+    });
+  }, [ensureReady]);
 
   // Hooks must run every render — never below an early return
   const cvText = forgeCvText ?? "";
   const jdText = forgeJdText ?? "";
-  const isLoading = busy || aiLoading;
+  const isLoading = busy || analyzing || isLoadingModel;
 
   const cvFeedback = useMemo(() => {
     try {
@@ -272,28 +279,59 @@ export default function ForgePage() {
       runParse(cvText, "manual", undefined, true);
     });
 
+  /** Primary path: Transformers.js embeddings in the browser */
   const onAnalyze = () =>
     run(async () => {
       try {
-        if (!forgeParsedCv) return;
+        if (!forgeParsedCv && !cvText.trim()) {
+          toast.error("Önce CV yükleyin veya yapıştırın.");
+          return;
+        }
         if (!jdText.trim()) {
           toast.error("Önce iş ilanı (JD) metnini yapıştırın.");
           return;
         }
-        const analysis = await getJobMatch(forgeParsedCv, jdText);
+        setModelBanner("Analyzing… (first run may download the model)");
+        const semantic = await analyzeInBrowser(
+          cvText || JSON.stringify(forgeParsedCv),
+          jdText,
+          forgeParsedCv?.skills ?? []
+        );
+        const analysis: MatchAnalysis = {
+          matchScore: semantic.matchScore,
+          atsScore: semantic.atsScore,
+          strengths: semantic.strengths,
+          gaps: semantic.gaps,
+          suggestions: semantic.suggestions,
+          matchedSkills: semantic.matchedKeywords,
+          missingSkills: semantic.missingKeywords,
+        };
         setForgeAnalysis(analysis);
+        setAts({
+          atsScore: semantic.atsScore,
+          issues: semantic.gaps,
+          fixes: semantic.suggestions,
+          keywordCoverage: Math.round(
+            (semantic.matchedKeywords.length /
+              Math.max(
+                1,
+                semantic.matchedKeywords.length + semantic.missingKeywords.length
+              )) *
+              100
+          ),
+        });
         pushForgeHistory({
           action: "analyze",
-          summary: `Match %${analysis.matchScore} · ATS %${analysis.atsScore}`,
+          summary: `Browser AI · Match %${analysis.matchScore} · ATS %${analysis.atsScore}`,
           payload: analysis,
         });
-        toast.success(`Eşleşme skoru: %${analysis.matchScore}`);
+        setModelBanner(null);
+        toast.success(`Eşleşme: %${analysis.matchScore} (tarayıcı AI)`);
         setPreviewTab("match");
       } catch (e) {
+        setModelBanner(null);
         toast.error(
-          e instanceof Error && /Local AI|Ollama|offline/i.test(e.message)
-            ? "Local AI unavailable"
-            : "Eşleştirme yapılamadı — tarayıcı analiziyle devam edin."
+          e instanceof Error ? e.message : "Analiz tamamlanamadı — model indirmeyi kontrol edin."
         );
       }
     });
@@ -302,17 +340,20 @@ export default function ForgePage() {
     run(async () => {
       try {
         if (!forgeParsedCv) return;
-        const result = await getOptimization(forgeParsedCv, jdText);
+        // Local heuristic optimizer (already client-side, no network)
+        const { optimizeCV } = await import("@/lib/forge/optimize");
+        const match = forgeAnalysis;
+        const result = optimizeCV(forgeParsedCv, match, jdText);
         setOptimized(result);
         pushForgeHistory({
           action: "optimize",
           summary: `${result.optimizedSkills.length} skills optimized`,
           payload: result,
         });
-        toast.success("CV optimize edildi");
+        toast.success("CV optimize edildi (cihazda)");
         setPreviewTab("preview");
       } catch {
-        toast.error("Optimizasyon tamamlanamadı — sayfa çalışmaya devam ediyor.");
+        toast.error("Optimizasyon tamamlanamadı.");
       }
     });
 
@@ -324,17 +365,20 @@ export default function ForgePage() {
           toast.error("Önce JD metnini yapıştırın.");
           return;
         }
-        const result = await getCoverLetter(forgeParsedCv, jdText, forgeTone);
+        const result = await simulateAIResponse("coverletter", forgeParsedCv, {
+          jd: jdText,
+          tone: forgeTone,
+        });
         setCover(result);
         pushForgeHistory({
           action: "coverletter",
           summary: `${result.tone} tone cover letter`,
           payload: result,
         });
-        toast.success("Ön yazı oluşturuldu");
+        toast.success("Ön yazı oluşturuldu (cihazda)");
         setPreviewTab("cover");
       } catch {
-        toast.error("Local AI unavailable — ön yazı üretilemedi, sayfa açık kalır.");
+        toast.error("Ön yazı üretilemedi.");
       }
     });
 
@@ -342,37 +386,77 @@ export default function ForgePage() {
     run(async () => {
       try {
         if (!forgeParsedCv) return;
-        await new Promise((r) => setTimeout(r, 600));
-        const result = analyzeAts(forgeParsedCv, jdText);
-        setAts(result);
-        pushForgeHistory({
-          action: "ats",
-          summary: `ATS score: %${result.atsScore}`,
-          payload: result,
-        });
-        toast.success(`ATS Score: %${result.atsScore}`);
+        setModelBanner("Analyzing…");
+        // Prefer semantic ATS when JD present; else structural local scan
+        if (jdText.trim()) {
+          const semantic = await analyzeInBrowser(
+            cvText || forgeParsedCv.skills.join(" "),
+            jdText,
+            forgeParsedCv.skills
+          );
+          setAts({
+            atsScore: semantic.atsScore,
+            issues: semantic.gaps,
+            fixes: semantic.suggestions,
+            keywordCoverage: Math.round(
+              (semantic.matchedKeywords.length /
+                Math.max(
+                  1,
+                  semantic.matchedKeywords.length + semantic.missingKeywords.length
+                )) *
+                100
+            ),
+          });
+          setForgeAnalysis({
+            matchScore: semantic.matchScore,
+            atsScore: semantic.atsScore,
+            strengths: semantic.strengths,
+            gaps: semantic.gaps,
+            suggestions: semantic.suggestions,
+            matchedSkills: semantic.matchedKeywords,
+            missingSkills: semantic.missingKeywords,
+          });
+          pushForgeHistory({
+            action: "ats",
+            summary: `Browser AI ATS %${semantic.atsScore}`,
+            payload: semantic,
+          });
+          toast.success(`ATS: %${semantic.atsScore} (tarayıcı AI)`);
+        } else {
+          const result = analyzeAts(forgeParsedCv, jdText);
+          setAts(result);
+          pushForgeHistory({
+            action: "ats",
+            summary: `ATS score: %${result.atsScore}`,
+            payload: result,
+          });
+          toast.success(`ATS: %${result.atsScore}`);
+        }
+        setModelBanner(null);
         setPreviewTab("feedback");
-      } catch {
-        toast.error("ATS taraması tamamlanamadı — sayfa açık kalır.");
+      } catch (e) {
+        setModelBanner(null);
+        toast.error(e instanceof Error ? e.message : "ATS taraması tamamlanamadı.");
       }
     });
 
   const onInterview = () =>
     run(async () => {
       try {
-        const parsed = forgeParsedCv || parseCV(cvText || "Aday\nSoftware Engineer\nReact");
+        const parsed =
+          forgeParsedCv || parseCV(cvText || "Aday\nSoftware Engineer\nReact");
         if (!forgeParsedCv && cvText.trim()) setForgeParsedCv(parsed);
-        const result = await getInterviewPrep(parsed, jdText);
+        const result = await simulateAIResponse("interview", parsed, { jd: jdText });
         setInterview(result);
         pushForgeHistory({
           action: "interview",
           summary: `${result.questions.length} questions ready`,
           payload: result,
         });
-        toast.success("Mülakat soruları hazır");
+        toast.success("Mülakat soruları hazır (cihazda)");
         setPreviewTab("interview");
       } catch {
-        toast.error("Local AI unavailable — mülakat soruları üretilemedi.");
+        toast.error("Mülakat soruları üretilemedi.");
       }
     });
 
@@ -392,7 +476,7 @@ export default function ForgePage() {
         });
         setPreviewTab("chat");
       } catch {
-        toast.error("Local AI unavailable — sohbet yanıtı üretilemedi.");
+        toast.error("Sohbet yanıtı üretilemedi.");
       }
     });
 
@@ -454,6 +538,20 @@ export default function ForgePage() {
             </div>
             <h1 className="font-display text-3xl font-bold tracking-tight text-star-white">{t("forgeTitle")}</h1>
             <p className="text-sm text-muted-steel mt-1 max-w-xl leading-relaxed">{t("forgeDesc")}</p>
+            <p className="text-xs text-indigo-600 mt-2 font-semibold">
+              100% tarayıcı AI (Transformers.js) · sunucu / API anahtarı yok
+            </p>
+            {(isLoadingModel || analyzing || modelBanner) && (
+              <div className="mt-3 inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/90 px-3 py-2 text-xs font-semibold text-indigo-800 dark:bg-indigo-500/10 dark:border-indigo-500/30 dark:text-indigo-200">
+                <LoadingSpinner />
+                {modelBanner || statusMessage || "Analyzing…"}
+              </div>
+            )}
+            {clientAiError && (
+              <div className="mt-2">
+                <ErrorAlert title="Browser AI" message={clientAiError} />
+              </div>
+            )}
           </div>
           {forgeParsedCv && (
             <div className="flex flex-wrap gap-2">
@@ -818,9 +916,9 @@ export default function ForgePage() {
 
             {/* Tool Output Window */}
             <div className="glass-panel rounded-3xl p-6 min-h-[460px]" style={{ border: "1px solid rgba(168,85,247,0.12)" }}>
-              {aiError && (
-                <div className="rounded-xl border border-sunset-coral/20 bg-sunset-coral/10 px-4 py-3 mb-4 text-xs text-sunset-coral">
-                  ⚠️ {aiError}
+              {clientAiError && (
+                <div className="mb-4">
+                  <ErrorAlert title="Browser AI" message={clientAiError} />
                 </div>
               )}
               
@@ -1003,7 +1101,7 @@ export default function ForgePage() {
                     >
                       {isLoading ? (
                         <>
-                          <LoadingSpinner /> {t("analyzingLabel")}
+                          <LoadingSpinner /> Analyzing…
                         </>
                       ) : (
                         "Check Match Score"
@@ -1013,8 +1111,8 @@ export default function ForgePage() {
                       Optimize for JD
                     </Button>
                   </div>
-                  {aiError && (
-                    <ErrorAlert title={t("errorTitle")} message={aiError} />
+                  {clientAiError && (
+                    <ErrorAlert title="Browser AI" message={clientAiError} />
                   )}
 
                   {forgeAnalysis && (
