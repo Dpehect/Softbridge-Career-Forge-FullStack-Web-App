@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { DemoNotice } from "@/components/DemoNotice";
+import { WorkspaceSyncProvider } from "@/components/providers/WorkspaceSyncProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -47,7 +48,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "CareerForge | Resume and Career Workspace",
     description:
-      "Profesyonel CV araçları, iş eşleştirme, ATS kontrolü ve mülakat hazırlığı — tarayıcınızda gizli.",
+      "Profesyonel CV araçları, iş eşleştirme, ATS kontrolü ve güvenli hesap senkronizasyonu.",
     url: siteUrl,
     siteName: "CareerForge",
     locale: "tr_TR",
@@ -86,7 +87,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             __html: `
 (function() {
   try {
-    var stored = localStorage.getItem('softbridge-careerforge');
+    var stored = localStorage.getItem('softbridge-careerforge-ui-v2') || localStorage.getItem('softbridge-careerforge');
     if (stored) {
       var parsed = JSON.parse(stored);
       var theme = parsed && parsed.state && parsed.state.theme;
@@ -106,19 +107,21 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         />
       </head>
       <body className="min-h-full flex flex-col bg-background text-ink font-sans">
-        <Header />
-        <div className="flex-1 pt-16 pb-16 md:pt-[6.5rem] md:pb-0">
-          <DemoNotice />
-          {children}
-        </div>
-        <Footer />
-        <Toaster
-          theme="system"
-          position="bottom-right"
-          toastOptions={{
-            className: "border border-line bg-surface text-ink",
-          }}
-        />
+        <WorkspaceSyncProvider>
+          <Header />
+          <div className="flex-1 pt-16 pb-16 md:pt-[6.5rem] md:pb-0">
+            <DemoNotice />
+            {children}
+          </div>
+          <Footer />
+          <Toaster
+            theme="system"
+            position="bottom-right"
+            toastOptions={{
+              className: "border border-line bg-surface text-ink",
+            }}
+          />
+        </WorkspaceSyncProvider>
       </body>
     </html>
   );

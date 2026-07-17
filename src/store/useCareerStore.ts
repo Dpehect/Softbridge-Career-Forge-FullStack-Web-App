@@ -1,9 +1,10 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, subscribeWithSelector } from "zustand/middleware";
 import type { CoachMessage, ResumeProfile } from "@/types";
 import type { Locale } from "@/i18n/messages";
+import { createEmptyHydrationData, createEmptyResume, type StoreHydrationData } from "@/lib/supabase/workspace-mapper";
 import type {
   CoverLetterTone,
   CvBackup,
@@ -12,18 +13,7 @@ import type {
   ParsedCV,
 } from "@/lib/forge/types";
 
-const emptyResume = (): ResumeProfile => ({
-  fullName: "",
-  headline: "",
-  email: "",
-  phone: "",
-  location: "",
-  summary: "",
-  skills: [],
-  experience: [],
-  education: [],
-  photoDataUrl: null,
-});
+const emptyResume = createEmptyResume;
 
 export function parsedToResume(cv: ParsedCV): ResumeProfile {
   return {
@@ -116,7 +106,11 @@ function coachWelcome(lang: Locale, reset = false): CoachMessage {
   };
 }
 
-interface CareerState {
+export type CloudSyncStatus = "idle" | "loading" | "saving" | "saved" | "offline" | "error" | "conflict" | "demo";
+
+export interface CareerState {
+  profileFullName: string;
+  profileAvatarPath: string | null;
   savedJobIds: string[];
   appliedJobIds: string[];
   enrolledPathIds: string[];
@@ -144,6 +138,24 @@ interface CareerState {
     candidateName?: string;
     targetTitle?: string;
   } | null;
+  cloudUserId: string | null;
+  cloudHydrated: boolean;
+  cloudDirty: boolean;
+  cloudStatus: CloudSyncStatus;
+  cloudError: string | null;
+  cloudLastSyncedAt: string | null;
+  cloudChangeVersion: number;
+  cloudReloadVersion: number;
+  hydrateFromCloud: (data: StoreHydrationData, userId: string, updatedAt: string | null) => void;
+  setCloudLoading: () => void;
+  setCloudSaving: () => void;
+  markCloudSaved: (changeVersion: number, updatedAt: string) => void;
+  markCloudError: (message: string, offline?: boolean) => void;
+  markCloudConflict: (message: string) => void;
+  requestCloudReload: () => void;
+  retryCloudSync: () => void;
+  clearPrivateWorkspace: () => void;
+  setProfileFullName: (name: string) => void;
   setLastAnalysisMeta: (
     meta: {
       at: string;
@@ -185,13 +197,28 @@ interface CareerState {
   exitDemoMode: () => void;
 }
 
+function cloudMutation(state: CareerState) {
+  if (state.isDemoMode) {
+    return { isDemoMode: true as const, cloudDirty: false, cloudStatus: "demo" as const };
+  }
+  if (!state.cloudHydrated || !state.cloudUserId) return {};
+  return {
+    cloudDirty: true,
+    cloudChangeVersion: state.cloudChangeVersion + 1,
+    cloudStatus: "idle" as const,
+    cloudError: null,
+  };
+}
+
 export const useCareerStore = create<CareerState>()(
-  persist(
+  subscribeWithSelector(persist(
     (set, get) => ({
+      profileFullName: "",
+      profileAvatarPath: null,
       lang: "tr",
-      setLang: (lang) => set({ lang, coachMessages: [coachWelcome(lang)] }),
+      setLang: (lang) => set((state) => ({ lang, ...cloudMutation(state) })),
       theme: "light",
-      setTheme: (theme) => set({ theme }),
+      setTheme: (theme) => set((state) => ({ theme, ...cloudMutation(state) })),
       savedJobIds: [],
       appliedJobIds: [],
       enrolledPathIds: [],
@@ -209,71 +236,152 @@ export const useCareerStore = create<CareerState>()(
       forgeTone: "Profesyonel",
       forgeHistory: [],
       forgeBackups: [],
+      cloudUserId: null,
+      cloudHydrated: false,
+      cloudDirty: false,
+      cloudStatus: "idle",
+      cloudError: null,
+      cloudLastSyncedAt: null,
+      cloudChangeVersion: 0,
+      cloudReloadVersion: 0,
+      hydrateFromCloud: (data, userId, updatedAt) => set({
+        ...data,
+        coachMessages: data.coachMessages.length ? data.coachMessages : [coachWelcome(data.lang)],
+        resumePast: [],
+        resumeFuture: [],
+        isDemoMode: false,
+        cloudUserId: userId,
+        cloudHydrated: true,
+        cloudDirty: false,
+        cloudStatus: "saved",
+        cloudError: null,
+        cloudLastSyncedAt: updatedAt,
+      }),
+      setCloudLoading: () => set({ cloudStatus: "loading", cloudError: null }),
+      setCloudSaving: () => set({ cloudStatus: "saving", cloudError: null }),
+      markCloudSaved: (changeVersion, updatedAt) => set((state) => ({
+        cloudDirty: state.cloudChangeVersion === changeVersion ? false : state.cloudDirty,
+        cloudStatus: state.cloudChangeVersion === changeVersion ? "saved" : "idle",
+        cloudError: null,
+        cloudLastSyncedAt: updatedAt,
+      })),
+      markCloudError: (message, offline = false) => set({
+        cloudStatus: offline ? "offline" : "error",
+        cloudError: message,
+      }),
+      markCloudConflict: (message) => set({ cloudStatus: "conflict", cloudError: message }),
+      requestCloudReload: () => set((state) => ({
+        cloudHydrated: false,
+        cloudDirty: false,
+        cloudStatus: "loading",
+        cloudError: null,
+        cloudReloadVersion: state.cloudReloadVersion + 1,
+      })),
+      retryCloudSync: () => set((state) => state.cloudHydrated && state.cloudDirty
+        ? {
+            cloudStatus: "idle",
+            cloudError: null,
+            cloudChangeVersion: state.cloudChangeVersion + 1,
+          }
+        : {
+            cloudHydrated: false,
+            cloudStatus: "loading",
+            cloudError: null,
+            cloudReloadVersion: state.cloudReloadVersion + 1,
+          }),
+      clearPrivateWorkspace: () => {
+        const { lang, theme, cloudReloadVersion, cloudChangeVersion } = get();
+        set({
+          ...createEmptyHydrationData({ lang, theme }),
+          coachMessages: [coachWelcome(lang)],
+          resumePast: [],
+          resumeFuture: [],
+          isDemoMode: false,
+          cloudUserId: null,
+          cloudHydrated: false,
+          cloudDirty: false,
+          cloudStatus: "idle",
+          cloudError: null,
+          cloudLastSyncedAt: null,
+          cloudReloadVersion: cloudReloadVersion + 1,
+          cloudChangeVersion,
+        });
+      },
+      setProfileFullName: (profileFullName) => set((state) => ({
+        profileFullName,
+        ...cloudMutation(state),
+      })),
       careerGoalId: "fullstack",
-      setCareerGoalId: (careerGoalId) => set({ careerGoalId }),
+      setCareerGoalId: (careerGoalId) => set((state) => ({ careerGoalId, ...cloudMutation(state) })),
       lastAnalysisMeta: null,
-      setLastAnalysisMeta: (lastAnalysisMeta) => set({ lastAnalysisMeta }),
+      setLastAnalysisMeta: (lastAnalysisMeta) => set((state) => ({ lastAnalysisMeta, ...cloudMutation(state) })),
       toggleSaveJob: (id) => {
         const { savedJobIds } = get();
-        set({
+        set((state) => ({
           savedJobIds: savedJobIds.includes(id)
             ? savedJobIds.filter((x) => x !== id)
             : [...savedJobIds, id],
-        });
+          ...cloudMutation(state),
+        }));
       },
       applyToJob: (id) => {
         const { appliedJobIds, savedJobIds } = get();
         if (appliedJobIds.includes(id)) return;
-        set({
+        set((state) => ({
           appliedJobIds: [...appliedJobIds, id],
           savedJobIds: savedJobIds.includes(id) ? savedJobIds : [...savedJobIds, id],
-        });
+          ...cloudMutation(state),
+        }));
       },
       enrollPath: (id) => {
         const { enrolledPathIds } = get();
         if (enrolledPathIds.includes(id)) return;
-        set({ enrolledPathIds: [...enrolledPathIds, id] });
+        set((state) => ({ enrolledPathIds: [...enrolledPathIds, id], ...cloudMutation(state) }));
       },
       toggleModule: (id) => {
         const { completedModuleIds } = get();
-        set({
+        set((state) => ({
           completedModuleIds: completedModuleIds.includes(id)
             ? completedModuleIds.filter((x) => x !== id)
             : [...completedModuleIds, id],
-        });
+          ...cloudMutation(state),
+        }));
       },
       updateResume: (patch) => {
         const current = get().resume;
         const updated = { ...current, ...patch };
-        set({
+        set((state) => ({
           resume: updated,
           forgeParsedCv: resumeToParsed(updated),
           resumePast: [...get().resumePast, current].slice(-40),
           resumeFuture: [],
           isDemoMode: false,
-        });
+          ...cloudMutation(state),
+        }));
       },
       undoResume: () => {
         const { resumePast, resume, resumeFuture } = get();
         const previous = resumePast.at(-1);
         if (!previous) return;
-        set({
+        set((state) => ({
           resume: previous,
           forgeParsedCv: resumeToParsed(previous),
           resumePast: resumePast.slice(0, -1),
           resumeFuture: [resume, ...resumeFuture].slice(0, 40),
-        });
+          ...cloudMutation(state),
+        }));
       },
       redoResume: () => {
         const { resumePast, resume, resumeFuture } = get();
         const next = resumeFuture[0];
         if (!next) return;
-        set({
+        set((state) => ({
           resume: next,
           forgeParsedCv: resumeToParsed(next),
           resumePast: [...resumePast, resume].slice(-40),
           resumeFuture: resumeFuture.slice(1),
-        });
+          ...cloudMutation(state),
+        }));
       },
       moveResumeSection: (id, direction) => {
         const order = [...get().resumeSectionOrder];
@@ -281,7 +389,7 @@ export const useCareerStore = create<CareerState>()(
         const target = index + direction;
         if (index < 0 || target < 0 || target >= order.length) return;
         [order[index], order[target]] = [order[target], order[index]];
-        set({ resumeSectionOrder: order });
+        set((state) => ({ resumeSectionOrder: order, ...cloudMutation(state) }));
       },
       addSkills: (skills) => {
         const { resume, forgeParsedCv } = get();
@@ -297,25 +405,32 @@ export const useCareerStore = create<CareerState>()(
         const nextParsed = forgeParsedCv
           ? { ...forgeParsedCv, skills: [...new Set([...forgeParsedCv.skills, ...toAdd])] }
           : resumeToParsed(updated);
-        set({ resume: updated, forgeParsedCv: nextParsed, isDemoMode: false });
+        set((state) => ({
+          resume: updated,
+          forgeParsedCv: nextParsed,
+          isDemoMode: false,
+          ...cloudMutation(state),
+        }));
         return toAdd.length;
       },
-      setResume: (resume) => set({
+      setResume: (resume) => set((state) => ({
         resume,
         forgeParsedCv: resumeToParsed(resume),
         resumePast: [...get().resumePast, get().resume].slice(-40),
         resumeFuture: [],
         isDemoMode: false,
-      }),
-      resetResume: () => set({
+        ...cloudMutation(state),
+      })),
+      resetResume: () => set((state) => ({
         resume: emptyResume(),
         forgeParsedCv: null,
         resumePast: [],
         resumeFuture: [],
         isDemoMode: false,
-      }),
+        ...cloudMutation(state),
+      })),
       addCoachMessage: (message) =>
-        set({
+        set((state) => ({
           coachMessages: [
             ...get().coachMessages,
             {
@@ -324,12 +439,16 @@ export const useCareerStore = create<CareerState>()(
               createdAt: new Date().toISOString(),
             },
           ],
-        }),
-      clearCoach: () => set({ coachMessages: [coachWelcome(get().lang, true)] }),
-      setForgeCvText: (text) => set({ forgeCvText: text }),
-      setForgeJdText: (text) => set({ forgeJdText: text }),
+          ...cloudMutation(state),
+        })),
+      clearCoach: () => set((state) => ({
+        coachMessages: [coachWelcome(get().lang, true)],
+        ...cloudMutation(state),
+      })),
+      setForgeCvText: (text) => set((state) => ({ forgeCvText: text, ...cloudMutation(state) })),
+      setForgeJdText: (text) => set((state) => ({ forgeJdText: text, ...cloudMutation(state) })),
       setForgeParsedCv: (cv) =>
-        set({
+        set((state) => ({
           forgeParsedCv: cv,
           resume: cv ? parsedToResume(cv) : emptyResume(),
           isDemoMode: false,
@@ -341,11 +460,12 @@ export const useCareerStore = create<CareerState>()(
                 fileName: get().lastAnalysisMeta?.fileName,
               }
             : get().lastAnalysisMeta,
-        }),
-      setForgeAnalysis: (analysis) => set({ forgeAnalysis: analysis }),
-      setForgeTone: (tone) => set({ forgeTone: tone }),
+          ...cloudMutation(state),
+        })),
+      setForgeAnalysis: (analysis) => set((state) => ({ forgeAnalysis: analysis, ...cloudMutation(state) })),
+      setForgeTone: (tone) => set((state) => ({ forgeTone: tone, ...cloudMutation(state) })),
       pushForgeHistory: (item) =>
-        set({
+        set((state) => ({
           forgeHistory: [
             {
               ...item,
@@ -354,10 +474,11 @@ export const useCareerStore = create<CareerState>()(
             },
             ...get().forgeHistory,
           ].slice(0, 30),
-        }),
-      clearForgeHistory: () => set({ forgeHistory: [] }),
+          ...cloudMutation(state),
+        })),
+      clearForgeHistory: () => set((state) => ({ forgeHistory: [], ...cloudMutation(state) })),
       clearForgeCv: () =>
-        set({
+        set((state) => ({
           forgeCvText: "",
           forgeParsedCv: null,
           forgeAnalysis: null,
@@ -365,7 +486,8 @@ export const useCareerStore = create<CareerState>()(
           resumePast: [],
           resumeFuture: [],
           isDemoMode: false,
-        }),
+          ...cloudMutation(state),
+        })),
       saveForgeBackup: (label) => {
         const { forgeCvText, forgeParsedCv, forgeBackups } = get();
         if (!forgeCvText.trim() && !forgeParsedCv) return null;
@@ -376,20 +498,27 @@ export const useCareerStore = create<CareerState>()(
           cvText: forgeCvText,
           parsed: forgeParsedCv,
         };
-        set({ forgeBackups: [backup, ...forgeBackups].slice(0, 20) });
+        set((state) => ({
+          forgeBackups: [backup, ...forgeBackups].slice(0, 20),
+          ...cloudMutation(state),
+        }));
         return backup;
       },
       restoreForgeBackup: (id) => {
         const bak = get().forgeBackups.find((b) => b.id === id);
         if (!bak) return false;
-        set({
+        set((state) => ({
           forgeCvText: bak.cvText,
           forgeParsedCv: bak.parsed,
-        });
+          ...cloudMutation(state),
+        }));
         return true;
       },
       deleteForgeBackup: (id) =>
-        set({ forgeBackups: get().forgeBackups.filter((b) => b.id !== id) }),
+        set((state) => ({
+          forgeBackups: get().forgeBackups.filter((b) => b.id !== id),
+          ...cloudMutation(state),
+        })),
       loadDemoProfile: () => {
         const lang = get().lang;
         const isTr = lang === "tr";
@@ -461,6 +590,9 @@ export const useCareerStore = create<CareerState>()(
 
         set({
           isDemoMode: true,
+          cloudDirty: false,
+          cloudStatus: "demo",
+          cloudError: null,
           resume: demoResume,
           resumePast: [],
           resumeFuture: [],
@@ -513,24 +645,18 @@ export const useCareerStore = create<CareerState>()(
           }
         });
       },
-      exitDemoMode: () => set({
+      exitDemoMode: () => set((state) => ({
         isDemoMode: false,
-        resume: emptyResume(),
-        resumePast: [],
-        resumeFuture: [],
-        forgeCvText: "",
-        forgeJdText: "",
-        forgeParsedCv: null,
-        forgeAnalysis: null,
-        forgeHistory: [],
-        savedJobIds: [],
-        appliedJobIds: [],
-        enrolledPathIds: [],
-        completedModuleIds: [],
-        coachMessages: [coachWelcome(get().lang)],
-        lastAnalysisMeta: null,
-      }),
+        cloudHydrated: false,
+        cloudDirty: false,
+        cloudStatus: "loading",
+        cloudError: null,
+        cloudReloadVersion: state.cloudReloadVersion + 1,
+      })),
     }),
-    { name: "softbridge-careerforge" }
-  )
+    {
+      name: "softbridge-careerforge-ui-v2",
+      partialize: (state) => ({ lang: state.lang, theme: state.theme }),
+    }
+  ))
 );

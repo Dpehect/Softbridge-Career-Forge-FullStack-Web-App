@@ -9,17 +9,19 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
   const { locale } = useMessages();
 
   useEffect(() => {
-    console.error("[CareerForge]", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("[CareerForge] route error", { name: error.name, digest: error.digest });
+    }
   }, [error]);
 
   const copy = locale === "tr" ? {
     title: "Çalışma alanı yüklenemedi",
-    body: "Geçici bir sorun oluştu. Yerel verileriniz korunuyor; sayfayı yeniden deneyebilir veya ana sayfaya dönebilirsiniz.",
+    body: "Geçici bir sorun oluştu. Bu oturumdaki değişiklikleriniz korunuyor; sayfayı yeniden deneyebilir veya ana sayfaya dönebilirsiniz.",
     retry: "Yeniden dene",
     home: "Ana sayfa",
   } : {
     title: "The workspace could not load",
-    body: "A temporary problem occurred. Your local data is preserved; try again or return home.",
+    body: "A temporary problem occurred. Your current session changes are preserved; try again or return home.",
     retry: "Try again",
     home: "Home",
   };

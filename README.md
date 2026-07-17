@@ -7,7 +7,7 @@ Bilingual resume analysis, explainable ATS scoring, job matching, editing, inter
 - Next.js 16 App Router, React 19, strict TypeScript
 - Tailwind CSS 4, Zustand, Lucide
 - Supabase Auth with Google OAuth and cookie-based SSR sessions
-- Browser-local resume parsing, ATS analysis, and workspace persistence
+- Browser-local resume parsing and ATS analysis, with authenticated Supabase workspace sync
 
 ## Local development
 
@@ -17,7 +17,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3001](http://localhost:3001). Without Supabase variables, the full local/demo product remains usable and the login page shows a configuration state.
+Open [http://localhost:3001](http://localhost:3001). Without Supabase variables, public and demo surfaces remain available and the login page shows a configuration state; authenticated workspace routes require Supabase configuration.
 
 ## Supabase and Google login setup
 
@@ -88,13 +88,16 @@ NEXT_PUBLIC_SITE_URL
 
 Use the production site URL for `NEXT_PUBLIC_SITE_URL` in Production. Redeploy after changing environment variables.
 
-## Authentication architecture
+## Authentication and persistence architecture
 
-- `src/proxy.ts` refreshes Supabase session cookies but is not the authorization gate.
+- `src/proxy.ts` refreshes Supabase session cookies and redirects unauthenticated workspace requests.
 - `src/app/auth/callback/route.ts` exchanges the Google PKCE code for a session.
-- `src/app/account/page.tsx` validates the user again on the server.
+- Protected route layouts validate the user again on the server before rendering private content.
 - `/login`, `/privacy`, and `/terms` support the complete sign-in and consent experience.
-- Resume and ATS data remain in browser `localStorage`; sign-in currently provides identity, not cloud resume sync.
+- `public.profiles` stores profile preferences and `public.career_workspaces` stores each authenticated user's structured workspace under RLS.
+- Zustand remains the immediate UI cache; `localStorage` stores only language and theme under `softbridge-careerforge-ui-v2`.
+- Existing data under `softbridge-careerforge` is migrated once after remote data is checked. Non-empty cloud data is never silently overwritten.
+- Resume photos remain local previews unless a separately configured storage flow is added; Base64 image data is removed from cloud payloads.
 
 ## Quality commands
 

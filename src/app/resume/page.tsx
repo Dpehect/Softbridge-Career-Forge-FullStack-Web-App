@@ -39,6 +39,7 @@ import { calculateAtsScore } from "@/features/analysis/atsScore";
 import { buildActionableRecommendations, type ActionableRecommendation, type RecommendationAction } from "@/features/analysis/recommendations";
 import { AtsScoreBreakdown } from "@/components/AtsScoreBreakdown";
 import { ActionableRecommendations } from "@/components/ActionableRecommendations";
+import { CloudSyncStatus } from "@/components/sync/CloudSyncStatus";
 
 type EditorSection = ResumeSectionId;
 
@@ -122,8 +123,20 @@ export default function ResumePage() {
   const uploadPhoto = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    const accepted = new Set(["image/jpeg", "image/png", "image/webp"]);
+    if (!accepted.has(file.type)) {
+      toast.error(locale === "tr" ? "JPG, PNG veya WebP görsel seçin." : "Choose a JPG, PNG, or WebP image.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error(locale === "tr" ? "Profil görseli en fazla 2 MB olabilir." : "Profile images must be 2 MB or smaller.");
+      event.target.value = "";
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => updateResume({ photoDataUrl: String(reader.result) });
+    reader.onerror = () => toast.error(locale === "tr" ? "Görsel okunamadı." : "The image could not be read.");
     reader.readAsDataURL(file);
   };
 
@@ -169,6 +182,7 @@ export default function ResumePage() {
           <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-2">{copy.lede}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <CloudSyncStatus className="mr-2" />
           <Button variant="ghost" size="icon" onClick={undoResume} disabled={!resumePast.length} aria-label={messages.common.undo} title={messages.common.undo}><Undo2 className="h-4 w-4" /></Button>
           <Button variant="ghost" size="icon" onClick={redoResume} disabled={!resumeFuture.length} aria-label={messages.common.redo} title={messages.common.redo}><Redo2 className="h-4 w-4" /></Button>
           <Button variant="outline" onClick={() => setShowImport((value) => !value)}><Plus className="h-4 w-4" /> {copy.import}</Button>

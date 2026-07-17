@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { CheckCircle2, LogOut, ShieldCheck, UserRound } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { CloudSyncStatus } from "@/components/sync/CloudSyncStatus";
 import { useMessages } from "@/i18n/useMessages";
 import { cn } from "@/lib/utils";
+import { useCareerStore } from "@/store/useCareerStore";
 
 interface AccountViewProps {
   email: string;
@@ -13,7 +16,10 @@ interface AccountViewProps {
 }
 
 export function AccountView({ email, name, provider }: AccountViewProps) {
-  const { messages } = useMessages();
+  const { locale, messages } = useMessages();
+  const profileFullName = useCareerStore((state) => state.profileFullName);
+  const setProfileFullName = useCareerStore((state) => state.setProfileFullName);
+  const displayName = profileFullName.trim() || name;
 
   return (
     <main className="mx-auto min-h-[calc(100vh-10rem)] w-[min(100%-2rem,64rem)] py-12 lg:py-20">
@@ -28,12 +34,16 @@ export function AccountView({ email, name, provider }: AccountViewProps) {
               <UserRound className="h-5 w-5" />
             </span>
             <div>
-              <h2 id="account-details-title" className="text-base font-semibold text-ink">{name}</h2>
+              <h2 id="account-details-title" className="text-base font-semibold text-ink">{displayName}</h2>
               <p className="mt-1 text-sm text-ink-3">{messages.auth.signedInAs}</p>
             </div>
           </div>
 
           <dl className="mt-8 divide-y divide-line border-y border-line">
+            <div className="grid gap-2 py-4 sm:grid-cols-[10rem_1fr] sm:items-center">
+              <dt><label htmlFor="profile-full-name" className="text-xs font-medium text-ink-3">{locale === "tr" ? "Görünen ad" : "Display name"}</label></dt>
+              <dd><Input id="profile-full-name" value={profileFullName} placeholder={name} onChange={(event) => setProfileFullName(event.target.value)} /></dd>
+            </div>
             <div className="grid gap-1 py-4 sm:grid-cols-[10rem_1fr] sm:items-center">
               <dt className="text-xs font-medium text-ink-3">{messages.auth.email}</dt>
               <dd className="text-sm text-ink">{email}</dd>
@@ -52,9 +62,14 @@ export function AccountView({ email, name, provider }: AccountViewProps) {
         <aside className="surface-subtle p-5">
           <ShieldCheck className="h-5 w-5 text-positive" />
           <p className="mt-3 text-xs leading-5 text-ink-2">{messages.auth.configuredBy}</p>
+          <CloudSyncStatus className="mt-4 border-t border-line pt-4" />
           <div className="mt-6 grid gap-2">
             <Link href="/dashboard" className={cn(buttonVariants({ variant: "primary" }), "w-full")}>{messages.auth.continueWorkspace}</Link>
-            <form action="/auth/signout" method="post">
+            <form
+              action="/auth/signout"
+              method="post"
+              onSubmit={() => window.dispatchEvent(new Event("careerforge:signout"))}
+            >
               <Button type="submit" variant="outline" className="w-full"><LogOut className="h-4 w-4" />{messages.auth.signOut}</Button>
             </form>
           </div>

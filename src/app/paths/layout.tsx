@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ProtectedWorkspace } from "@/components/auth/ProtectedWorkspace";
 
 export const metadata: Metadata = {
   title: "Career Roadmap",
@@ -7,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function PathsLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return <ProtectedWorkspace nextPath="/paths">{children}</ProtectedWorkspace>;
 }

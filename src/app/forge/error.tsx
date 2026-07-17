@@ -30,7 +30,7 @@ export default function ForgeError({
           {locale === "tr" ? "CV analizi yüklenemedi" : "Resume analysis could not load"}
         </h2>
         <p className="text-sm text-slate-500 leading-relaxed">
-          {locale === "tr" ? "Geçici bir sorun oluştu. Yerel verileriniz korunuyor; yeniden deneyebilir veya CV Düzenleyici'ye geçebilirsiniz." : "A temporary problem occurred. Your local data is preserved; try again or continue to Resume Editor."}
+          {locale === "tr" ? "Geçici bir sorun oluştu. Bu oturumdaki değişiklikleriniz korunuyor; yeniden deneyebilir veya CV Düzenleyici'ye geçebilirsiniz." : "A temporary problem occurred. Your current session changes are preserved; try again or continue to Resume Editor."}
         </p>
         <div className="flex flex-wrap justify-center gap-3 pt-2">
           <button

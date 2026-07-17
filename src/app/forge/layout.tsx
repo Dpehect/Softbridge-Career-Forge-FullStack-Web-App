@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ProtectedWorkspace } from "@/components/auth/ProtectedWorkspace";
 export const metadata: Metadata = {
   title: "Resume Analysis",
   description: "Private resume parsing, explainable ATS scoring, and target job-description alignment.",
@@ -6,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function ForgeLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return <ProtectedWorkspace nextPath="/forge">{children}</ProtectedWorkspace>;
 }

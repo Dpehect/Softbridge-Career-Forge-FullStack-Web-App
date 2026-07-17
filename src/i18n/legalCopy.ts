@@ -9,9 +9,9 @@ const copy = {
       updated: "Son güncelleme: 17 Temmuz 2026",
       sections: [
         { title: "İşlenen hesap bilgileri", body: "Google ile giriş yaptığınızda Supabase Auth; adınız, e-posta adresiniz, profil görseliniz ve sağlayıcı kimliğiniz gibi temel hesap bilgilerini işler. CareerForge Google Drive, Gmail veya diğer Google hizmetlerine erişim istemez." },
-        { title: "CV ve analiz verileri", body: "Mevcut sürümde CV, ATS analizi, kaydedilen işler ve kariyer planı tarayıcınızın yerel depolamasında tutulur. Bu içerik Supabase veritabanına gönderilmez ve hesaplar arasında eşitlenmez." },
+        { title: "CV ve analiz verileri", body: "Standart analiz tarayıcıda çalışır. Hesabınızla senkronizasyon açıksa düzenlenmiş çalışma alanı verileri güvenli şekilde Supabase hesabınıza kaydedilir. Orijinal CV dosyası yalnızca açıkça yüklemeyi seçerseniz saklanır." },
         { title: "Amaç ve hizmet sağlayıcılar", body: "Hesap bilgileri güvenli oturum oluşturmak ve giriş yapan kullanıcıyı göstermek için kullanılır. Kimlik doğrulama altyapısı Supabase, kimlik sağlayıcısı Google tarafından işletilir; bu sağlayıcıların kendi gizlilik koşulları da geçerlidir." },
-        { title: "Kontrol ve saklama", body: "Yerel CV verilerini profil menüsündeki temizleme işlemiyle kaldırabilir, Google oturumunu hesap sayfasından kapatabilirsiniz. Supabase hesap kaydının silinmesi için proje destek kanalından talep oluşturabilirsiniz." },
+        { title: "Kontrol ve saklama", body: "Çalışma alanı verilerinizi ürün içindeki temizleme işlemleriyle yönetebilir ve Google oturumunu hesap sayfasından kapatabilirsiniz. Supabase hesap kaydının silinmesi için proje destek kanalından talep oluşturabilirsiniz." },
         { title: "Güvenlik", body: "Oturumlar cookie tabanlı SSR akışı ve PKCE kod değişimiyle yönetilir. Hiçbir internet hizmeti mutlak güvenlik garantisi veremez; bilinen riskler düzenli olarak gözden geçirilir." },
       ],
       support: "Hesap veya gizlilik desteği",
@@ -39,9 +39,9 @@ const copy = {
       updated: "Last updated: July 17, 2026",
       sections: [
         { title: "Account information", body: "When you sign in with Google, Supabase Auth processes basic account information such as your name, email address, profile image, and provider identifier. CareerForge does not request access to Google Drive, Gmail, or other Google services." },
-        { title: "Resume and analysis data", body: "In the current version, your resume, ATS analysis, saved jobs, and career roadmap remain in your browser's local storage. This content is not sent to the Supabase database and is not synchronized between accounts." },
+        { title: "Resume and analysis data", body: "Standard analysis runs in your browser. When account sync is enabled, edited workspace data is securely saved to your Supabase account. The original resume file is stored only if you explicitly choose to upload it." },
         { title: "Purpose and service providers", body: "Account information is used to create a secure session and identify the signed-in user. Authentication is operated by Supabase and identity is provided by Google; their respective privacy terms also apply." },
-        { title: "Control and retention", body: "You can remove local resume data from the profile menu and end your Google session from the account page. You can request deletion of the Supabase account record through the project support channel." },
+        { title: "Control and retention", body: "You can manage workspace data with the product's clearing controls and end your Google session from the account page. You can request deletion of the Supabase account record through the project support channel." },
         { title: "Security", body: "Sessions use a secure cookie flow and PKCE code exchange. No internet service can guarantee absolute security; known risks are reviewed as the product evolves." },
       ],
       support: "Account or privacy support",
