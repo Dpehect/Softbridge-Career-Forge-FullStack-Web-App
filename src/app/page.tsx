@@ -112,13 +112,13 @@ export default function HomePage() {
             {/* Güven rozeti — en büyük USP */}
             <motion.div
               {...fadeUp(0.18)}
-              className="inline-flex flex-col sm:flex-row sm:items-center gap-2 rounded-2xl border-2 border-emerald-500/50 bg-emerald-50 px-5 py-3.5 text-sm font-bold text-emerald-950 shadow-md dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-100"
+              className="inline-flex flex-col sm:flex-row sm:items-center gap-2 rounded-2xl border border-emerald-300 bg-emerald-50/80 px-5 py-3.5 text-sm font-bold shadow-sm dark:border-emerald-800/80 dark:bg-emerald-950/30"
             >
-              <span className="inline-flex items-center gap-2">
-                <Lock className="w-5 h-5 shrink-0" />
+              <span className="inline-flex items-center gap-2 text-emerald-900 dark:text-emerald-300">
+                <Lock className="w-5 h-5 shrink-0 text-emerald-700 dark:text-emerald-400" />
                 🔐 Verileriniz Asla Buluta Çıkmaz.
               </span>
-              <span className="font-semibold opacity-90">
+              <span className="font-extrabold text-emerald-900 dark:text-emerald-300">
                 %100 Yerel · %100 Güvenli
               </span>
             </motion.div>
