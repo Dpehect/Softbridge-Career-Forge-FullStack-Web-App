@@ -216,7 +216,7 @@ export function CareerWorkflow() {
                   ref={(el) => { stepRefs.current[idx] = el; }}
                   variants={fadeUp}
                   initial="hidden"
-                  whileInView="show"
+                  whileInView="visible"
                   viewport={{ once: true, margin: "-100px" }}
                   className="relative pl-0 lg:pl-16 flex flex-col lg:block"
                 >
@@ -263,7 +263,7 @@ export function CareerWorkflow() {
                   key={activeStep}
                   variants={panelTransition}
                   initial="hidden"
-                  animate="show"
+                  animate="visible"
                   exit="exit"
                   className="w-full h-full p-4"
                 >
