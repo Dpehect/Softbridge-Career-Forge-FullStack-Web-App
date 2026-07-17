@@ -27,7 +27,6 @@ export {
 } from "./jobRecommendations";
 export { exportCvAsPdf } from "./exportPdf";
 export { generateCvFeedback, type CvDeepFeedback } from "./cvFeedback";
-export { simulateAIResponse, useForgeAI } from "./forgeAI";
 export {
   CAREER_GOALS,
   getGoal,

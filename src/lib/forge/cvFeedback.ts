@@ -1,3 +1,5 @@
+import type { Locale } from "@/i18n/messages";
+import { buildActionableRecommendations } from "@/features/analysis/recommendations";
 import type { ParsedCV } from "./types";
 import { analyzeAts } from "./analyze";
 
@@ -10,199 +12,98 @@ export interface CvDeepFeedback {
   careerAdvice: string[];
   summaryLine: string;
 }
-
 function hasMetrics(text: string) {
-  return /\d+%|\$\d|\d+\+|x\d|increased|reduced|grew|improved|\d{2,}/i.test(text);
+  return /\d+%|[$€£₺]\s*\d+|\d+\+|x\d|increased|reduced|grew|improved|artırdı|azalttı|iyileştirdi|\d{2,}/i.test(text);
 }
 
-export function generateCvFeedback(cv: ParsedCV, rawText = ""): CvDeepFeedback {
-  const strengths: string[] = [];
-  const weaknesses: string[] = [];
-  const improvements: string[] = [];
-  const careerAdvice: string[] = [];
-
-  // Defensive: corrupted localStorage / partial CV must never crash the page
+export function generateCvFeedback(
+  cv: ParsedCV,
+  rawText = "",
+  locale: Locale = "tr"
+): CvDeepFeedback {
   const experience = Array.isArray(cv?.experience) ? cv.experience : [];
   const skills = Array.isArray(cv?.skills) ? cv.skills : [];
-  const allBullets = experience.flatMap((e) =>
-    Array.isArray(e?.description) ? e.description : []
-  );
-  const metricBullets = allBullets.filter(hasMetrics);
+  const education = Array.isArray(cv?.education) ? cv.education : [];
+  const bullets = experience.flatMap((item) => item.description ?? []).filter(Boolean);
+  const metricBullets = bullets.filter(hasMetrics);
   const safeCv: ParsedCV = {
     ...cv,
-    name: cv?.name || "Candidate",
-    title: cv?.title || "Professional",
+    name: cv?.name || (locale === "tr" ? "Aday" : "Candidate"),
+    title: cv?.title || (locale === "tr" ? "Profesyonel" : "Professional"),
     email: cv?.email || "",
     phone: cv?.phone ?? null,
     location: cv?.location ?? null,
     summary: cv?.summary ?? null,
     experience,
     skills,
-    education: Array.isArray(cv?.education) ? cv.education : [],
-    rawLength: cv?.rawLength ?? 0,
+    education,
+    rawLength: cv?.rawLength ?? rawText.length,
   };
-  const ats = analyzeAts(safeCv, rawText || skills.join(" "));
+  const ats = analyzeAts(safeCv, rawText, locale);
+  const actionable = buildActionableRecommendations(safeCv, locale);
 
-  // —— Strengths ——
-  if (safeCv.name && safeCv.name !== "Candidate" && safeCv.name !== "Aday") {
-    strengths.push(`Clear candidate identity (“${safeCv.name}”) — recruiters can attribute the file quickly.`);
+  const strengths: string[] = [];
+  const weaknesses: string[] = [];
+
+  if (locale === "tr") {
+    if (safeCv.title) strengths.push(`Profesyonel başlık hedefi görünür kılıyor: ${safeCv.title}.`);
+    if (safeCv.email) strengths.push("İletişim e-postası taranabilir biçimde mevcut.");
+    if (skills.length >= 6) strengths.push(`${skills.length} beceri, teknik kapsam için güçlü bir başlangıç sağlıyor.`);
+    if (experience.length) strengths.push(`${experience.length} yapılandırılmış deneyim bölümü kariyer kanıtı sunuyor.`);
+    if (metricBullets.length) strengths.push(`${metricBullets.length} deneyim maddesi ölçülebilir sonuç içeriyor.`);
+    if (safeCv.summary && safeCv.summary.length >= 60) strengths.push("Profil özeti rol, uzmanlık ve yön bilgisini birlikte taşıyor.");
+    if (education.length) strengths.push("Eğitim bilgileri tarama filtreleri için tamamlanmış.");
+
+    if (!safeCv.email) weaknesses.push("İletişim e-postası eksik; işe alım akışı doğrudan etkilenebilir.");
+    if (!safeCv.phone) weaknesses.push("Telefon bilgisi eksik; bazı pazarlarda iletişim bütünlüğünü azaltabilir.");
+    if (!safeCv.location) weaknesses.push("Konum bilgisi eksik; hibrit ve ofis rolleriyle eşleşmeyi zorlaştırabilir.");
+    if (!safeCv.summary || safeCv.summary.length < 60) weaknesses.push("Profil özeti hedef rolü ve doğrulanabilir değeri yeterince açıklamıyor.");
+    if (skills.length < 6) weaknesses.push("Beceri kapsamı hedef rol terminolojisi için sınırlı.");
+    if (!experience.length) weaknesses.push("Yapılandırılmış deneyim bölümü bulunmuyor.");
+    if (bullets.length && !metricBullets.length) weaknesses.push("Deneyim maddelerinde ölçülebilir sonuç görünmüyor.");
+  } else {
+    if (safeCv.title) strengths.push(`The professional headline makes the target clear: ${safeCv.title}.`);
+    if (safeCv.email) strengths.push("A readable contact email is present.");
+    if (skills.length >= 6) strengths.push(`${skills.length} skills provide a strong starting point for technical coverage.`);
+    if (experience.length) strengths.push(`${experience.length} structured experience section provides career evidence.`);
+    if (metricBullets.length) strengths.push(`${metricBullets.length} experience bullet includes a measurable outcome.`);
+    if (safeCv.summary && safeCv.summary.length >= 60) strengths.push("The profile summary connects role, expertise, and direction.");
+    if (education.length) strengths.push("Education details are complete for screening filters.");
+
+    if (!safeCv.email) weaknesses.push("Contact email is missing and may interrupt the hiring path.");
+    if (!safeCv.phone) weaknesses.push("Phone details are missing and may reduce profile completeness in some markets.");
+    if (!safeCv.location) weaknesses.push("Location is missing, which may limit hybrid and on-site matching.");
+    if (!safeCv.summary || safeCv.summary.length < 60) weaknesses.push("The profile summary does not clearly state the target role and verifiable value.");
+    if (skills.length < 6) weaknesses.push("Skill coverage is limited for target-role terminology.");
+    if (!experience.length) weaknesses.push("No structured experience section was found.");
+    if (bullets.length && !metricBullets.length) weaknesses.push("Experience bullets do not show measurable outcomes.");
   }
-  if (safeCv.title && safeCv.title.length > 3) {
-    strengths.push(`Professional headline is present (“${safeCv.title}”), which helps both humans and ATS keyword matching.`);
-  }
-  if (safeCv.email) {
-    strengths.push("Contact email is available — a basic but critical hire-path requirement.");
-  }
-  if (skills.length >= 6) {
-    strengths.push(`Solid skill surface area (${skills.length} skills listed): ${skills.slice(0, 6).join(", ")}${skills.length > 6 ? "…" : ""}.`);
-  } else if (skills.length >= 3) {
-    strengths.push(`Core skills are listed (${skills.join(", ")}).`);
-  }
-  if (experience.length >= 2) {
-    strengths.push(`Multiple experience blocks (${experience.length}) give a career narrative beyond a single role.`);
-  } else if (experience.length === 1) {
-    strengths.push("At least one experience block is structured — a foundation you can expand with stronger outcomes.");
-  }
-  if (metricBullets.length >= 2) {
-    strengths.push(`${metricBullets.length} achievement lines already use numbers or measurable language — keep leaning into that.`);
-  }
-  if (safeCv.summary && safeCv.summary.length > 80) {
-    strengths.push("Summary/profile text exists and can frame your positioning before the experience list.");
-  }
-  if (safeCv.education.length > 0) {
-    strengths.push("Education is present for screening filters that still check degree/school fields.");
-  }
-  if (safeCv.photoDataUrl) {
-    strengths.push("Profile photo is attached for export-facing versions of the CV (keep ATS plain-text versions photo-free when needed).");
-  }
+
   if (!strengths.length) {
-    strengths.push("You have a starting CV shell — structure is enough to improve quickly with focused edits.");
+    strengths.push(locale === "tr"
+      ? "CV yapısı, odaklı düzenlemelerle geliştirilebilecek bir başlangıç sunuyor."
+      : "The resume provides a starting structure that can improve with focused edits.");
   }
 
-  // —— Weaknesses ——
-  if (!safeCv.email) {
-    weaknesses.push("No email detected — many ATS systems and recruiters will bounce incomplete contact blocks.");
-  }
-  if (!safeCv.phone) {
-    weaknesses.push("Phone number missing — optional in some markets, but still useful for high-intent roles.");
-  }
-  if (!safeCv.location) {
-    weaknesses.push("Location not stated — hybrid/on-site filters may skip you without city/region or “Remote”.");
-  }
-  if (!safeCv.summary || safeCv.summary.length < 60) {
-    weaknesses.push("Summary is thin or missing — you lose a high-attention slot to state target role + proof + direction.");
-  }
-  if (skills.length < 5) {
-    weaknesses.push("Skill list is short for technical hiring screens — aim for 8–14 real, role-relevant skills.");
-  }
-  if (experience.length === 0) {
-    weaknesses.push("No experience blocks detected — even projects/internships should appear as structured roles.");
-  }
-  if (allBullets.length > 0 && metricBullets.length === 0) {
-    weaknesses.push("Experience lines lack measurable outcomes (%, time saved, users, revenue, reliability).");
-  }
-  if (allBullets.some((b) => b.length > 200)) {
-    weaknesses.push("Some bullets are very long — ATS and recruiters prefer scannable 1–2 line outcomes.");
-  }
-  if (allBullets.some((b) => /responsible for|helped with|worked on/i.test(b))) {
-    weaknesses.push("Passive duty language (“responsible for / helped with”) weakens impact versus ownership verbs.");
-  }
-  if (experience.some((e) => (Array.isArray(e?.description) ? e.description.length : 0) < 2)) {
-    weaknesses.push("One or more roles have too few bullets — thin roles look unfinished in senior screens.");
-  }
-  if (!safeCv.education.length) {
-    weaknesses.push("Education section empty — add school/degree/year if relevant, or a certifications block.");
-  }
-  if (ats.atsScore < 60) {
-    weaknesses.push(`ATS structural score is modest (%${ats.atsScore}) — formatting and keyword coverage need attention.`);
-  }
-
-  // —— Improvements (specific) ——
-  improvements.push(
-    "Rewrite each bullet as: strong verb + what you built/owned + tool/stack + business or product result."
-  );
-  improvements.push(
-    "Add 1–2 metrics per recent role (latency, conversion, adoption, revenue, tickets, team size, release cadence)."
-  );
-  if (cv.title) {
-    improvements.push(
-      `Mirror the language of 3 target job ads for “${cv.title}” in your top skills line and first two bullets.`
-    );
-  } else {
-    improvements.push("Choose one target title and put it in the headline — avoid generic “Professional” positioning.");
-  }
-  improvements.push(
-    "Keep a plain single-column layout for ATS applications; use the photo PDF export only for human-forward channels."
-  );
-  if (cv.skills.length) {
-    improvements.push(
-      `Group skills into Core vs Tools (example Core: ${cv.skills.slice(0, 3).join(", ") || "…"}).`
-    );
-  } else {
-    improvements.push("Build a skills section from real work evidence — only list skills you can defend in an interview.");
-  }
-  improvements.push(
-    "Open the summary with: who you are + years/domain + signature outcome + what you’re targeting next."
-  );
-  if (allBullets.length) {
-    improvements.push(
-      `Upgrade your weakest bullet first — pick one line under ${cv.experience[0]?.company || "your latest role"} and make it metric-led this week.`
-    );
-  }
-  improvements.push(...ats.fixes.slice(0, 3));
-
-  // —— Career advice ——
-  careerAdvice.push(
-    "Run a weekly loop: 8–12 high-fit applications, 2 outreach messages, 1 mock interview — consistency beats volume spikes."
-  );
-  careerAdvice.push(
-    "Keep a living “proof library”: 5 STAR stories (success, conflict, failure, leadership, hard technical decision) mapped to your bullets."
-  );
-  if (cv.skills.some((s) => /react|next|frontend|ui/i.test(s)) || /frontend|react/i.test(cv.title)) {
-    careerAdvice.push(
-      "For frontend tracks, pair your CV with one public repo or live URL that proves taste + performance awareness."
-    );
-  } else if (cv.skills.some((s) => /python|java|go|backend|node/i.test(s)) || /backend|engineer/i.test(cv.title)) {
-    careerAdvice.push(
-      "For backend tracks, highlight reliability: scale numbers, incident ownership, or API/design trade-offs in bullets."
-    );
-  } else {
-    careerAdvice.push(
-      "Publish one proof artifact aligned to your target role (case study, dashboard, design write-up, or architecture note)."
-    );
-  }
-  careerAdvice.push(
-    "After every rejection or silence, adjust one thing only (headline, top bullets, or target list) — controlled iteration compounds."
-  );
-  careerAdvice.push(
-    "Use CareerForge Match with a real job ad next: close the top 3 skill gaps with either a project or honest repositioning."
-  );
-
-  // scores
-  let overall = 42;
-  overall += Math.min(18, cv.skills.length * 2);
-  overall += Math.min(16, cv.experience.length * 6);
-  overall += Math.min(12, metricBullets.length * 4);
-  if (cv.summary && cv.summary.length > 80) overall += 8;
-  if (cv.email) overall += 5;
-  if (cv.education.length) overall += 4;
-  if (cv.location) overall += 3;
-  overall = Math.max(28, Math.min(94, overall));
-
-  const summaryLine =
-    overall >= 75
-      ? "Solid professional base — tighten metrics and keyword alignment to compete for stronger roles."
-      : overall >= 55
-        ? "Promising foundation — focused rewrites on summary and bullets will move this into interview-ready range."
-        : "Early-stage CV structure — prioritize contact completeness, 3 strong bullets, and a clear target title first.";
+  const overallScore = Math.round(ats.atsScore * 0.75 + Math.min(25, strengths.length * 4));
+  const summaryLine = ats.summary;
+  const careerAdvice = locale === "tr" ? [
+    "Her hafta yüksek uyumlu 8–12 başvuru, iki hedefli iletişim ve bir prova mülakatından oluşan sürdürülebilir bir ritim kurun.",
+    "Başarı, çatışma, hata, liderlik ve teknik karar konularında beş doğrulanabilir STAR hikâyesi hazırlayın.",
+    "Hedef rolünüzle eşleşen tek bir portföy kanıtını güncel ve erişilebilir tutun.",
+  ] : [
+    "Build a sustainable weekly rhythm of 8–12 high-fit applications, two targeted outreach messages, and one mock interview.",
+    "Prepare five verifiable STAR stories covering success, conflict, failure, leadership, and a technical decision.",
+    "Keep one portfolio artifact aligned with your target role current and accessible.",
+  ];
 
   return {
-    overallScore: overall,
+    overallScore: Math.max(0, Math.min(100, overallScore)),
     atsScore: ats.atsScore,
     strengths: strengths.slice(0, 8),
     weaknesses: weaknesses.slice(0, 8),
-    improvements: improvements.slice(0, 10),
-    careerAdvice: careerAdvice.slice(0, 6),
+    improvements: actionable.map((item) => item.correction),
+    careerAdvice,
     summaryLine,
   };
 }

@@ -1,69 +1,44 @@
 "use client";
 
 import { useEffect } from "react";
-import { motion } from "framer-motion";
-import { RefreshCw, Home } from "lucide-react";
 import Link from "next/link";
+import { AlertTriangle, Home, RefreshCw } from "lucide-react";
+import { useMessages } from "@/i18n/useMessages";
 
-/**
- * Global hata sayfası — "This page couldn't load" yerine markalı TR UI.
- */
-export default function ErrorPage({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  const { locale } = useMessages();
+
   useEffect(() => {
-    console.error("[SoftBridge]", error);
+    console.error("[CareerForge]", error);
   }, [error]);
 
+  const copy = locale === "tr" ? {
+    title: "Çalışma alanı yüklenemedi",
+    body: "Geçici bir sorun oluştu. Yerel verileriniz korunuyor; sayfayı yeniden deneyebilir veya ana sayfaya dönebilirsiniz.",
+    retry: "Yeniden dene",
+    home: "Ana sayfa",
+  } : {
+    title: "The workspace could not load",
+    body: "A temporary problem occurred. Your local data is preserved; try again or return home.",
+    retry: "Try again",
+    home: "Home",
+  };
+
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-6 py-20">
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="text-center max-w-md mx-auto space-y-6"
-      >
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-indigo-50 text-3xl dark:bg-indigo-500/15">
-          ☕
-        </div>
-
-        <div className="space-y-3">
-          <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Kariyer asistanımız şu an dinleniyor
-          </h1>
-          <p className="text-base leading-relaxed text-slate-600 dark:text-slate-400">
-            Sistem meşgul veya geçici bir aksama oluştu. Lütfen bağlantınızı kontrol edip
-            sayfayı yenileyin. Verileriniz cihazınızda güvende.
-          </p>
-        </div>
-
-        <div className="flex items-center justify-center gap-3 flex-wrap">
-          <button
-            type="button"
-            onClick={reset}
-            className="inline-flex items-center gap-2 h-11 px-6 rounded-full text-sm font-bold text-white bg-indigo-600 shadow-lg shadow-indigo-500/30 transition-all hover:bg-indigo-500"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Sayfayı yenile
+    <main className="grid min-h-[70vh] place-items-center px-6 py-16">
+      <div className="surface-panel max-w-lg p-8 text-center">
+        <span className="mx-auto grid h-12 w-12 place-items-center rounded-[var(--radius-control)] bg-[var(--negative-wash)] text-negative"><AlertTriangle className="h-5 w-5" /></span>
+        <h1 className="mt-5 text-xl font-semibold text-ink">{copy.title}</h1>
+        <p className="mt-3 text-sm leading-6 text-ink-2">{copy.body}</p>
+        <div className="mt-7 flex flex-wrap justify-center gap-3">
+          <button type="button" onClick={reset} className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] bg-brand px-5 text-sm font-semibold text-[var(--action-primary-ink)] hover:bg-brand-strong">
+            <RefreshCw className="h-4 w-4" /> {copy.retry}
           </button>
-
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 h-11 px-5 rounded-full text-sm font-semibold border-2 border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200"
-          >
-            <Home className="w-4 h-4" />
-            Ana sayfa
+          <Link href="/" className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border border-line bg-surface px-5 text-sm font-semibold text-ink hover:bg-surface-2">
+            <Home className="h-4 w-4" /> {copy.home}
           </Link>
         </div>
-
-        <p className="text-xs text-slate-500">
-          🔐 Verileriniz asla buluta çıkmaz · %100 yerel işleme
-        </p>
-      </motion.div>
-    </div>
+      </div>
+    </main>
   );
 }

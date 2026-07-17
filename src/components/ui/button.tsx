@@ -16,10 +16,10 @@ const buttonVariants = cva(
         soft: "border border-transparent bg-surface-2 text-ink hover:bg-surface-3",
       },
       size: {
-        default: "h-10 px-4",
-        sm: "h-8 px-3 text-xs",
+        default: "h-11 px-4",
+        sm: "min-h-11 px-3 text-xs",
         lg: "h-12 px-5 text-base",
-        icon: "h-10 w-10 p-0",
+        icon: "h-11 w-11 p-0",
       },
     },
     defaultVariants: { variant: "default", size: "default" },

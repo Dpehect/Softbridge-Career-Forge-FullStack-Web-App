@@ -3,24 +3,29 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-
-const STEPS = [
-  { label: "Profil", meta: "CV", href: "/resume", paths: ["/", "/resume"] },
-  { label: "Kanıt", meta: "Analiz", href: "/forge", paths: ["/forge", "/coach"] },
-  { label: "Fırsat", meta: "İşler", href: "/jobs", paths: ["/jobs", "/paths", "/dashboard"] },
-] as const;
+import { useMessages } from "@/i18n/useMessages";
 
 export function JourneyStepper({ className }: { className?: string }) {
   const pathname = usePathname();
+  const { locale } = useMessages();
+  const steps = locale === "tr" ? [
+    { label: "Profil", meta: "CV", href: "/resume", paths: ["/", "/resume"] },
+    { label: "Kanıt", meta: "Analiz", href: "/forge", paths: ["/forge", "/coach"] },
+    { label: "Fırsat", meta: "İşler", href: "/jobs", paths: ["/jobs", "/paths", "/dashboard"] },
+  ] : [
+    { label: "Profile", meta: "Resume", href: "/resume", paths: ["/", "/resume"] },
+    { label: "Evidence", meta: "Analysis", href: "/forge", paths: ["/forge", "/coach"] },
+    { label: "Opportunity", meta: "Jobs", href: "/jobs", paths: ["/jobs", "/paths", "/dashboard"] },
+  ];
   const currentIndex = Math.max(
     0,
-    STEPS.findIndex((step) => step.paths.some((path) => pathname === path || pathname.startsWith(`${path}/`)))
+    steps.findIndex((step) => step.paths.some((path) => pathname === path || pathname.startsWith(`${path}/`)))
   );
 
   return (
-    <nav className={cn("h-10", className)} aria-label="Kariyer akışı">
+    <nav className={cn("h-10", className)} aria-label={locale === "tr" ? "Kariyer akışı" : "Career workflow"}>
       <ol className="mx-auto flex h-full w-[min(100%-2rem,80rem)] items-center justify-center gap-0">
-        {STEPS.map((step, index) => {
+        {steps.map((step, index) => {
           const active = index === currentIndex;
           const completed = index < currentIndex;
           return (

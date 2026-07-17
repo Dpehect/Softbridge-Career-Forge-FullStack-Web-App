@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { useMessages } from "@/i18n/useMessages";
 
 /**
  * Next.js route error UI for /forge — soft recovery, Turkish copy.
@@ -14,41 +15,37 @@ export default function ForgeError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { locale } = useMessages();
   useEffect(() => {
     console.error("[Forge route error]", error);
   }, [error]);
 
   return (
     <div className="min-h-[55vh] flex items-center justify-center px-4 py-16">
-      <div className="max-w-md w-full rounded-3xl border border-slate-200 bg-white/80 backdrop-blur-sm p-8 shadow-lg text-center space-y-4 dark:bg-white/5 dark:border-white/10">
-        <div className="mx-auto w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center dark:bg-amber-500/15">
-          <AlertTriangle className="w-7 h-7 text-amber-600" />
+      <div className="surface-panel w-full max-w-md space-y-4 p-8 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[var(--radius-control)] bg-[var(--caution-wash)]">
+          <AlertTriangle className="h-7 w-7 text-caution" />
         </div>
-        <h2 className="font-extrabold tracking-tighter text-xl text-star-white">
-          Kariyer asistanımız şu an dinleniyor
+        <h2 className="text-xl font-semibold text-ink">
+          {locale === "tr" ? "CV analizi yüklenemedi" : "Resume analysis could not load"}
         </h2>
         <p className="text-sm text-slate-500 leading-relaxed">
-          Sistem meşgul, lütfen bağlantınızı kontrol edip tekrar deneyin. Verileriniz cihazınızda
-          güvende — hiçbir şey sunucuya gitmedi.
+          {locale === "tr" ? "Geçici bir sorun oluştu. Yerel verileriniz korunuyor; yeniden deneyebilir veya CV Düzenleyici'ye geçebilirsiniz." : "A temporary problem occurred. Your local data is preserved; try again or continue to Resume Editor."}
         </p>
         <div className="flex flex-wrap justify-center gap-3 pt-2">
           <button
             type="button"
             onClick={() => reset()}
-            className="inline-flex h-11 items-center gap-2 rounded-2xl px-5 text-sm font-bold text-white shadow-lg transition-transform hover:scale-102"
-            style={{
-              background: "linear-gradient(135deg, #6B21A8, #A855F7)",
-              boxShadow: "0 4px 12px rgba(107, 33, 168, 0.25)",
-            }}
+            className="inline-flex h-11 items-center gap-2 rounded-[var(--radius-control)] bg-brand px-5 text-sm font-bold text-[var(--action-primary-ink)] hover:bg-brand-strong"
           >
             <RefreshCw className="w-4 h-4" />
-            Tekrar dene
+            {locale === "tr" ? "Yeniden dene" : "Try again"}
           </button>
           <Link
             href="/resume"
-            className="inline-flex h-11 items-center rounded-2xl px-5 text-sm font-semibold border-2 border-slate-200 text-slate-700 hover:bg-slate-50"
+            className="inline-flex h-11 items-center rounded-[var(--radius-control)] border border-line bg-surface px-5 text-sm font-semibold text-ink hover:bg-surface-2"
           >
-            Özgeçmişe git
+            {locale === "tr" ? "CV Düzenleyici'ye git" : "Open Resume Editor"}
           </Link>
         </div>
       </div>

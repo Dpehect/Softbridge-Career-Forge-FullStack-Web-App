@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Özgeçmiş Düzenleyici",
-  description: "Özgeçmişinizi yapılandırın, düzenleyin ve Forge ile analiz edin.",
+  title: "Resume Editor",
+  description: "Private structured resume editing with autosave, undo, section reordering, and print-ready preview.",
+  robots: { index: false, follow: false },
 };
 
 export default function ResumeLayout({ children }: { children: React.ReactNode }) {

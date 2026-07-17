@@ -59,6 +59,7 @@ export interface ResumeProfile {
   fullName: string;
   headline: string;
   email: string;
+  phone: string;
   location: string;
   summary: string;
   skills: string[];

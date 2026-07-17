@@ -1,5 +1,7 @@
 import type { MatchAnalysis, ParsedCV } from "./types";
 import { SKILL_LEXICON } from "./parse";
+import type { Locale } from "@/i18n/messages";
+import { calculateAtsScore, getAtsSummary } from "@/features/analysis/atsScore";
 
 function extractJdSkills(jd: string) {
   const lower = jd.toLowerCase();
@@ -37,7 +39,7 @@ function normalizeSkill(s: string) {
   return s.toLowerCase().replace(/\./g, "").trim();
 }
 
-export function analyzeMatch(cv: ParsedCV, jd: string): MatchAnalysis {
+export function analyzeMatch(cv: ParsedCV, jd: string, locale: Locale = "tr"): MatchAnalysis {
   const jdSkills = extractJdSkills(jd);
   const cvSkills = cv.skills.map(normalizeSkill);
   const cvBlob = [
@@ -69,51 +71,52 @@ export function analyzeMatch(cv: ParsedCV, jd: string): MatchAnalysis {
   let matchScore = Math.round(skillRatio * 70 + expBoost + summaryBoost + emailBoost);
   matchScore = Math.max(18, Math.min(96, matchScore));
 
-  // ATS score: structure + keywords
-  let atsScore = 40;
-  if (cv.email) atsScore += 8;
-  if (cv.skills.length >= 5) atsScore += 12;
-  if (cv.experience.length >= 1) atsScore += 12;
-  if (cv.experience.some((e) => e.description.length >= 2)) atsScore += 10;
-  if (matchedSkills.length >= 3) atsScore += 12;
-  if (cv.rawLength > 400 && cv.rawLength < 6000) atsScore += 6;
-  atsScore = Math.max(20, Math.min(98, atsScore));
+  const atsScore = calculateAtsScore(cv).total;
 
   const strengths: string[] = [];
   if (matchedSkills.length) {
-    strengths.push(`İlanla örtüşen beceriler: ${matchedSkills.slice(0, 6).join(", ")}`);
+    strengths.push(locale === "tr"
+      ? `İlanla örtüşen beceriler: ${matchedSkills.slice(0, 6).join(", ")}`
+      : `Skills aligned with the role: ${matchedSkills.slice(0, 6).join(", ")}`);
   }
   if (cv.experience.length >= 2) {
-    strengths.push("Birden fazla deneyim bloğu mevcut — hikaye anlatımı için iyi zemin.");
+    strengths.push(locale === "tr" ? "Birden fazla deneyim bölümü, kariyer gelişimini anlatmak için güçlü bir temel sağlıyor." : "Multiple experience sections provide a strong foundation for a clear career narrative.");
   }
   if (cv.summary) {
-    strengths.push("Özet/profil metni var; konumlandırma için kullanılabilir.");
+    strengths.push(locale === "tr" ? "Profil özeti, hedef rol konumlandırması için kullanılabilir." : "The profile summary can support target-role positioning.");
   }
   if (cv.title) {
-    strengths.push(`Başlık net görünüyor: ${cv.title}`);
+    strengths.push(locale === "tr" ? `Profesyonel başlık net: ${cv.title}` : `The professional headline is clear: ${cv.title}`);
   }
   if (!strengths.length) {
-    strengths.push("CV içeriği yüklendi; hedefe göre şekillendirilebilir bir temel var.");
+    strengths.push(locale === "tr" ? "CV içeriği, hedef role göre geliştirilebilecek bir temel sunuyor." : "The resume provides a foundation that can be developed for the target role.");
   }
 
   const gaps: string[] = [];
   if (missingSkills.length) {
-    gaps.push(`Eksik veya zayıf görünen beceriler: ${missingSkills.slice(0, 8).join(", ")}`);
+    gaps.push(locale === "tr" ? `Eksik veya zayıf görünen beceriler: ${missingSkills.slice(0, 8).join(", ")}` : `Missing or weak skill signals: ${missingSkills.slice(0, 8).join(", ")}`);
   }
-  if (!cv.summary) gaps.push("Güçlü bir profesyonel özet eksik.");
+  if (!cv.summary) gaps.push(locale === "tr" ? "Profesyonel profil özeti eksik." : "A professional profile summary is missing.");
   if (cv.experience.every((e) => e.description.length < 2)) {
-    gaps.push("Deneyim maddeleri ölçülebilir başarıdan yoksun görünüyor.");
+    gaps.push(locale === "tr" ? "Deneyim maddeleri ölçülebilir sonuçları yeterince göstermiyor." : "Experience bullets do not show enough measurable outcomes.");
   }
-  if (!cv.email) gaps.push("İletişim e-postası tespit edilemedi (ATS için kritik).");
-  if (matchScore < 55) gaps.push("Genel uyum orta-altı; ilan diline daha fazla hizalama gerekli.");
+  if (!cv.email) gaps.push(locale === "tr" ? "İletişim e-postası tespit edilemedi." : "A contact email could not be detected.");
+  if (matchScore < 55) gaps.push(locale === "tr" ? "Hedef rol uyumu düşük; ilan terminolojisiyle dürüst eşleşme güçlendirilmeli." : "Target-role alignment is low; honest alignment with job terminology should be strengthened.");
 
-  const suggestions: string[] = [
-    "İlandaki en kritik 5 anahtar kelimeyi özet ve ilk 2 deneyim maddesine doğal şekilde ekle.",
-    "Her deneyim maddesini Etki + Metrik + Yöntem formatına çevir (ör. %X iyileşme, N kullanıcı).",
+  const suggestions: string[] = locale === "tr" ? [
+    "İlandaki en kritik beş anahtar kelimeyi yalnızca gerçek deneyiminizle destekleyebildiğiniz yerlerde kullanın.",
+    "Her deneyim maddesini eylem, yöntem ve doğrulanmış sonuç sırasıyla yeniden yazın.",
     missingSkills[0]
-      ? `"${missingSkills[0]}" için mini kanıt üret: proje, kurs veya iş maddesi.`
-      : "Zaten iyi örtüşen becerileri portföy linki veya proje ile kanıtla.",
-    "ATS için başlıkları sade tut: Deneyim, Beceriler, Eğitim — tablo/ikon kullanma.",
+      ? `"${missingSkills[0]}" için proje, eğitim veya iş deneyiminden doğrulanabilir bir kanıt ekleyin.`
+      : "Güçlü eşleşen becerileri portföy veya proje bağlantısıyla kanıtlayın.",
+    "ATS için bölüm başlıklarını sade tutun: Deneyim, Beceriler ve Eğitim.",
+  ] : [
+    "Use the five most important job keywords only where they are supported by real experience.",
+    "Rewrite each experience bullet in the order of action, method, and verified outcome.",
+    missingSkills[0]
+      ? `Add verifiable evidence for "${missingSkills[0]}" from a project, course, or work experience.`
+      : "Support strongly aligned skills with a portfolio or project link.",
+    "Keep ATS section headings simple: Experience, Skills, and Education.",
   ];
 
   return {
@@ -127,39 +130,35 @@ export function analyzeMatch(cv: ParsedCV, jd: string): MatchAnalysis {
   };
 }
 
-export function analyzeAts(cv: ParsedCV, jd = ""): {
-  atsScore: number;
-  issues: string[];
-  fixes: string[];
-  keywordCoverage: number;
-} {
-  const analysis = analyzeMatch(cv, jd || cv.skills.join(" "));
+export function analyzeAts(cv: ParsedCV, jd = "", locale: Locale = "tr") {
+  const analysis = analyzeMatch(cv, jd || cv.skills.join(" "), locale);
+  const score = calculateAtsScore(cv);
   const issues: string[] = [];
   const fixes: string[] = [];
 
   if (!cv.email) {
-    issues.push("E-posta alanı eksik veya algılanamadı");
-    fixes.push("CV başına ad + e-posta + telefon + şehir satırı ekle");
+    issues.push(locale === "tr" ? "E-posta alanı eksik veya algılanamadı." : "The email field is missing or could not be detected.");
+    fixes.push(locale === "tr" ? "CV'nin üst bölümüne ad, e-posta, telefon ve şehir bilgisi ekleyin." : "Add name, email, phone, and location to the resume header.");
   }
   if (cv.skills.length < 5) {
-    issues.push("Beceri listesi zayıf (ATS anahtar kelime yoğunluğu düşük)");
-    fixes.push("JD’den 6–10 teknik/araç anahtar kelimesini Beceriler bölümüne ekle");
+    issues.push(locale === "tr" ? "Beceri listesi hedef rol için dar kalıyor." : "The skills list is narrow for the target role.");
+    fixes.push(locale === "tr" ? "Yalnızca doğrulayabildiğiniz 6–10 rol becerisini ekleyin." : "Add 6–10 role skills that you can verify with real experience.");
   }
   if (cv.experience.some((e) => e.description.some((d) => d.length > 220))) {
-    issues.push("Çok uzun maddeler parse edilebilirliği düşürebilir");
-    fixes.push("Her maddeyi 1–2 satırda, fiil + sonuç formatında kısalt");
+    issues.push(locale === "tr" ? "Bazı deneyim maddeleri taranamayacak kadar uzun." : "Some experience bullets are too long to scan efficiently.");
+    fixes.push(locale === "tr" ? "Her maddeyi bir veya iki satırda eylem ve sonuç yapısıyla kısaltın." : "Shorten each bullet to one or two lines using action and outcome.");
   }
   if (!cv.experience.length) {
-    issues.push("Deneyim bölümü zayıf yapılandırılmış");
-    fixes.push("Şirket | Pozisyon | Tarih + 3–5 bullet düzenine geç");
+    issues.push(locale === "tr" ? "Deneyim bölümü bulunamadı veya yapılandırılmadı." : "The experience section is missing or unstructured.");
+    fixes.push(locale === "tr" ? "Şirket, pozisyon, tarih ve 3–5 sonuç maddesi ekleyin." : "Add company, role, dates, and 3–5 outcome bullets.");
   }
   if (analysis.missingSkills.length > 5) {
-    issues.push("İlan anahtar kelimeleriyle düşük örtüşme");
-    fixes.push("Eksik kelimeleri gerçek deneyimle eşleştir; uydurma, yeniden ifade et");
+    issues.push(locale === "tr" ? "Hedef ilan terminolojisiyle düşük örtüşme var." : "Alignment with target-job terminology is low.");
+    fixes.push(locale === "tr" ? "Eksik terimleri yalnızca gerçek deneyimle eşleştiğinde ekleyin; deneyim uydurmayın." : "Add missing terms only when supported by real experience; never invent evidence.");
   }
   if (!issues.length) {
-    issues.push("Kritik yapısal sorun görünmüyor");
-    fixes.push("PDF yerine .docx veya sade metin yüklemeyi de test et");
+    issues.push(locale === "tr" ? "Kritik yapısal sorun görünmüyor." : "No critical structural issue was detected.");
+    fixes.push(locale === "tr" ? "Hedef rol terminolojisini ve ölçülebilir sonuçları geliştirin." : "Refine target-role terminology and measurable outcomes.");
   }
 
   const keywordCoverage = analysis.matchedSkills.length + analysis.missingSkills.length
@@ -171,9 +170,12 @@ export function analyzeAts(cv: ParsedCV, jd = ""): {
     : 50;
 
   return {
-    atsScore: analysis.atsScore,
+    atsScore: score.total,
     issues,
     fixes,
     keywordCoverage,
+    status: score.status,
+    summary: getAtsSummary(score.total, locale),
+    breakdown: score.categories,
   };
 }

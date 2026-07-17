@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { extractTextFromFile } from "@/lib/forge/extractFileText";
+import { useMessages } from "@/i18n/useMessages";
 
 type Props = {
   label?: string;
@@ -23,13 +24,19 @@ type Props = {
  */
 export function FilePickButton({
   label = "Choose file",
-  accept = ".txt,.md,.markdown,.csv,.json,.log,.rtf,.pdf,text/plain,application/pdf",
+  accept = ".txt,.md,.markdown,.csv,.json,.log,.rtf,.pdf,.docx,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   onText,
   silentSuccess = false,
   className,
   size = "sm",
   variant = "outline",
 }: Props) {
+  const { locale } = useMessages();
+  const copy = locale === "tr" ? {
+    loaded: "yüklendi.", scanned: "Bu PDF taranmış görünüyor. Aranabilir metin olarak dışa aktarın veya metni yapıştırın.", unsupported: "Desteklenen formatlar: PDF, DOCX ve TXT.", empty: "Dosya boş görünüyor.", failed: "Dosya okunamadı. Tekrar deneyin.", reading: "Okunuyor...",
+  } : {
+    loaded: "uploaded.", scanned: "This PDF appears to be scanned. Export it with searchable text or paste the text.", unsupported: "Supported formats: PDF, DOCX, and TXT.", empty: "The file appears to be empty.", failed: "The file could not be read. Try again.", reading: "Reading...",
+  };
   const inputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -49,20 +56,20 @@ export function FilePickButton({
       setFileName(file.name);
       onText(text, file.name, { kind });
       if (!silentSuccess) {
-        toast.success(`${file.name} yüklendi.`);
+        toast.success(`${file.name} ${copy.loaded}`);
       }
     } catch (err) {
       const code = err instanceof Error ? err.message : "";
       if (code === "PDF_SCANNED" || code === "PDF_NO_TEXT") {
         toast.error(
-          "Bu PDF taranmış görünüyor. Aranabilir metin olarak dışa aktarın veya yapıştırın."
+          copy.scanned
         );
       } else if (code === "UNSUPPORTED") {
-        toast.error("Desteklenen formatlar: PDF ve TXT.");
+        toast.error(copy.unsupported);
       } else if (code === "EMPTY") {
-        toast.error("Dosya boş görünüyor.");
+        toast.error(copy.empty);
       } else {
-        toast.error("Dosya okunamadı. Tekrar deneyin.");
+        toast.error(copy.failed);
       }
     } finally {
       setLoading(false);
@@ -82,7 +89,7 @@ export function FilePickButton({
       />
       <Button type="button" size={size} variant={variant} onClick={openPicker} disabled={loading} className={cn(loading && "opacity-50")}>
         <FolderOpen className="w-4 h-4" />
-        {loading ? "Okunuyor…" : label}
+        {loading ? copy.reading : label}
       </Button>
       {fileName && (
         <span className="text-[11px] text-muted-steel max-w-[140px] truncate" title={fileName}>

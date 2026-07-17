@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "AI Koç",
-  description: "Kariyer koçu ile STAR cevapları, CV önerileri ve mülakat pratiği.",
+  title: "Career and Interview Coach",
+  description: "Resume-grounded career coaching, STAR answer preparation, and interview practice in Turkish and English.",
+  robots: { index: false, follow: false },
 };
 
 export default function CoachLayout({ children }: { children: React.ReactNode }) {

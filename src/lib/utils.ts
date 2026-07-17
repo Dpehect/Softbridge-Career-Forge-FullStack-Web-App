@@ -16,12 +16,13 @@ export function formatSalary(min: number, max: number, currency = "USD") {
   return `${fmt(min)} – ${fmt(max)}`;
 }
 
-export function formatRelativeDate(iso: string) {
+export function formatRelativeDate(iso: string, locale: "tr" | "en" = "en") {
   const diff = Date.now() - new Date(iso).getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  if (days <= 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days}d ago`;
-  if (days < 30) return `${Math.floor(days / 7)}w ago`;
-  return `${Math.floor(days / 30)}mo ago`;
+  const formatter = new Intl.RelativeTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    numeric: "auto",
+  });
+  if (days < 7) return formatter.format(-Math.max(0, days), "day");
+  if (days < 30) return formatter.format(-Math.floor(days / 7), "week");
+  return formatter.format(-Math.floor(days / 30), "month");
 }

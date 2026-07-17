@@ -4,7 +4,32 @@
  * - Never returns raw %PDF / font / xref garbage to the UI
  */
 
-import { inflateSync, unzlibSync } from "fflate";
+import { inflateSync, unzipSync, unzlibSync } from "fflate";
+
+interface PdfTextItem {
+  str: string;
+  transform: number[];
+}
+
+interface PdfPage {
+  getTextContent: () => Promise<{ items: PdfTextItem[] }>;
+}
+
+interface PdfDocument {
+  numPages: number;
+  getPage: (pageNumber: number) => Promise<PdfPage>;
+}
+
+interface PdfJsLibrary {
+  GlobalWorkerOptions: { workerSrc: string };
+  getDocument: (options: { data: Uint8Array }) => { promise: Promise<PdfDocument> };
+}
+
+declare global {
+  interface Window {
+    pdfjsLib?: PdfJsLibrary;
+  }
+}
 
 function decodePdfStringEscapes(s: string): string {
   return s
@@ -142,7 +167,7 @@ function isHumanLine(line: string): boolean {
 }
 
 export function cleanExtractedText(text: string): string {
-  let t = text
+  const t = text
     .replace(/%PDF-[\d.]+/gi, " ")
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, " ")
     .replace(/\r\n/g, "\n")
@@ -336,18 +361,18 @@ export function extractTextFromPdfBytes(bytes: Uint8Array): {
   return { text, likelyScanned: false };
 }
 
-async function loadPdfJS(): Promise<any> {
+async function loadPdfJS(): Promise<PdfJsLibrary> {
   if (typeof window === "undefined") {
     throw new Error("Window not defined");
   }
-  if ((window as any).pdfjsLib) {
-    return (window as any).pdfjsLib;
+  if (window.pdfjsLib) {
+    return window.pdfjsLib;
   }
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
     script.src = "/pdfjs/pdf.min.js";
     script.onload = () => {
-      const pdfjsLib = (window as any).pdfjsLib;
+      const pdfjsLib = window.pdfjsLib;
       if (pdfjsLib) {
         pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.js";
         resolve(pdfjsLib);
@@ -370,7 +395,7 @@ export async function extractTextWithPdfJS(bytes: Uint8Array): Promise<string> {
   for (let i = 1; i <= numPages; i++) {
     const page = await pdf.getPage(i);
     const textContent = await page.getTextContent();
-    const items = textContent.items as any[];
+    const items = textContent.items;
     if (items.length === 0) continue;
 
     const itemsWithY = items.map(item => ({
@@ -412,6 +437,24 @@ export async function extractTextFromFile(
     name.endsWith(".pdf") ||
     file.type === "application/pdf" ||
     file.type === "application/x-pdf";
+  const isDocx =
+    name.endsWith(".docx") ||
+    file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+  if (isDocx) {
+    const archive = unzipSync(new Uint8Array(await file.arrayBuffer()));
+    const documentXml = archive["word/document.xml"];
+    if (!documentXml) throw new Error("UNSUPPORTED");
+    const xml = new TextDecoder("utf-8").decode(documentXml);
+    const document = new DOMParser().parseFromString(xml, "application/xml");
+    if (document.querySelector("parsererror")) throw new Error("UNSUPPORTED");
+    const paragraphs = Array.from(document.getElementsByTagNameNS("*", "p"));
+    const text = cleanExtractedText(paragraphs.map((paragraph) =>
+      Array.from(paragraph.getElementsByTagNameNS("*", "t")).map((node) => node.textContent ?? "").join("")
+    ).join("\n"));
+    if (!text.trim()) throw new Error("EMPTY");
+    return { text, kind: "text" };
+  }
 
   if (isPdf) {
     const buf = new Uint8Array(await file.arrayBuffer());

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { DemoNotice } from "@/components/DemoNotice";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,13 +25,14 @@ const siteUrl =
     : "https://careerforge.softbridgesolutions.com");
 
 export const metadata: Metadata = {
+  applicationName: "CareerForge",
   metadataBase: new URL(siteUrl),
   title: {
-    default: "CareerForge | Kişisel Kariyer Asistanı",
+    default: "CareerForge | Resume and Career Workspace",
     template: "%s | CareerForge",
   },
   description:
-    "CV analizi, iş eşleştirme, ATS optimizasyonu, PDF dışa aktarma ve mülakat hazırlığı — tarayıcınızda gizli. SoftBridge Solutions.",
+    "Bilingual resume analysis, explainable ATS scoring, job matching, resume editing, interview coaching, and career roadmaps.",
   keywords: [
     "CV analizi",
     "ATS",
@@ -40,19 +42,26 @@ export const metadata: Metadata = {
     "SoftBridge",
   ],
   authors: [{ name: "SoftBridge Solutions" }],
+  creator: "SoftBridge Solutions",
+  category: "career development",
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/icon.svg" },
   openGraph: {
-    title: "CareerForge | Kişisel Kariyer Asistanı",
+    title: "CareerForge | Resume and Career Workspace",
     description:
       "Profesyonel CV araçları, iş eşleştirme, ATS kontrolü ve mülakat hazırlığı — tarayıcınızda gizli.",
     url: siteUrl,
     siteName: "CareerForge",
     locale: "tr_TR",
+    alternateLocale: "en_US",
     type: "website",
+    images: [{ url: "/icon.svg", width: 512, height: 512, alt: "CareerForge" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CareerForge | Kişisel Kariyer Asistanı",
-    description: "Yerel AI ile CV analizi ve kariyer hazırlığı.",
+    title: "CareerForge | Resume and Career Workspace",
+    description: "Explainable resume analysis and career preparation in Turkish and English.",
+    images: ["/icon.svg"],
   },
   robots: { index: true, follow: true },
   alternates: {
@@ -64,6 +73,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html
       lang="tr"
+      suppressHydrationWarning
       data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
     >
@@ -78,12 +88,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             __html: `
 (function() {
   try {
-    var stored = localStorage.getItem('career-store');
+    var stored = localStorage.getItem('softbridge-careerforge');
     if (stored) {
       var parsed = JSON.parse(stored);
       var theme = parsed && parsed.state && parsed.state.theme;
+      var lang = parsed && parsed.state && parsed.state.lang;
       if (theme === 'dark') {
         document.documentElement.classList.add('dark');
+      }
+      if (lang === 'tr' || lang === 'en') {
+        document.documentElement.lang = lang;
       }
     }
     // Default = light — do nothing if no preference saved
@@ -95,7 +109,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body className="min-h-full flex flex-col bg-background text-ink font-sans">
         <Header />
-        <div className="flex-1 pt-16 pb-16 md:pt-[6.5rem] md:pb-0">{children}</div>
+        <div className="flex-1 pt-16 pb-16 md:pt-[6.5rem] md:pb-0">
+          <DemoNotice />
+          {children}
+        </div>
         <Footer />
         <Toaster
           theme="system"

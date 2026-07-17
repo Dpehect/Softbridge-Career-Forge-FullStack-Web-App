@@ -8,6 +8,7 @@ import {
   FileDown,
   FileText,
   LayoutDashboard,
+  Languages,
   Menu,
   MessagesSquare,
   Moon,
@@ -20,17 +21,18 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useCareerStore } from "@/store/useCareerStore";
+import { resumeToParsed, useCareerStore } from "@/store/useCareerStore";
 import { exportCvAsPdf } from "@/lib/forge";
 import { JourneyStepper } from "@/components/JourneyStepper";
+import { useMessages } from "@/i18n/useMessages";
 
 const NAV_ITEMS = [
-  { path: "/dashboard", label: "Genel Bakış", shortLabel: "Özet", icon: LayoutDashboard },
-  { path: "/forge", label: "Analiz", shortLabel: "Analiz", icon: ScanLine },
-  { path: "/resume", label: "Özgeçmiş", shortLabel: "CV", icon: FileText },
-  { path: "/jobs", label: "İşler", shortLabel: "İşler", icon: BriefcaseBusiness },
-  { path: "/coach", label: "Koç", shortLabel: "Koç", icon: MessagesSquare },
-  { path: "/paths", label: "Yollar", shortLabel: "Yollar", icon: Route },
+  { path: "/dashboard", label: "dashboard", shortLabel: "shortDashboard", icon: LayoutDashboard },
+  { path: "/forge", label: "analysis", shortLabel: "shortAnalysis", icon: ScanLine },
+  { path: "/resume", label: "resume", shortLabel: "shortResume", icon: FileText },
+  { path: "/jobs", label: "jobs", shortLabel: "shortJobs", icon: BriefcaseBusiness },
+  { path: "/coach", label: "coach", shortLabel: "shortCoach", icon: MessagesSquare },
+  { path: "/paths", label: "roadmap", shortLabel: "shortRoadmap", icon: Route },
 ] as const;
 
 export function Header() {
@@ -38,11 +40,13 @@ export function Header() {
   const profileRef = useRef<HTMLDivElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const { locale, messages } = useMessages();
   const {
     resume,
     forgeParsedCv,
     theme,
     setTheme,
+    setLang,
     resetResume,
     clearForgeCv,
   } = useCareerStore();
@@ -50,6 +54,10 @@ export function Header() {
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   useEffect(() => {
     const close = (event: MouseEvent) => {
@@ -70,49 +78,28 @@ export function Header() {
       resume.experience.length
   );
   const firstName =
-    forgeParsedCv?.name?.split(" ")[0] || resume.fullName.trim().split(" ")[0] || "Profil";
+    forgeParsedCv?.name?.split(" ")[0] || resume.fullName.trim().split(" ")[0] || messages.header.profile;
   const activeItem = NAV_ITEMS.find(
     (item) => pathname === item.path || pathname.startsWith(`${item.path}/`)
   );
 
   const exportResume = async () => {
-    const cv = forgeParsedCv ?? (hasResume ? {
-      name: resume.fullName || "Aday",
-      title: resume.headline || "Profesyonel",
-      email: resume.email,
-      phone: null,
-      location: resume.location || null,
-      summary: resume.summary || null,
-      skills: resume.skills,
-      experience: resume.experience.map((item) => ({
-        company: item.company,
-        position: item.role,
-        duration: [item.start, item.end].filter(Boolean).join(" – ") || "—",
-        description: item.highlights,
-      })),
-      education: resume.education.map((item) => ({
-        school: item.school,
-        degree: item.degree,
-        year: item.year,
-      })),
-      rawLength: 0,
-      photoDataUrl: resume.photoDataUrl || null,
-    } : null);
+    const cv = forgeParsedCv ?? (hasResume ? resumeToParsed(resume) : null);
 
     if (!cv) {
-      toast.error("Önce bir özgeçmiş oluşturun.");
+      toast.error(messages.header.createFirst);
       return;
     }
     await exportCvAsPdf(cv);
-    toast.success("PDF hazırlandı.");
+    toast.success(messages.header.pdfReady);
     setProfileOpen(false);
   };
 
   const clearProfile = () => {
-    if (!window.confirm("Özgeçmiş ve analiz verilerini temizlemek istiyor musunuz?")) return;
+    if (!window.confirm(messages.header.clearConfirm)) return;
     resetResume();
     clearForgeCv();
-    toast.success("Çalışma alanı temizlendi.");
+    toast.success(messages.header.cleared);
     setProfileOpen(false);
   };
 
@@ -120,7 +107,7 @@ export function Header() {
     <>
       <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-surface">
         <div className="mx-auto flex h-16 w-[min(100%-2rem,80rem)] items-center gap-4">
-          <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label="CareerForge ana sayfa">
+          <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label={messages.header.home}>
             <span className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] bg-ink text-[0.6875rem] font-bold text-background transition-transform duration-200 group-hover:-rotate-3">
               CF
             </span>
@@ -129,10 +116,10 @@ export function Header() {
 
           <span className="hidden h-5 w-px bg-line lg:block" aria-hidden />
           <span className="hidden min-w-24 text-xs text-ink-3 lg:block">
-            {activeItem?.label || "Kariyer OS"}
+            {activeItem ? messages.nav[activeItem.label] : messages.header.workspace}
           </span>
 
-          <nav className="mx-auto hidden items-stretch self-stretch md:flex" aria-label="Ana menü">
+          <nav className="mx-auto hidden items-stretch self-stretch md:flex" aria-label={messages.nav.primary}>
             {NAV_ITEMS.map((item) => {
               const active = pathname === item.path || pathname.startsWith(`${item.path}/`);
               return (
@@ -144,7 +131,7 @@ export function Header() {
                     active ? "text-ink" : "text-ink-3 hover:text-ink"
                   )}
                 >
-                  {item.label}
+                  {messages.nav[item.label]}
                   {active && <span className="absolute inset-x-3 bottom-0 h-0.5 bg-brand" />}
                 </Link>
               );
@@ -154,10 +141,20 @@ export function Header() {
           <div className="ml-auto flex items-center gap-1.5">
             <button
               type="button"
+              onClick={() => setLang(locale === "tr" ? "en" : "tr")}
+              className="inline-flex h-11 items-center gap-1.5 rounded-[var(--radius-control)] px-2 text-xs font-semibold text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
+              aria-label={messages.languageAction}
+              title={messages.languageAction}
+            >
+              <Languages className="h-4 w-4" />
+              <span>{locale.toUpperCase()}</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="grid h-9 w-9 place-items-center rounded-[var(--radius-control)] text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
-              aria-label={theme === "dark" ? "Açık temaya geç" : "Koyu temaya geç"}
-              title={theme === "dark" ? "Açık tema" : "Koyu tema"}
+              className="grid h-11 w-11 place-items-center rounded-[var(--radius-control)] text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
+              aria-label={theme === "dark" ? messages.header.lightTheme : messages.header.darkTheme}
+              title={theme === "dark" ? messages.header.light : messages.header.dark}
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
@@ -166,7 +163,7 @@ export function Header() {
               <button
                 type="button"
                 onClick={() => setProfileOpen((value) => !value)}
-                className="flex h-9 items-center gap-2 rounded-[var(--radius-control)] border border-line bg-surface px-2.5 text-xs font-medium text-ink transition-colors hover:bg-surface-2"
+                className="flex h-11 items-center gap-2 rounded-[var(--radius-control)] border border-line bg-surface px-2.5 text-xs font-medium text-ink transition-colors hover:bg-surface-2"
                 aria-expanded={profileOpen}
                 aria-haspopup="menu"
               >
@@ -180,8 +177,8 @@ export function Header() {
               {profileOpen && (
                 <div className="absolute right-0 top-11 w-56 rounded-[var(--radius-panel)] border border-line bg-surface p-1.5 shadow-lg" role="menu">
                   <div className="border-b border-line px-2.5 py-2">
-                    <p className="text-xs font-semibold text-ink">Yerel profil</p>
-                    <p className="mt-0.5 text-[0.6875rem] text-ink-3">Veriler yalnızca bu cihazda</p>
+                    <p className="text-xs font-semibold text-ink">{messages.header.localProfile}</p>
+                    <p className="mt-0.5 text-[0.6875rem] text-ink-3">{messages.header.localData}</p>
                   </div>
                   <button
                     type="button"
@@ -189,7 +186,7 @@ export function Header() {
                     className="mt-1 flex w-full items-center gap-2 rounded-[var(--radius-control)] px-2.5 py-2 text-left text-xs text-ink-2 hover:bg-surface-2 hover:text-ink"
                     role="menuitem"
                   >
-                    <FileDown className="h-3.5 w-3.5" /> PDF dışa aktar
+                    <FileDown className="h-3.5 w-3.5" /> {messages.header.exportPdf}
                   </button>
                   <button
                     type="button"
@@ -197,7 +194,7 @@ export function Header() {
                     className="flex w-full items-center gap-2 rounded-[var(--radius-control)] px-2.5 py-2 text-left text-xs text-negative hover:bg-[var(--negative-wash)]"
                     role="menuitem"
                   >
-                    <Trash2 className="h-3.5 w-3.5" /> Verileri temizle
+                    <Trash2 className="h-3.5 w-3.5" /> {messages.header.clearData}
                   </button>
                 </div>
               )}
@@ -206,8 +203,8 @@ export function Header() {
             <button
               type="button"
               onClick={() => setMobileOpen((value) => !value)}
-              className="grid h-9 w-9 place-items-center rounded-[var(--radius-control)] text-ink md:hidden"
-              aria-label={mobileOpen ? "Menüyü kapat" : "Menüyü aç"}
+              className="grid h-11 w-11 place-items-center rounded-[var(--radius-control)] text-ink md:hidden"
+              aria-label={mobileOpen ? messages.header.closeMenu : messages.header.openMenu}
               aria-expanded={mobileOpen}
             >
               {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -218,7 +215,7 @@ export function Header() {
         <JourneyStepper className="hidden border-t border-line bg-background md:block" />
 
         {mobileOpen && (
-          <nav className="border-t border-line bg-surface px-4 py-3 md:hidden" aria-label="Mobil menü">
+          <nav className="border-t border-line bg-surface px-4 py-3 md:hidden" aria-label={messages.nav.mobile}>
             <div className="grid grid-cols-2 gap-1">
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
@@ -233,7 +230,7 @@ export function Header() {
                       active ? "bg-[var(--accent-wash)] text-brand-strong" : "text-ink-2 hover:bg-surface-2"
                     )}
                   >
-                    <Icon className="h-4 w-4" /> {item.label}
+                    <Icon className="h-4 w-4" /> {messages.nav[item.label]}
                   </Link>
                 );
               })}
@@ -242,7 +239,7 @@ export function Header() {
         )}
       </header>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-6 border-t border-line bg-surface px-1 pb-[env(safe-area-inset-bottom)] md:hidden" aria-label="Hızlı menü">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-6 border-t border-line bg-surface px-1 pb-[env(safe-area-inset-bottom)] md:hidden" aria-label={messages.nav.quick}>
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.path || pathname.startsWith(`${item.path}/`);
@@ -258,7 +255,7 @@ export function Header() {
               aria-current={active ? "page" : undefined}
             >
               <Icon className="h-4 w-4" />
-              <span className="truncate">{item.shortLabel}</span>
+              <span className="truncate">{messages.nav[item.shortLabel]}</span>
             </Link>
           );
         })}

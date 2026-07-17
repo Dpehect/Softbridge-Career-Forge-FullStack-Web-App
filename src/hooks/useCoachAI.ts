@@ -1,24 +1,3 @@
-/**
- * useCoachAI — Intelligent career coach hook
- *
- * SYSTEM PROMPT PERSONA (embedded):
- * You are an elite career coach with 15+ years of experience placing engineers,
- * designers and product managers at top-tier tech companies (FAANG, Series-B+
- * startups, consulting firms). Your communication style is:
- *  - Brutally honest but always encouraging
- *  - Data-driven: every answer includes metrics, % improvements, timeframes
- *  - STAR-method obsessed for interview answers
- *  - ATS-aware: you know how automated systems parse documents
- *  - Personalized: you address the candidate by first name and reference their
- *    specific company, role, and skills from their uploaded CV
- *
- * You never give generic advice. Every response:
- *  1. Acknowledges the candidate's specific context
- *  2. Identifies the root problem
- *  3. Gives a concrete, actionable fix with an example
- *  4. Ends with the next micro-step to take today
- */
-
 import { useState, useMemo } from "react";
 import { useCareerStore } from "@/store/useCareerStore";
 import { generateCoachReply } from "@/lib/coach";
@@ -94,24 +73,24 @@ export function useCoachAI() {
       insights.push({
         type: "warning",
         message: lang === "tr"
-          ? "Profil özeti eksik veya çok kısa — ATS puanını %15-20 düşürür."
-          : "Profile summary is missing or too short — reduces ATS score by 15-20%.",
+          ? "Profil özeti eksik veya çok kısa; rol ve değer önerisi ilk taramada görünmüyor."
+          : "The profile summary is missing or too short, so role and value signals are not visible in an initial scan.",
       });
     }
     if (bulletsPresent && !metricsPresent) {
       insights.push({
         type: "warning",
         message: lang === "tr"
-          ? "Hiçbir deneyim maddesinde sayısal metrik yok — işverenler rakam görmek ister."
-          : "No quantitative metrics found in experience bullets — employers expect numbers.",
+          ? "Deneyim maddelerinde doğrulanabilir sonuç sinyali bulunamadı; gerçek bir etki varsa ekleyin."
+          : "No verifiable outcome signal was found in experience bullets; add one only when a real result exists.",
       });
     }
     if (skillCount < 5) {
       insights.push({
         type: "warning",
         message: lang === "tr"
-          ? `Yalnızca ${skillCount} beceri listelendi — hedef ilanlar genelde 8–12 keyword bekler.`
-          : `Only ${skillCount} skills listed — target job descriptions typically expect 8–12 keywords.`,
+          ? `${skillCount} beceri listelendi. Hedef ilanla karşılaştırarak eksik ve gerçekten sahip olduğunuz becerileri doğrulayın.`
+          : `${skillCount} skills are listed. Compare them with a target listing and verify any missing skills you genuinely have.`,
       });
     }
     if (expCount === 0) {
@@ -230,8 +209,8 @@ export function useCoachAI() {
       });
       questions.push({
         id: slugId("q", i++),
-        label: "Reddedildikten sonra ne yapmalı",
-        prompt: `40'tan fazla iş başvurusu yaptım ama geri dönüş alamıyorum. "${title}" pozisyonu için başvuru stratejimi nasıl değiştirmeliyim? Neyi yanlış yapıyor olabilirim?`,
+        label: "Başvuru stratejimi değerlendir",
+        prompt: `"${title}" pozisyonu için başvuru stratejimi hangi doğrulanabilir sinyallerle değerlendirmeliyim? Olası sorunları kesinlik iddiası olmadan sırala.`,
         tag: "growth",
         priority: "low",
       });
@@ -321,8 +300,8 @@ export function useCoachAI() {
       });
       questions.push({
         id: slugId("q", i++),
-        label: "Stuck after 40+ applications",
-        prompt: `I've applied to 40+ jobs as a "${title}" with no responses. What's likely wrong with my application strategy and what should I change immediately?`,
+        label: "Review my application strategy",
+        prompt: `Which verifiable signals should I use to review my application strategy for "${title}" roles? Rank possible issues without claiming certainty.`,
         tag: "growth",
         priority: "low",
       });

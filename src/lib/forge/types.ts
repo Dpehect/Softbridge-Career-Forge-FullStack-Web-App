@@ -104,6 +104,13 @@ export interface AtsResult {
   issues: string[];
   fixes: string[];
   keywordCoverage: number;
+  status: "critical" | "needsWork" | "good" | "veryGood" | "strong";
+  summary: string;
+  breakdown: Array<{
+    id: "structure" | "completeness" | "experience" | "keywords" | "impact" | "contact";
+    score: number;
+    maxScore: number;
+  }>;
 }
 
 export interface ForgeHistoryItem {

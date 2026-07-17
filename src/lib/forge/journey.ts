@@ -83,9 +83,6 @@ export function matchSkills(cvSkills: string[], required: string[]) {
 
 export type JourneyInsight = {
   atsScore: number;
-  rejectionRiskPct: number;
-  jobsNow: number;
-  jobsAfter: number;
   missingKeywords: string[];
   readySkills: string[];
   missingSkills: string[];
@@ -120,14 +117,8 @@ export function buildJourneyInsight(opts: {
   const baseAts =
     opts.atsScore ??
     opts.feedback?.atsScore ??
-    (skills.length >= 8 ? 68 : skills.length >= 4 ? 55 : 42);
-
-  const gapPenalty = Math.min(35, missing.length * 8);
-  const atsScore = Math.max(18, Math.min(98, Math.round(baseAts - gapPenalty * 0.15)));
-
-  const rejectionRiskPct = Math.min(85, Math.max(25, 100 - atsScore + missing.length * 4));
-  const jobsNow = Math.max(3, Math.round(5 + (atsScore / 100) * 8 - missing.length));
-  const jobsAfter = Math.min(40, jobsNow + 12 + missing.length * 2);
+    0;
+  const atsScore = Math.max(0, Math.min(100, Math.round(baseAts)));
 
   const keyword =
     missing[0] ||
@@ -139,17 +130,14 @@ export function buildJourneyInsight(opts: {
     (ready.length / Math.max(1, ready.length + missing.length)) * 100
   );
 
-  const painLineTr = `CV'nizde “${keyword}” net görünmüyor. Bu yüzden Amazon ve Google gibi firmaların ATS sistemleri tarafından yaklaşık %${rejectionRiskPct} oranında elenebilirsiniz.`;
-  const painLineEn = `“${keyword}” is weak or missing on your CV. ATS systems at firms like Amazon and Google may auto-filter you roughly ${rejectionRiskPct}% of the time.`;
+  const painLineTr = `CV'nizde “${keyword}” sinyali net görünmüyor. Bu eksik, hedef rol gereksinimleriyle eşleşmeyi zayıflatabilir; etkisi ancak gerçek bir ilan metniyle karşılaştırıldığında doğrulanabilir.`;
+  const painLineEn = `The “${keyword}” signal is not clearly visible in your resume. This may weaken alignment with a target role, but the effect can only be verified against a real job description.`;
 
-  const gainLineTr = `Bu CV ile yaklaşık ${jobsNow} ilana güçlü başvurabilirsiniz. Özgeçmiş Düzenleyici ile puanınızı %80+ bandına taşırsanız bu sayı ~${jobsAfter} ilana çıkabilir.`;
-  const gainLineEn = `With this CV you can competitively apply to about ${jobsNow} roles. Raise your score toward 80%+ in the Resume Builder and that expands to ~${jobsAfter} roles.`;
+  const gainLineTr = "Eksik sinyali yalnızca gerçek deneyiminizle destekleyebiliyorsanız ilgili deneyim maddesine ekleyin; ardından hedef ilanla eşleşmeyi yeniden ölçün.";
+  const gainLineEn = "Add the missing signal to an experience bullet only when real evidence supports it, then measure alignment again against the target listing.";
 
   return {
     atsScore,
-    rejectionRiskPct,
-    jobsNow,
-    jobsAfter,
     missingKeywords: missing.slice(0, 8),
     readySkills: ready,
     missingSkills: missing,
@@ -159,9 +147,9 @@ export function buildJourneyInsight(opts: {
     gainLineTr,
     gainLineEn,
     nextStepsTr: [
-      "Özgeçmiş Düzenleyici’de eksik anahtar kelimeleri deneyim maddelerine gömün.",
-      "Forge’da hedef ilan metnini yapıştırıp eşleşme skorunu yeniden ölçün.",
-      "AI Koç ile STAR cevap şablonları çalışın — mülakatta canınız yanmasın.",
+      "Eksik anahtar kelimeyi yalnızca doğrulanmış deneyiminiz varsa ilgili CV maddesine ekleyin.",
+      "CV Analizi alanında gerçek hedef ilan metnini yapıştırıp eşleşmeyi yeniden ölçün.",
+      "Kariyer ve Mülakat Koçu ile deneyiminize dayalı STAR yanıtı çalışın.",
     ],
     nextStepsEn: [
       "Embed missing keywords into experience bullets in Resume Builder.",

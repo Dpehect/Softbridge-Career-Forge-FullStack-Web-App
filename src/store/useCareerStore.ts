@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CoachMessage, ResumeProfile } from "@/types";
+import type { Locale } from "@/i18n/messages";
 import type {
   CoverLetterTone,
   CvBackup,
@@ -15,6 +16,7 @@ const emptyResume = (): ResumeProfile => ({
   fullName: "",
   headline: "",
   email: "",
+  phone: "",
   location: "",
   summary: "",
   skills: [],
@@ -28,6 +30,7 @@ export function parsedToResume(cv: ParsedCV): ResumeProfile {
     fullName: cv.name === "Candidate" || cv.name === "Aday" ? "" : cv.name,
     headline: cv.title || "",
     email: cv.email || "",
+    phone: cv.phone || "",
     location: cv.location || "",
     summary: cv.summary || "",
     skills: cv.skills || [],
@@ -50,11 +53,31 @@ export function parsedToResume(cv: ParsedCV): ResumeProfile {
 }
 
 export function resumeToParsed(resume: ResumeProfile): ParsedCV {
+  const rawText = [
+    resume.fullName,
+    resume.headline,
+    resume.email,
+    resume.phone,
+    resume.location,
+    resume.summary,
+    ...resume.skills,
+    ...resume.experience.flatMap((item) => [
+      item.role,
+      item.company,
+      item.start,
+      item.end,
+      ...item.highlights,
+    ]),
+    ...resume.education.flatMap((item) => [item.school, item.degree, item.year]),
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return {
     name: resume.fullName || "Candidate",
     title: resume.headline || "Professional",
     email: resume.email,
-    phone: null,
+    phone: resume.phone || null,
     location: resume.location || null,
     summary: resume.summary || null,
     skills: resume.skills,
@@ -70,18 +93,39 @@ export function resumeToParsed(resume: ResumeProfile): ParsedCV {
       degree: e.degree,
       year: e.year,
     })),
-    rawLength: 0,
+    rawLength: rawText.length,
   };
 }
 
 const defaultResume: ResumeProfile = emptyResume();
+
+export type ResumeSectionId = "profile" | "experience" | "skills" | "education";
+
+function coachWelcome(lang: Locale, reset = false): CoachMessage {
+  return {
+    id: reset ? `welcome-${Date.now()}` : "welcome",
+    role: "assistant",
+    content: lang === "tr"
+      ? reset
+        ? "Oturum sıfırlandı. Önümüzdeki 90 günde neyi başarmak istiyorsunuz?"
+        : "Merhaba. CV'nizdeki gerçek deneyimlere dayanarak mülakat hazırlığı, kariyer planı ve başvuru stratejisi üzerinde çalışabiliriz. Hedef rolünüz nedir?"
+      : reset
+        ? "Session reset. What would you like to achieve in the next 90 days?"
+        : "Hello. We can work on interview preparation, career planning, and application strategy using evidence from your resume. What is your target role?",
+    createdAt: new Date().toISOString(),
+  };
+}
 
 interface CareerState {
   savedJobIds: string[];
   appliedJobIds: string[];
   enrolledPathIds: string[];
   completedModuleIds: string[];
+  isDemoMode: boolean;
   resume: ResumeProfile;
+  resumePast: ResumeProfile[];
+  resumeFuture: ResumeProfile[];
+  resumeSectionOrder: ResumeSectionId[];
   coachMessages: CoachMessage[];
   forgeCvText: string;
   forgeJdText: string;
@@ -108,8 +152,8 @@ interface CareerState {
       targetTitle?: string;
     } | null
   ) => void;
-  lang: "tr" | "en";
-  setLang: (lang: "tr" | "en") => void;
+  lang: Locale;
+  setLang: (lang: Locale) => void;
   theme: "light" | "dark";
   setTheme: (theme: "light" | "dark") => void;
   toggleSaveJob: (id: string) => void;
@@ -117,6 +161,9 @@ interface CareerState {
   enrollPath: (id: string) => void;
   toggleModule: (id: string) => void;
   updateResume: (patch: Partial<ResumeProfile>) => void;
+  undoResume: () => void;
+  redoResume: () => void;
+  moveResumeSection: (id: ResumeSectionId, direction: -1 | 1) => void;
   /** Merge skills into resume + parsed CV (one-click from journey) */
   addSkills: (skills: string[]) => number;
   setResume: (resume: ResumeProfile) => void;
@@ -135,30 +182,26 @@ interface CareerState {
   restoreForgeBackup: (id: string) => boolean;
   deleteForgeBackup: (id: string) => void;
   loadDemoProfile: () => void;
+  exitDemoMode: () => void;
 }
 
 export const useCareerStore = create<CareerState>()(
   persist(
     (set, get) => ({
-      // Product language locked to Turkish (SaaS consistency)
       lang: "tr",
-      setLang: () => set({ lang: "tr" }),
+      setLang: (lang) => set({ lang, coachMessages: [coachWelcome(lang)] }),
       theme: "light",
       setTheme: (theme) => set({ theme }),
       savedJobIds: [],
       appliedJobIds: [],
-      enrolledPathIds: ["path-frontend"],
-      completedModuleIds: ["fe-1"],
+      enrolledPathIds: [],
+      completedModuleIds: [],
+      isDemoMode: false,
       resume: defaultResume,
-      coachMessages: [
-        {
-          id: "welcome",
-          role: "assistant",
-          content:
-            "Merhaba — ben kariyer danışmanın. CV'nle sohbet edebiliriz: en zor mülakat sorunu, STAR cevap iskeletini ve yarın yapman gereken tek iyileştirmeyi birlikte çıkaralım. Hedef rolün nedir?",
-          createdAt: new Date().toISOString(),
-        },
-      ],
+      resumePast: [],
+      resumeFuture: [],
+      resumeSectionOrder: ["profile", "experience", "skills", "education"],
+      coachMessages: [coachWelcome("tr")],
       forgeCvText: "",
       forgeJdText: "",
       forgeParsedCv: null,
@@ -200,8 +243,45 @@ export const useCareerStore = create<CareerState>()(
         });
       },
       updateResume: (patch) => {
-        const updated = { ...get().resume, ...patch };
-        set({ resume: updated, forgeParsedCv: resumeToParsed(updated) });
+        const current = get().resume;
+        const updated = { ...current, ...patch };
+        set({
+          resume: updated,
+          forgeParsedCv: resumeToParsed(updated),
+          resumePast: [...get().resumePast, current].slice(-40),
+          resumeFuture: [],
+          isDemoMode: false,
+        });
+      },
+      undoResume: () => {
+        const { resumePast, resume, resumeFuture } = get();
+        const previous = resumePast.at(-1);
+        if (!previous) return;
+        set({
+          resume: previous,
+          forgeParsedCv: resumeToParsed(previous),
+          resumePast: resumePast.slice(0, -1),
+          resumeFuture: [resume, ...resumeFuture].slice(0, 40),
+        });
+      },
+      redoResume: () => {
+        const { resumePast, resume, resumeFuture } = get();
+        const next = resumeFuture[0];
+        if (!next) return;
+        set({
+          resume: next,
+          forgeParsedCv: resumeToParsed(next),
+          resumePast: [...resumePast, resume].slice(-40),
+          resumeFuture: resumeFuture.slice(1),
+        });
+      },
+      moveResumeSection: (id, direction) => {
+        const order = [...get().resumeSectionOrder];
+        const index = order.indexOf(id);
+        const target = index + direction;
+        if (index < 0 || target < 0 || target >= order.length) return;
+        [order[index], order[target]] = [order[target], order[index]];
+        set({ resumeSectionOrder: order });
       },
       addSkills: (skills) => {
         const { resume, forgeParsedCv } = get();
@@ -217,11 +297,23 @@ export const useCareerStore = create<CareerState>()(
         const nextParsed = forgeParsedCv
           ? { ...forgeParsedCv, skills: [...new Set([...forgeParsedCv.skills, ...toAdd])] }
           : resumeToParsed(updated);
-        set({ resume: updated, forgeParsedCv: nextParsed });
+        set({ resume: updated, forgeParsedCv: nextParsed, isDemoMode: false });
         return toAdd.length;
       },
-      setResume: (resume) => set({ resume, forgeParsedCv: resumeToParsed(resume) }),
-      resetResume: () => set({ resume: emptyResume(), forgeParsedCv: null }),
+      setResume: (resume) => set({
+        resume,
+        forgeParsedCv: resumeToParsed(resume),
+        resumePast: [...get().resumePast, get().resume].slice(-40),
+        resumeFuture: [],
+        isDemoMode: false,
+      }),
+      resetResume: () => set({
+        resume: emptyResume(),
+        forgeParsedCv: null,
+        resumePast: [],
+        resumeFuture: [],
+        isDemoMode: false,
+      }),
       addCoachMessage: (message) =>
         set({
           coachMessages: [
@@ -233,24 +325,14 @@ export const useCareerStore = create<CareerState>()(
             },
           ],
         }),
-      clearCoach: () =>
-        set({
-          coachMessages: [
-            {
-              id: "welcome",
-              role: "assistant",
-              content:
-                "Oturum sıfırlandı. Önümüzdeki 90 günde neyi başarmak istiyorsun?",
-              createdAt: new Date().toISOString(),
-            },
-          ],
-        }),
+      clearCoach: () => set({ coachMessages: [coachWelcome(get().lang, true)] }),
       setForgeCvText: (text) => set({ forgeCvText: text }),
       setForgeJdText: (text) => set({ forgeJdText: text }),
       setForgeParsedCv: (cv) =>
         set({
           forgeParsedCv: cv,
           resume: cv ? parsedToResume(cv) : emptyResume(),
+          isDemoMode: false,
           lastAnalysisMeta: cv
             ? {
                 at: new Date().toISOString(),
@@ -280,6 +362,9 @@ export const useCareerStore = create<CareerState>()(
           forgeParsedCv: null,
           forgeAnalysis: null,
           resume: emptyResume(),
+          resumePast: [],
+          resumeFuture: [],
+          isDemoMode: false,
         }),
       saveForgeBackup: (label) => {
         const { forgeCvText, forgeParsedCv, forgeBackups } = get();
@@ -306,12 +391,17 @@ export const useCareerStore = create<CareerState>()(
       deleteForgeBackup: (id) =>
         set({ forgeBackups: get().forgeBackups.filter((b) => b.id !== id) }),
       loadDemoProfile: () => {
+        const lang = get().lang;
+        const isTr = lang === "tr";
         const demoResume: ResumeProfile = {
           fullName: "Yusuf Demir",
           headline: "Senior Frontend Engineer",
           email: "yusuf@demir.dev",
-          location: "İstanbul, Türkiye",
-          summary: "SoftBridge üzerinde 4 yıllık frontend geliştirme deneyimine sahip, Next.js ve TypeScript konularında uzmanlaşmış yazılım mühendisi. Sayfa yüklenme hızlarını %35 optimize etme ve kullanıcı arayüzlerini ölçekleme konularında kanıtlanmış başarı.",
+          phone: "+90 555 123 4567",
+          location: isTr ? "İstanbul, Türkiye" : "Istanbul, Türkiye",
+          summary: isTr
+            ? "Dört yıllık ürün geliştirme deneyimine sahip, Next.js ve TypeScript alanlarında uzmanlaşmış frontend mühendisi. Sayfa açılış süresini %35 azaltan ve 12 bin aylık kullanıcıya hizmet veren arayüz sistemleri geliştirdi."
+            : "Frontend engineer with four years of product development experience specializing in Next.js and TypeScript. Built interface systems serving 12,000 monthly users and reduced page load time by 35%.",
           skills: ["React", "JavaScript", "CSS", "Git", "REST APIs", "TypeScript", "Next.js", "System Design"],
           photoDataUrl: null,
           experience: [
@@ -320,11 +410,15 @@ export const useCareerStore = create<CareerState>()(
               role: "Senior Frontend Developer",
               company: "SoftBridge",
               start: "2022",
-              end: "Devam Ediyor",
-              highlights: [
-                "12k aktif kullanıcısı olan analitik panel arayüzünü sıfırdan Next.js ile kodladı.",
-                "Sayfa yüklenme hızlarını code-splitting ve resim optimizasyonlarıyla %35 iyileştirdi.",
-                "Ekipler arası entegrasyonu hızlandıran reusable UI kütüphanesini yayına aldı."
+              end: isTr ? "Devam Ediyor" : "Present",
+              highlights: isTr ? [
+                "12 bin aylık kullanıcıya hizmet veren analitik paneli Next.js ile geliştirdi.",
+                "Kod bölümleme ve görsel optimizasyonuyla sayfa açılış süresini %35 azalttı.",
+                "Üç ürün ekibinin kullandığı ortak arayüz bileşen kütüphanesini yayına aldı."
+              ] : [
+                "Built a Next.js analytics workspace serving 12,000 monthly users.",
+                "Reduced page load time by 35% through code splitting and image optimization.",
+                "Launched a shared interface component library adopted by three product teams."
               ]
             }
           ],
@@ -332,7 +426,7 @@ export const useCareerStore = create<CareerState>()(
             {
               id: "edu-demo-1",
               school: "Boğaziçi Üniversitesi",
-              degree: "Bilgisayar Mühendisliği",
+              degree: isTr ? "Bilgisayar Mühendisliği" : "Computer Engineering",
               year: "2018 - 2022"
             }
           ]
@@ -343,26 +437,22 @@ export const useCareerStore = create<CareerState>()(
           title: "Senior Frontend Engineer",
           email: "yusuf@demir.dev",
           phone: "+90 555 123 4567",
-          location: "İstanbul, Türkiye",
-          summary: "SoftBridge üzerinde 4 yıllık frontend geliştirme deneyimine sahip, Next.js ve TypeScript konularında uzmanlaşmış yazılım mühendisi. Sayfa yüklenme hızlarını %35 optimize etme ve kullanıcı arayüzlerini ölçekleme konularında kanıtlanmış başarı.",
+          location: isTr ? "İstanbul, Türkiye" : "Istanbul, Türkiye",
+          summary: demoResume.summary,
           skills: ["React", "JavaScript", "CSS", "Git", "REST APIs", "TypeScript", "Next.js", "System Design"],
           photoDataUrl: null,
           experience: [
             {
               company: "SoftBridge",
               position: "Senior Frontend Developer",
-              duration: "2022 – Devam Ediyor",
-              description: [
-                "12k aktif kullanıcısı olan analitik panel arayüzünü sıfırdan Next.js ile kodladı.",
-                "Sayfa yüklenme hızlarını code-splitting ve resim optimizasyonlarıyla %35 iyileştirdi.",
-                "Ekipler arası entegrasyonu hızlandıran reusable UI kütüphanesini yayına aldı."
-              ]
+              duration: isTr ? "2022 – Devam Ediyor" : "2022 – Present",
+              description: demoResume.experience[0].highlights,
             }
           ],
           education: [
             {
               school: "Boğaziçi Üniversitesi",
-              degree: "Bilgisayar Mühendisliği",
+              degree: isTr ? "Bilgisayar Mühendisliği" : "Computer Engineering",
               year: "2022"
             }
           ],
@@ -370,13 +460,51 @@ export const useCareerStore = create<CareerState>()(
         };
 
         set({
+          isDemoMode: true,
           resume: demoResume,
+          resumePast: [],
+          resumeFuture: [],
           forgeParsedCv: demoParsedCV,
-          forgeCvText: "Yusuf Demir — Full Stack Developer\nIstanbul | yusuf@demir.dev\n\nSUMMARY\nDeveloper with 4 years building web apps in React and Node.js.\n\nEXPERIENCE\nSoftBridge — Frontend Developer (2022–Present)\n- Built dashboard features used by 12k monthly users\n- Reduced page load time by 35% via code-splitting\n\nSKILLS\nJavaScript, React, CSS, Git, REST",
-          forgeJdText: "Senior Frontend Engineer\nRequirements: TypeScript, Next.js, React, testing, CI/CD, system design basics.",
+          forgeCvText: isTr
+            ? "Yusuf Demir — Senior Frontend Engineer\nİstanbul | yusuf@demir.dev\n\nÖZET\nNext.js ve TypeScript ile ölçeklenebilir ürün arayüzleri geliştiren frontend mühendisi.\n\nDENEYİM\nSoftBridge — Senior Frontend Developer (2022–Devam Ediyor)\n- 12 bin aylık kullanıcıya hizmet veren analitik paneli geliştirdi\n- Sayfa açılış süresini %35 azalttı\n\nBECERİLER\nJavaScript, React, CSS, Git, REST API, TypeScript, Next.js"
+            : "Yusuf Demir — Senior Frontend Engineer\nIstanbul | yusuf@demir.dev\n\nSUMMARY\nFrontend engineer building scalable product interfaces with Next.js and TypeScript.\n\nEXPERIENCE\nSoftBridge — Senior Frontend Developer (2022–Present)\n- Built an analytics workspace serving 12,000 monthly users\n- Reduced page load time by 35%\n\nSKILLS\nJavaScript, React, CSS, Git, REST API, TypeScript, Next.js",
+          forgeJdText: isTr
+            ? "Senior Frontend Engineer\nGereksinimler: TypeScript, Next.js, React, test otomasyonu, CI/CD ve temel sistem tasarımı."
+            : "Senior Frontend Engineer\nRequirements: TypeScript, Next.js, React, testing, CI/CD, and system design fundamentals.",
+          forgeAnalysis: {
+            matchScore: 78,
+            atsScore: 87,
+            strengths: isTr ? ["React, Next.js ve TypeScript gereksinimleriyle güçlü eşleşme."] : ["Strong alignment with React, Next.js, and TypeScript requirements."],
+            gaps: isTr ? ["Test otomasyonu ve CI/CD kanıtı güçlendirilmeli."] : ["Testing and CI/CD evidence should be strengthened."],
+            suggestions: isTr ? ["Son deneyime doğrulanabilir bir test otomasyonu örneği ekleyin."] : ["Add a verifiable testing automation example to the latest role."],
+            matchedSkills: ["React", "Next.js", "TypeScript"],
+            missingSkills: ["Testing", "CI/CD"],
+          },
           careerGoalId: "frontend",
           enrolledPathIds: ["path-frontend"],
           completedModuleIds: ["fe-1", "fe-2"],
+          savedJobIds: ["job-1", "job-9"],
+          appliedJobIds: ["job-1"],
+          coachMessages: [
+            coachWelcome(lang),
+            {
+              id: "demo-coach",
+              role: "assistant",
+              content: isTr
+                ? "Son provada performans iyileştirmesini STAR yapısına dönüştürdünüz. Sıradaki çalışma: test otomasyonu deneyiminizi doğrulanabilir bir örnekle anlatmak."
+                : "In the latest practice, you turned the performance improvement into a STAR response. Next: describe your testing automation experience with a verifiable example.",
+              createdAt: new Date().toISOString(),
+            },
+          ],
+          forgeHistory: [
+            {
+              id: "demo-history-1",
+              action: "ats",
+              summary: isTr ? "ATS analizi tamamlandı · 87/100" : "ATS analysis completed · 87/100",
+              createdAt: new Date().toISOString(),
+              payload: { atsScore: 87 },
+            },
+          ],
           lastAnalysisMeta: {
             at: new Date().toISOString(),
             candidateName: "Yusuf Demir",
@@ -385,6 +513,23 @@ export const useCareerStore = create<CareerState>()(
           }
         });
       },
+      exitDemoMode: () => set({
+        isDemoMode: false,
+        resume: emptyResume(),
+        resumePast: [],
+        resumeFuture: [],
+        forgeCvText: "",
+        forgeJdText: "",
+        forgeParsedCv: null,
+        forgeAnalysis: null,
+        forgeHistory: [],
+        savedJobIds: [],
+        appliedJobIds: [],
+        enrolledPathIds: [],
+        completedModuleIds: [],
+        coachMessages: [coachWelcome(get().lang)],
+        lastAnalysisMeta: null,
+      }),
     }),
     { name: "softbridge-careerforge" }
   )
