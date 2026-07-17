@@ -108,38 +108,22 @@ body::before {
     linear-gradient(180deg, var(--background), var(--background));
 }
 
-/* Premium glassmorphism panel */
-/* Premium dark panel overrides (no white bg cards in light mode) */
 @utility glass-panel {
-  background-color: #0F172A !important;
-  color: #F8FAFC !important;
-  border: 1px solid rgba(248, 250, 252, 0.1) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
-  
-  --text-primary: #F8FAFC;
-  --text-secondary: #CBD5E1;
-  --text-muted: #94A3B8;
-  --grid-line: rgba(248, 250, 252, 0.04);
-  --border-color: rgba(248, 250, 252, 0.1);
-  --glass-bg: #0F172A;
-  --background: #020617;
-  --panel: #0F172A;
+  background-color: var(--glass-bg) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
 }
 
 @utility glass {
-  background-color: #0F172A !important;
-  color: #F8FAFC !important;
-  border: 1px solid rgba(248, 250, 252, 0.1) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
-  
-  --text-primary: #F8FAFC;
-  --text-secondary: #CBD5E1;
-  --text-muted: #94A3B8;
-  --grid-line: rgba(248, 250, 252, 0.04);
-  --border-color: rgba(248, 250, 252, 0.1);
-  --glass-bg: #0F172A;
-  --background: #020617;
-  --panel: #0F172A;
+  background-color: var(--glass-bg) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
 }
 
 /* Purple glow ring */

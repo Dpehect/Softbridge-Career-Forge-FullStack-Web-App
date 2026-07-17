@@ -685,8 +685,8 @@ export default function ForgePage() {
         <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-8 items-start">
           
           {/* Sol Sidebar Nav */}
-          <aside className="lg:sticky lg:top-24 flex flex-col gap-6 rounded-3xl p-5 border border-slate-800 bg-slate-900 text-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-100 dark:text-slate-200 flex items-center gap-2">
+          <aside className="lg:sticky lg:top-24 flex flex-col gap-6 rounded-3xl p-5 border border-slate-200/80 bg-slate-50/50 dark:border-slate-800/85 dark:bg-slate-900 shadow-sm">
+            <div className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
               <Anvil className="w-4 h-4 text-purple-600 dark:text-[#C084FC]" strokeWidth={1.5} />
               CareerForge
             </div>
@@ -695,7 +695,7 @@ export default function ForgePage() {
                 onClick={() => setActiveSection("analiz")}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer text-left",
-                  activeSection === "analiz" ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10" : "text-slate-300 hover:bg-slate-800 hover:text-purple-400 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-[#C084FC]"
+                  activeSection === "analiz" ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10" : "text-slate-600 hover:bg-slate-100 hover:text-purple-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-[#C084FC]"
                 )}
               >
                 <Anvil className="w-4 h-4" strokeWidth={1.5} />
@@ -705,7 +705,7 @@ export default function ForgePage() {
                 onClick={() => setActiveSection("gecmis")}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer text-left",
-                  activeSection === "gecmis" ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10" : "text-slate-300 hover:bg-slate-800 hover:text-purple-400 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-[#C084FC]"
+                  activeSection === "gecmis" ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10" : "text-slate-600 hover:bg-slate-100 hover:text-purple-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-[#C084FC]"
                 )}
               >
                 <History className="w-4 h-4" strokeWidth={1.5} />
@@ -715,16 +715,16 @@ export default function ForgePage() {
                 onClick={() => setActiveSection("ayarlar")}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer text-left",
-                  activeSection === "ayarlar" ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10" : "text-slate-300 hover:bg-slate-800 hover:text-purple-400 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-[#C084FC]"
+                  activeSection === "ayarlar" ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10" : "text-slate-600 hover:bg-slate-100 hover:text-purple-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-[#C084FC]"
                 )}
               >
                 <Settings className="w-4 h-4" strokeWidth={1.5} />
                 Kariyer Hedefleri
               </button>
             </nav>
-            <div className="mt-6 border-t border-slate-800 pt-4">
+            <div className="mt-6 border-t border-slate-200 dark:border-slate-800 pt-4">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Gizlilik Notu</p>
-              <p className="text-[10px] text-slate-300 leading-normal">
+              <p className="text-[10px] text-slate-500 dark:text-slate-300 leading-normal">
                 Tüm verileriniz tarayıcınızda (yerel) saklanır.
               </p>
             </div>

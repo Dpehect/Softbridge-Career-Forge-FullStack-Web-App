@@ -27,18 +27,17 @@ import { toast } from "sonner";
 import { AiStatusDot } from "@/components/AiStatusDot";
 import { JourneyStepper } from "@/components/JourneyStepper";
 
-/** Sadece 2 ana rota — geri kalanı profil menüsünde */
+/** Primary SaaS destinations visible directly in the header */
 const MAIN_NAV = [
+  { path: "/dashboard", label: "Kokpit" },
   { path: "/forge", label: "Analiz" },
-  { path: "/resume", label: "Özgeçmişim" },
+  { path: "/resume", label: "Özgeçmiş" },
+  { path: "/jobs", label: "İşler" },
+  { path: "/coach", label: "AI Koç" },
+  { path: "/paths", label: "Yollar" },
 ] as const;
 
-const PROFILE_LINKS = [
-  { path: "/dashboard", label: "Kariyer Kokpiti", icon: LayoutDashboard },
-  { path: "/coach", label: "AI Koç", icon: MessageSquare },
-  { path: "/jobs", label: "İş İlanları", icon: Briefcase },
-  { path: "/paths", label: "Kariyer Yolları", icon: GitCompare },
-] as const;
+const PROFILE_LINKS = [] as const;
 
 export function Header() {
   const pathname = usePathname();
@@ -238,28 +237,6 @@ export function Header() {
                         </p>
                       </div>
 
-                      <div className="p-1.5">
-                        {PROFILE_LINKS.map((item) => {
-                          const Icon = item.icon;
-                          const active = isActive(item.path);
-                          return (
-                            <Link
-                              key={item.path}
-                              href={item.path}
-                              role="menuitem"
-                              className={cn(
-                                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                                active
-                                  ? "bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300"
-                                  : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"
-                              )}
-                            >
-                              <Icon className="h-4 w-4 opacity-70" />
-                              {item.label}
-                            </Link>
-                          );
-                        })}
-                      </div>
 
                       <div className="border-t border-slate-100 p-1.5 dark:border-white/5">
                         <button
@@ -353,23 +330,7 @@ export function Header() {
                     {item.label}
                   </Link>
                 ))}
-                <p className="px-4 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Diğer
-                </p>
-                {PROFILE_LINKS.map((item) => (
-                  <Link
-                    key={item.path}
-                    href={item.path}
-                    className={cn(
-                      "block rounded-xl px-4 py-3 text-sm font-medium",
-                      isActive(item.path)
-                        ? "bg-purple-50 text-purple-800 dark:bg-purple-500/15 dark:text-purple-300"
-                        : "text-slate-800 hover:bg-slate-50 dark:text-slate-200"
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+
               </div>
             </motion.div>
           )}

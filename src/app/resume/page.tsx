@@ -2,7 +2,21 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Download, Plus, Trash2, RotateCcw, FileText, Camera, Sparkles } from "lucide-react";
+import {
+  Download,
+  Plus,
+  Trash2,
+  RotateCcw,
+  FileText,
+  Camera,
+  Sparkles,
+  Check,
+  Mail,
+  MapPin,
+  AlertTriangle,
+  ChevronRight,
+  Info,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,13 +41,13 @@ import { useTranslation } from "@/lib/forge/i18n";
 function parsedToResume(cv: ParsedCV): ResumeProfile {
   return {
     fullName: cv.name === "Candidate" || cv.name === "Aday" ? "" : cv.name,
-    headline: cv.title,
-    email: cv.email,
+    headline: cv.title || "",
+    email: cv.email || "",
     location: cv.location || "",
     summary: cv.summary || "",
-    skills: cv.skills,
+    skills: cv.skills || [],
     photoDataUrl: cv.photoDataUrl || null,
-    experience: cv.experience.map((e, i) => ({
+    experience: (cv.experience || []).map((e, i) => ({
       id: `exp-${Date.now()}-${i}`,
       role: e.position,
       company: e.company,
@@ -41,7 +55,7 @@ function parsedToResume(cv: ParsedCV): ResumeProfile {
       end: e.duration.split(/[–-]/)[1]?.trim() || "",
       highlights: e.description,
     })),
-    education: cv.education.map((e, i) => ({
+    education: (cv.education || []).map((e, i) => ({
       id: `edu-${Date.now()}-${i}`,
       school: e.school,
       degree: e.degree,
@@ -100,7 +114,7 @@ export default function ResumePage() {
     setMounted(true);
     if (forgeParsedCv || lastAnalysisMeta) {
       setShowFeedback(true);
-      setBanner("Analiz tamam — şimdi hataları tek tıkla kapatın.");
+      setBanner("Özgeçmiş analiziniz yüklendi. Eksik yetenekleri tek tıkla tamamlayabilirsiniz.");
     }
   }, [forgeParsedCv, lastAnalysisMeta]);
 
@@ -113,20 +127,18 @@ export default function ResumePage() {
     return generateCvFeedback(resumeToParsed(resume));
   }, [resume, hasContent, showFeedback]);
 
-  const journey = useMemo(
-    () =>
-      buildJourneyInsight({
-        cv: forgeParsedCv || (hasContent ? resumeToParsed(resume) : null),
-        goalId: careerGoalId,
-        feedback,
-      }),
-    [forgeParsedCv, hasContent, resume, careerGoalId, feedback]
-  );
+  const journey = useMemo(() => {
+    return buildJourneyInsight({
+      cv: forgeParsedCv || (hasContent ? resumeToParsed(resume) : null),
+      goalId: careerGoalId,
+      feedback,
+    });
+  }, [forgeParsedCv, hasContent, resume, careerGoalId, feedback]);
 
   if (!mounted) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-cosmic-teal border-t-transparent animate-spin" />
+        <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin border-purple-600" />
       </div>
     );
   }
@@ -138,7 +150,7 @@ export default function ResumePage() {
     setBanner(msg);
     pushForgeHistory({
       action: "parse",
-      summary: `Resume: ${cv.name} (${source})`,
+      summary: `Düzenleyici: ${cv.name} (${source})`,
       payload: cv,
     });
     toast.success(msg);
@@ -147,9 +159,7 @@ export default function ResumePage() {
   const onFileText = (text: string, fileName: string) => {
     const cleaned = cleanExtractedText(text);
     if (!cleaned.trim() || looksLikeRawPdf(cleaned) || looksLikeRawPdf(text)) {
-      toast.error(
-        "Bu PDF taranmış görünüyor. Lütfen aranabilir metin olarak dışa aktarın veya yapıştırın."
-      );
+      toast.error("Okunabilir metin bulunamadı. Lütfen metin içeren PDF veya TXT yükleyin.");
       return;
     }
     try {
@@ -164,17 +174,11 @@ export default function ResumePage() {
   const onParsePaste = () => {
     const cleaned = cleanExtractedText(pasteText);
     if (!cleaned.trim()) {
-      toast.error("Önce CV metnini yapıştırın veya dosya yükleyin.");
-      return;
-    }
-    if (looksLikeRawPdf(cleaned)) {
-      toast.error(
-        "Bu ham PDF kodu gibi görünüyor. Dosya yükleyin veya düz metin yapıştırın."
-      );
+      toast.error("Önce metin yapıştırın.");
       return;
     }
     try {
-      applyParsed(parseCV(cleaned), "paste");
+      applyParsed(parseCV(cleaned), "yapıştırılan metin");
     } catch {
       toast.error("Metin çözümlenemedi.");
     }
@@ -186,7 +190,7 @@ export default function ResumePage() {
     setBanner(null);
     setShowFeedback(false);
     setSkillDraft("");
-    toast.message(t("clearSuccess"));
+    toast.success("Düzenleyici sıfırlandı.");
   };
 
   const addSkill = () => {
@@ -198,126 +202,119 @@ export default function ResumePage() {
 
   const refreshFeedback = () => {
     if (!hasContent) {
-      toast.error("Önce bir CV yükleyin.");
+      toast.error("Önce özgeçmiş yükleyin.");
       return;
     }
     setShowFeedback(true);
-    toast.success("Analiz güncellendi.");
+    toast.success("Skor ve geri bildirim güncellendi.");
   };
 
   const applySuggestedSkills = () => {
     const n = addSkills(journey.missingSkills.slice(0, 3));
-    if (n === 0) toast.message("Bu yetenekler zaten ekli.");
-    else toast.success(`${n} yetenek eklendi — CV'niz güncellendi.`);
+    if (n === 0) toast.info("Önerilen yetenekler zaten ekli.");
+    else toast.success(`${n} yeni yetenek eklendi.`);
     setShowFeedback(true);
   };
 
   return (
     <div className="px-4 md:px-8 pb-20 pt-6">
-      <div className="max-w-7xl mx-auto">
-        <Badge variant="accent" className="mb-3">
-          {t("navResume")}
-        </Badge>
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+      <div className="max-w-7xl mx-auto space-y-6 text-left">
+        
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="font-display text-3xl md:text-4xl font-extrabold tracking-tighter text-star-white">
+            <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 dark:bg-purple-500/10 dark:text-purple-300">
+              <FileText className="w-3.5 h-3.5" />
+              {t("navResume")}
+            </div>
+            <h1 className="font-display text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               Özgeçmiş Düzenleyici
             </h1>
-            <p className="text-slate-500 mt-2 max-w-xl leading-relaxed text-sm">
-              Analiz sonucu burada kalır — önerilen yetenekleri tek tıkla ekleyin, maddeleri
-              güçlendirin, mülakata hazır PDF alın.
+            <p className="text-sm text-slate-500 mt-1 max-w-xl leading-relaxed">
+              Özgeçmişinizi canlı olarak güncelleyin, eksik yetkinlikleri tek tıkla ekleyin ve A4 standartlarında PDF indirin.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="primary" onClick={refreshFeedback} disabled={!hasContent} className="shadow-lg">
-              <FileText className="w-4 h-4" /> Analiz Et
+          <div className="flex flex-wrap gap-2 shrink-0">
+            <Button variant="primary" onClick={refreshFeedback} disabled={!hasContent} className="shadow-md">
+              Analizi Yenile
             </Button>
             <Button
-              variant="ghostBorder"
+              variant="outline"
+              className="text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800"
               disabled={!hasContent}
               onClick={async () => {
                 await exportCvAsPdf(resumeToParsed(resume));
-                toast.success(t("exportSuccess"));
+                toast.success("ATS Uyumlu PDF indirildi!");
               }}
             >
-              <Download className="w-4 h-4" /> {t("exportPdf")}
+              <Download className="w-4 h-4 mr-1.5" /> PDF İndir
             </Button>
-            <Button variant="ghost" onClick={onClear} className="text-sunset-coral">
-              <RotateCcw className="w-4 h-4" /> {t("clearCv")}
+            <Button variant="ghost" onClick={onClear} className="text-rose-500 hover:bg-rose-500/5">
+              Sıfırla
             </Button>
           </div>
         </div>
 
-        {/* Golden path: analysis → live edit */}
+        {/* ATS Real-time Score Alert */}
         {hasContent && (
-          <div className="mb-6 rounded-2xl border border-purple-200/60 bg-purple-50/80 backdrop-blur-sm p-5 space-y-4 dark:bg-purple-500/10 dark:border-purple-500/25">
+          <section className="glass-panel rounded-3xl p-5 space-y-4 border border-purple-200/50 dark:border-purple-500/10">
             <div className="flex items-start gap-3">
-              <div
-                className="w-10 h-10 rounded-xl text-white flex items-center justify-center shrink-0"
-                style={{
-                  background: "linear-gradient(135deg, #6B21A8, #A855F7)",
-                }}
-              >
+              <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center shrink-0">
                 <Sparkles className="w-5 h-5" />
               </div>
               <div className="min-w-0 flex-1 space-y-1">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300">
-                  Analiz sonucu · dinamik güncelleme
-                </p>
-                <p className="text-sm font-semibold text-star-white leading-relaxed">
-                  {lastAnalysisMeta?.at
-                    ? `${new Date(lastAnalysisMeta.at).toLocaleString("tr-TR")} tarihinde`
-                    : "Son analizde"}{" "}
-                  hedef <strong>{lastAnalysisMeta?.targetTitle || resume.headline || "rolünüz"}</strong>{" "}
-                  için skor: <strong>%{journey.atsScore}</strong>.
-                  {journey.missingSkills[0]
-                    ? ` İyileştirmek için “${journey.missingSkills.slice(0, 3).join(", ")}” ekleyin.`
-                    : " Güçlü görünüyorsunuz — maddelere metrik ekleyin."}
+                <h3 className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-[#C084FC]">
+                  Anlık ATS Uyum Analizi
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Hedef rolünüz olan <strong>{lastAnalysisMeta?.targetTitle || resume.headline || "Seçilen Rol"}</strong> için anlık skorunuz: <strong className="text-purple-600 dark:text-[#C084FC]">%{journey.atsScore}</strong>. 
+                  {journey.missingSkills.length > 0 && " Aşağıdaki eksik yetenekleri ekleyerek bu skoru hemen artırabilirsiniz."}
                 </p>
               </div>
             </div>
-            <AtsProgressBar score={journey.atsScore} label="ATS skoru (canlı)" />
+            
+            <AtsProgressBar score={journey.atsScore} label="Canlı ATS Skoru" />
+
             {journey.missingSkills.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2">
-                {journey.missingSkills.slice(0, 5).map((s) => (
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t dark:border-white/5">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 mr-1">
+                  Hızlı Ekle:
+                </span>
+                {journey.missingSkills.slice(0, 4).map((s) => (
                   <button
                     key={s}
                     type="button"
                     onClick={() => {
                       const n = addSkills([s]);
-                      toast.success(n ? `“${s}” eklendi` : `“${s}” zaten var`);
+                      if (n) toast.success(`“${s}” özgeçmiş yeteneklerine eklendi.`);
                     }}
-                    className="inline-flex items-center gap-1 rounded-full border border-purple-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-purple-700 hover:bg-purple-100 hover:border-purple-300 cursor-pointer"
+                    className="inline-flex items-center gap-1 rounded-full border border-purple-200 bg-white dark:bg-slate-900 px-3 py-1 text-xs font-bold text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
                   >
-                    <Plus className="w-3 h-3" />
+                    <Plus className="w-3.5 h-3.5" />
                     {s}
                   </button>
                 ))}
-
                 <Button
                   variant="primary"
                   size="sm"
-                  className="shadow-lg"
+                  className="shadow-sm ml-auto"
                   onClick={applySuggestedSkills}
                 >
-                  Önerilen 3 yeteneği ekle
+                  Önerilen 3 Yeteneği Ekle
                 </Button>
               </div>
             )}
-            <p className="text-xs text-slate-500">
-              “Analiz sonucun bu, hadi eyvallah” demiyoruz — hataları burada tek tıkla kapatıyorsunuz.
-            </p>
-          </div>
+          </section>
         )}
 
-        {/* CV Builder options */}
+        {/* CV Upload Option Drawer */}
         {showWizard ? (
-          <div className="glass-panel rounded-2xl p-5 mb-6 space-y-4 border border-cosmic-teal/20 relative">
-            <div className="absolute top-4 right-4 flex gap-2 z-10">
+          <div className="glass-panel rounded-3xl p-5 border border-purple-500/10 relative">
+            <div className="absolute top-4 right-4 z-10">
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs text-star-white"
+                className="text-xs text-slate-500 hover:text-slate-900"
                 onClick={() => setShowWizard(false)}
               >
                 ✕ Sihirbazı Kapat
@@ -325,200 +322,181 @@ export default function ResumePage() {
             </div>
             <CvWizard
               onComplete={(cv) => {
-                applyParsed(cv, "Wizard");
+                applyParsed(cv, "Sihirbaz");
                 setShowWizard(false);
               }}
             />
           </div>
         ) : (
-          <div className="glass-panel rounded-2xl p-5 mb-6 space-y-3">
+          <div className="glass-panel rounded-3xl p-5 space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <FilePickButton
-                label={t("uploadBtn")}
+                label="Özgeçmiş Belgesi Yükle"
                 variant="accent"
                 size="default"
                 silentSuccess
                 onText={(text, name) => onFileText(text, name)}
               />
-              <Button variant="outline" onClick={() => setShowWizard(true)} className="text-star-white">
-                {t("buildScratch")}
+              <Button
+                variant="outline"
+                className="text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-850"
+                onClick={() => setShowWizard(true)}
+              >
+                Sıfırdan CV Oluştur
               </Button>
-              <Button variant="soft" onClick={onParsePaste} disabled={!pasteText.trim()}>
-                {t("analyzePasteBtn")}
-              </Button>
-              <Button variant="ghost" onClick={onClear} className="text-sunset-coral">
-                <RotateCcw className="w-4 h-4 mr-1.5" /> {t("clearCv")}
+              <Button
+                variant="outline"
+                className="text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-850"
+                onClick={onParsePaste}
+                disabled={!pasteText.trim()}
+              >
+                Metni Çözümle
               </Button>
             </div>
-            <p className="text-[11px] text-muted-steel leading-relaxed">
-              <strong>Özgeçmiş metni yapıştırın</strong> veya dosya yükleyin. Taranmış PDF’leri metin olarak aktarın.
-            </p>
             <Textarea
               value={pasteText}
               onChange={(e) => setPasteText(e.target.value)}
-              placeholder={t("pasteTitle") + "..."}
-              className="min-h-[110px] font-mono text-xs text-star-white"
+              placeholder="Özgeçmiş metnini kopyalayıp buraya yapıştırabilirsiniz..."
+              className="min-h-[100px] font-mono text-xs text-slate-800 dark:text-slate-200"
             />
-            {banner && (
-              <div className="rounded-xl border border-cosmic-teal/25 bg-cosmic-teal/10 px-4 py-3 text-star-white">
-                <p className="text-sm font-semibold">{banner}</p>
-                <p className="text-xs text-muted-steel mt-1">
-                  Ayrıştırılan alanlar ve öneriler aşağıda — tek tıkla güncelleyin.
-                </p>
-              </div>
-            )}
           </div>
         )}
 
+        {/* Feedback Panel */}
         {feedback && (
-          <div className="mb-6">
+          <section className="glass-panel rounded-3xl p-1">
             <CvFeedbackPanel feedback={feedback} />
-          </div>
+          </section>
         )}
 
-        <div className="grid lg:grid-cols-2 gap-6 items-start">
-          <div className="space-y-5">
-            <section className="glass-panel rounded-2xl p-5 space-y-3">
-              <h2 className="font-semibold text-xs uppercase tracking-wider text-cosmic-teal">
-                {t("personalInfo")}
-              </h2>
-              <div className="flex items-center gap-4 p-3 bg-panel-elevated/40 rounded-xl border border-black/5">
-                <div className="w-16 h-16 rounded-full border bg-abyss-panel overflow-hidden flex items-center justify-center shrink-0 relative group">
+        {/* Split Editor / Preview view */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          
+          {/* Left Column: Form Editor */}
+          <div className="space-y-6">
+            
+            {/* Personal Details */}
+            <section className="glass-panel rounded-3xl p-6 space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-wider text-purple-700 dark:text-[#C084FC]">
+                Kişisel Bilgiler
+              </h3>
+              
+              <div className="flex items-center gap-4 p-4 bg-slate-100/50 dark:bg-white/[0.01] border dark:border-white/5 rounded-2xl">
+                <div className="w-16 h-16 rounded-full border bg-slate-200 overflow-hidden flex items-center justify-center shrink-0 relative group dark:bg-slate-950 dark:border-white/5">
                   {resume.photoDataUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={resume.photoDataUrl} alt="Profile" className="w-full h-full object-cover" />
+                    <img src={resume.photoDataUrl} alt="Profil" className="w-full h-full object-cover" />
                   ) : (
-                    <Camera className="w-6 h-6 text-muted-steel" />
+                    <Camera className="w-5 h-5 text-slate-400" />
+                  )}
+                  <input
+                    type="file"
+                    id="resume-photo-uploader"
+                    accept="image/*"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = () => updateResume({ photoDataUrl: reader.result as string });
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Profil Fotoğrafı</h4>
+                  <p className="text-[10px] text-slate-500">Değiştirmek veya eklemek için daireye tıklayın.</p>
+                  {resume.photoDataUrl && (
+                    <button
+                      type="button"
+                      onClick={() => updateResume({ photoDataUrl: null })}
+                      className="text-[10px] font-bold text-rose-500 hover:underline cursor-pointer"
+                    >
+                      Fotoğrafı Kaldır
+                    </button>
                   )}
                 </div>
-                <div className="flex flex-col gap-1.5 w-full">
-                  <span className="text-xs font-semibold text-muted-steel uppercase tracking-wider">Profile Photo</span>
-                  <div className="flex gap-2">
-                    <input
-                      type="file"
-                      id="profile-photo-upload"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = () => {
-                            updateResume({ photoDataUrl: reader.result as string });
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      type="button"
-                      className="text-star-white"
-                      onClick={() => document.getElementById("profile-photo-upload")?.click()}
-                    >
-                      <Camera className="w-3.5 h-3.5 mr-1.5" /> Upload Photo
-                    </Button>
-                    {resume.photoDataUrl && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        type="button"
-                        className="text-sunset-coral hover:text-sunset-coral/80"
-                        onClick={() => updateResume({ photoDataUrl: null })}
-                      >
-                        Remove
-                      </Button>
-                    )}
-                  </div>
+              </div>
+
+              <div className="space-y-3">
+                <Input
+                  value={resume.fullName}
+                  onChange={(e) => updateResume({ fullName: e.target.value })}
+                  placeholder="Ad Soyad"
+                />
+                <Input
+                  value={resume.headline}
+                  onChange={(e) => updateResume({ headline: e.target.value })}
+                  placeholder="Başlık (Örn. Senior Frontend Engineer)"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    value={resume.email}
+                    onChange={(e) => updateResume({ email: e.target.value })}
+                    placeholder="E-posta"
+                  />
+                  <Input
+                    value={resume.location}
+                    onChange={(e) => updateResume({ location: e.target.value })}
+                    placeholder="Lokasyon (Örn. İstanbul, Türkiye)"
+                  />
                 </div>
-              </div>
-              <Input
-                value={resume.fullName}
-                onChange={(e) => updateResume({ fullName: e.target.value })}
-                placeholder="Full name"
-                className="text-star-white"
-              />
-              <Input
-                value={resume.headline}
-                onChange={(e) => updateResume({ headline: e.target.value })}
-                placeholder="Headline / target title"
-                className="text-star-white"
-              />
-              <div className="grid sm:grid-cols-2 gap-3">
-                <Input
-                  value={resume.email}
-                  onChange={(e) => updateResume({ email: e.target.value })}
-                  placeholder="Email"
-                  className="text-star-white"
-                />
-                <Input
-                  value={resume.location}
-                  onChange={(e) => updateResume({ location: e.target.value })}
-                  placeholder="Location"
-                  className="text-star-white"
+                <Textarea
+                  value={resume.summary}
+                  onChange={(e) => updateResume({ summary: e.target.value })}
+                  placeholder="Kariyer Özeti / Ön Yazı..."
+                  className="min-h-[100px]"
                 />
               </div>
-              <Textarea
-                value={resume.summary}
-                onChange={(e) => updateResume({ summary: e.target.value })}
-                placeholder="Professional summary"
-                className="min-h-[110px] text-star-white"
-              />
             </section>
 
-            <section className="glass-panel rounded-2xl p-5 space-y-3">
-              <h2 className="font-semibold text-xs uppercase tracking-wider text-cosmic-teal">
-                {t("skills")}
-              </h2>
+            {/* Skills Details */}
+            <section className="glass-panel rounded-3xl p-6 space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-wider text-purple-700 dark:text-[#C084FC]">
+                Teknik ve Sosyal Beceriler
+              </h3>
+              
               <div className="flex flex-wrap gap-1.5">
                 {resume.skills.map((s) => (
-                  <button
+                  <Badge
                     key={s}
-                    type="button"
-                    onClick={() =>
-                      updateResume({ skills: resume.skills.filter((x) => x !== s) })
-                    }
-                    className="group"
+                    variant="soft"
+                    className="gap-1 cursor-pointer hover:bg-rose-500/10 hover:text-rose-500 hover:border-rose-500/20"
+                    onClick={() => updateResume({ skills: resume.skills.filter((x) => x !== s) })}
                   >
-                    <Badge
-                      variant="soft"
-                      className="cursor-pointer group-hover:border-sunset-coral/30"
-                    >
-                      {s} ×
-                    </Badge>
-                  </button>
+                    {s} ✕
+                  </Badge>
                 ))}
-                {!resume.skills.length && (
-                  <span className="text-sm text-muted-steel">No skills yet</span>
+                {resume.skills.length === 0 && (
+                  <span className="text-xs text-slate-500">Henüz yetenek eklenmedi.</span>
                 )}
               </div>
+
               <div className="flex gap-2">
                 <Input
                   value={skillDraft}
                   onChange={(e) => setSkillDraft(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addSkill())}
-                  placeholder="Add a skill"
-                  className="text-star-white"
+                  placeholder="Yeni yetenek ekle..."
                 />
-                <Button variant="soft" onClick={addSkill}>
+                <Button variant="outline" onClick={addSkill}>
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
             </section>
 
-            <section className="glass-panel rounded-2xl p-5 space-y-4">
+            {/* Experience Details */}
+            <section className="glass-panel rounded-3xl p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-xs uppercase tracking-wider text-cosmic-teal">
-                  {t("experience")}
-                </h2>
+                <h3 className="text-xs font-black uppercase tracking-wider text-purple-700 dark:text-[#C084FC]">
+                  İş Deneyimleri
+                </h3>
                 <Button
                   size="sm"
-                  variant="ghost"
-                  className="text-star-white"
+                  variant="outline"
                   onClick={() =>
-                    setResume({
-                      ...resume,
+                    updateResume({
                       experience: [
                         {
                           id: `exp-${Date.now()}`,
@@ -533,193 +511,240 @@ export default function ResumePage() {
                     })
                   }
                 >
-                  <Plus className="w-4 h-4 mr-1" /> Ekle
+                  <Plus className="w-3.5 h-3.5 mr-1" /> Ekle
                 </Button>
               </div>
-              {!resume.experience.length && (
-                <p className="text-sm text-muted-steel">
-                  No roles yet — upload a CV or add experience manually.
-                </p>
+
+              {resume.experience.length === 0 && (
+                <p className="text-xs text-slate-500">Henüz deneyim eklenmedi.</p>
               )}
-              {resume.experience.map((exp, idx) => (
-                <div
-                  key={exp.id}
-                  className="rounded-xl border border-black/5 p-3 space-y-2 bg-panel-elevated/50"
-                >
-                  <div className="flex justify-between gap-2">
-                    <Input
-                      value={exp.role}
+
+              <div className="space-y-4">
+                {resume.experience.map((exp, idx) => (
+                  <div
+                    key={exp.id}
+                    className="rounded-2xl border dark:border-white/5 p-4 space-y-3 bg-slate-100/50 dark:bg-white/[0.01]"
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1 space-y-2">
+                        <Input
+                          value={exp.role}
+                          onChange={(e) => {
+                            const experience = [...resume.experience];
+                            experience[idx] = { ...exp, role: e.target.value };
+                            updateResume({ experience });
+                          }}
+                          placeholder="Pozisyon / Rol"
+                        />
+                        <Input
+                          value={exp.company}
+                          onChange={(e) => {
+                            const experience = [...resume.experience];
+                            experience[idx] = { ...exp, company: e.target.value };
+                            updateResume({ experience });
+                          }}
+                          placeholder="Şirket"
+                        />
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="text-rose-500 hover:bg-rose-500/5 shrink-0"
+                        onClick={() =>
+                          updateResume({
+                            experience: resume.experience.filter((x) => x.id !== exp.id),
+                          })
+                        }
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        value={exp.start}
+                        onChange={(e) => {
+                          const experience = [...resume.experience];
+                          experience[idx] = { ...exp, start: e.target.value };
+                          updateResume({ experience });
+                        }}
+                        placeholder="Başlangıç Tarihi (Örn. 2022)"
+                      />
+                      <Input
+                        value={exp.end}
+                        onChange={(e) => {
+                          const experience = [...resume.experience];
+                          experience[idx] = { ...exp, end: e.target.value };
+                          updateResume({ experience });
+                        }}
+                        placeholder="Bitiş Tarihi (Örn. Devam Ediyor)"
+                      />
+                    </div>
+
+                    <Textarea
+                      value={exp.highlights.join("\n")}
                       onChange={(e) => {
                         const experience = [...resume.experience];
-                        experience[idx] = { ...exp, role: e.target.value };
-                        setResume({ ...resume, experience });
+                        experience[idx] = {
+                          ...exp,
+                          highlights: e.target.value.split("\n"),
+                        };
+                        updateResume({ experience });
                       }}
-                      placeholder="Role"
-                      className="text-star-white"
+                      placeholder="Başarılar ve Sorumluluklar (Her satıra bir adet)"
+                      className="min-h-[80px] font-mono text-xs"
                     />
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="text-sunset-coral"
-                      onClick={() =>
-                        setResume({
-                          ...resume,
-                          experience: resume.experience.filter((x) => x.id !== exp.id),
-                        })
-                      }
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
                   </div>
-                  <Input
-                    value={exp.company}
-                    onChange={(e) => {
-                      const experience = [...resume.experience];
-                      experience[idx] = { ...exp, company: e.target.value };
-                      setResume({ ...resume, experience });
-                    }}
-                    placeholder="Company"
-                    className="text-star-white"
-                  />
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      value={exp.start}
-                      onChange={(e) => {
-                        const experience = [...resume.experience];
-                        experience[idx] = { ...exp, start: e.target.value };
-                        setResume({ ...resume, experience });
-                      }}
-                      placeholder="Start"
-                      className="text-star-white"
-                    />
-                    <Input
-                      value={exp.end}
-                      onChange={(e) => {
-                        const experience = [...resume.experience];
-                        experience[idx] = { ...exp, end: e.target.value };
-                        setResume({ ...resume, experience });
-                      }}
-                      placeholder="End"
-                      className="text-star-white"
-                    />
-                  </div>
-                  <Textarea
-                    value={exp.highlights.join("\n")}
-                    onChange={(e) => {
-                      const experience = [...resume.experience];
-                      experience[idx] = {
-                        ...exp,
-                        highlights: e.target.value.split("\n").filter(Boolean),
-                      };
-                      setResume({ ...resume, experience });
-                    }}
-                    placeholder="One highlight per line"
-                    className="min-h-[90px] text-star-white"
-                  />
-                </div>
-              ))}
+                ))}
+              </div>
             </section>
           </div>
 
-          {/* Preview */}
-          <div className="lg:sticky lg:top-24 h-fit space-y-4">
-            <div className="rounded-3xl border border-slate-200 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 shadow-sm p-6 md:p-8 text-left leading-relaxed">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cosmic-teal mb-4">
-                Önizleme
-              </p>
+          {/* Right Column: Live High-fidelity Print Preview Sheet */}
+          <div className="lg:sticky lg:top-24 space-y-4">
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white text-slate-800 shadow-2xl p-6 md:p-8 text-left leading-relaxed max-w-full min-h-[640px] font-sans">
+              <span className="text-[10px] font-black uppercase tracking-widest text-purple-600 block mb-6 border-b pb-2">
+                A4 Canlı Önizleme
+              </span>
+
               {!hasContent ? (
-                <p className="text-sm text-muted-steel leading-relaxed">
-                  Şablonu doldurdukça canlı önizleme burada görünür.
-                </p>
+                <div className="text-center py-20 space-y-3">
+                  <FileText className="w-8 h-8 mx-auto text-slate-300" />
+                  <p className="text-xs text-slate-400">
+                    Özgeçmişinizi doldurdukça biçimlendirilmiş A4 önizlemesi burada belirecektir.
+                  </p>
+                </div>
               ) : (
-                <>
-                  <div className="flex justify-between items-center border-b pb-4 mb-4">
-                    <div>
-                      <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
-                        {resume.fullName || "Your name"}
+                <div className="space-y-6">
+                  {/* CV Header */}
+                  <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+                    <div className="space-y-1">
+                      <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+                        {resume.fullName || "İsim Soyisim"}
                       </h2>
-                      <p className="text-sm text-sky-600 font-medium mt-1">{resume.headline}</p>
-                      <p className="text-xs text-slate-500 mt-2">
-                        {[resume.email, resume.location].filter(Boolean).join(" · ")}
+                      <p className="text-xs font-semibold text-purple-600 uppercase tracking-wider">
+                        {resume.headline || "Profesyonel Başlık"}
                       </p>
+                      <div className="flex flex-wrap gap-2 pt-2 text-[10px] text-slate-500">
+                        {resume.email && (
+                          <span className="flex items-center gap-0.5">✉ {resume.email}</span>
+                        )}
+                        {resume.location && (
+                          <span className="flex items-center gap-0.5">📍 {resume.location}</span>
+                        )}
+                      </div>
                     </div>
                     {resume.photoDataUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={resume.photoDataUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover border" />
+                      <img
+                        src={resume.photoDataUrl}
+                        alt="Avatar"
+                        className="w-14 h-14 rounded-full object-cover border border-slate-200 shadow-sm"
+                      />
                     )}
                   </div>
+
+                  {/* Summary Section */}
                   {resume.summary && (
-                    <div className="mb-4">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white border-l-4 border-sky-500 pl-2 mb-2">Summary</h3>
-                      <p className="text-xs text-slate-600 dark:text-slate-300 text-justify">{resume.summary}</p>
+                    <div className="space-y-1">
+                      <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                        PROFESSIONAL SUMMARY
+                      </h4>
+                      <p className="text-xs text-slate-600 text-justify leading-relaxed">
+                        {resume.summary}
+                      </p>
                     </div>
                   )}
+
+                  {/* Skills Section */}
                   {resume.skills.length > 0 && (
-                    <div className="mb-4">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white border-l-4 border-sky-500 pl-2 mb-2">
-                        Skills
-                      </h3>
+                    <div className="space-y-2">
+                      <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                        CORE COMPETENCIES
+                      </h4>
                       <div className="flex flex-wrap gap-1">
                         {resume.skills.map((s) => (
-                          <span key={s} className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded text-[10px] font-medium border dark:border-slate-700">{s}</span>
+                          <span
+                            key={s}
+                            className="bg-slate-50 text-slate-700 border border-slate-200/60 px-2 py-0.5 rounded text-[10px] font-medium"
+                          >
+                            {s}
+                          </span>
                         ))}
                       </div>
                     </div>
                   )}
+
+                  {/* Experience Section */}
                   {resume.experience.length > 0 && (
-                    <div className="mb-4">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white border-l-4 border-sky-500 pl-2 mb-3">
-                        Experience
-                      </h3>
-                      <div className="space-y-4">
+                    <div className="space-y-3">
+                      <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                        PROFESSIONAL EXPERIENCE
+                      </h4>
+                      <div className="space-y-3">
                         {resume.experience.map((exp) => (
-                          <div key={exp.id} className="text-xs">
-                            <div className="flex justify-between gap-3 font-semibold text-slate-800 dark:text-slate-200">
+                          <div key={exp.id} className="space-y-1">
+                            <div className="flex justify-between items-baseline text-xs font-bold text-slate-800">
                               <span>
-                                {exp.role}
-                                <span className="font-normal text-slate-500"> · {exp.company}</span>
+                                {exp.role || "Pozisyon"}
+                                <span className="font-normal text-slate-400">
+                                  {exp.company ? ` · ${exp.company}` : ""}
+                                </span>
                               </span>
-                              <span className="font-normal text-slate-400 shrink-0">
+                              <span className="font-normal text-slate-400 text-[10px]">
                                 {exp.start} – {exp.end}
                               </span>
                             </div>
-                            <ul className="mt-1.5 space-y-0.5 list-disc list-inside pl-2 text-slate-500 dark:text-slate-400">
-                              {exp.highlights.map((h) => (
-                                <li key={h}>{h}</li>
-                              ))}
-                            </ul>
+                            {exp.highlights.length > 0 && (
+                              <ul className="list-disc list-inside text-[11px] text-slate-500 pl-1 space-y-0.5">
+                                {exp.highlights.filter(Boolean).map((h, i) => (
+                                  <li key={i} className="leading-relaxed">
+                                    {h}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
+
+                  {/* Education Section */}
                   {resume.education.length > 0 && (
-                    <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white border-l-4 border-sky-500 pl-2 mb-2">
-                        Education
-                      </h3>
+                    <div className="space-y-2">
+                      <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                        EDUCATION
+                      </h4>
                       <div className="space-y-2">
                         {resume.education.map((edu) => (
-                          <div key={edu.id} className="text-xs flex justify-between font-semibold text-slate-800 dark:text-slate-200">
+                          <div
+                            key={edu.id}
+                            className="flex justify-between items-baseline text-xs font-bold text-slate-800"
+                          >
                             <span>
                               {edu.school}
-                              <span className="font-normal text-slate-500"> — {edu.degree}</span>
+                              <span className="font-normal text-slate-400">
+                                {edu.degree ? ` — ${edu.degree}` : ""}
+                              </span>
                             </span>
-                            <span className="font-normal text-slate-400">{edu.year}</span>
+                            <span className="font-normal text-slate-400 text-[10px]">{edu.year}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
-                </>
+                </div>
               )}
             </div>
+
             {hasContent && (
-              <Button className="w-full" variant="soft" onClick={refreshFeedback}>
-                Analizi yenile
+              <Button className="w-full shadow-md" variant="primary" onClick={refreshFeedback}>
+                Canlı Analizi Tetikle
               </Button>
             )}
           </div>
+          
         </div>
       </div>
     </div>
