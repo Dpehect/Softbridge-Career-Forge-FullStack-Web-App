@@ -11,61 +11,44 @@ import {
   Briefcase,
   GitCompare,
   MessageSquare,
-  History,
+  LayoutDashboard,
   Sun,
   Moon,
-  User,
   Zap,
   FileText,
-  MoreHorizontal,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { useCareerStore } from "@/store/useCareerStore";
 import { exportCvAsPdf } from "@/lib/forge";
 import { toast } from "sonner";
 import { AiStatusDot } from "@/components/AiStatusDot";
 import { JourneyStepper } from "@/components/JourneyStepper";
 
-/** Sade ana menü: Logo · Forge · Özgeçmişim · (profil) */
-const primaryLinks = [
-  { name: "Forge", path: "/forge", icon: Anvil, label: "Forge" },
-  { name: "Resume", path: "/resume", icon: FileText, label: "Özgeçmişim" },
-  { name: "Dashboard", path: "/dashboard", icon: History, label: "Kokpit" },
-] as const;
-
-/** Hamburger / “Daha fazla” altı */
-const moreLinks = [
-  { name: "Coach", path: "/coach", icon: MessageSquare, label: "AI Koç" },
-  { name: "Jobs", path: "/jobs", icon: Briefcase, label: "İş İlanları" },
-  { name: "Paths", path: "/paths", icon: GitCompare, label: "Kariyer Yolları" },
+/** Tek düz, profesyonel navigasyon — hepsi görünür, bitişik değil */
+const NAV = [
+  { path: "/forge", label: "Forge", icon: Anvil },
+  { path: "/resume", label: "Özgeçmiş", icon: FileText },
+  { path: "/dashboard", label: "Kokpit", icon: LayoutDashboard },
+  { path: "/coach", label: "Koç", icon: MessageSquare },
+  { path: "/jobs", label: "İlanlar", icon: Briefcase },
+  { path: "/paths", label: "Yollar", icon: GitCompare },
 ] as const;
 
 export function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
-  const moreRef = useRef<HTMLDivElement>(null);
   const { resume, resetResume, forgeParsedCv, clearForgeCv, theme, setTheme } =
     useCareerStore();
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      document.documentElement.classList.toggle("dark", theme === "dark");
-    }
+    document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
   useEffect(() => {
-    const onDoc = (e: MouseEvent) => {
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
-        setMoreOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, []);
+    setMobileOpen(false);
+  }, [pathname]);
 
   const hasContent =
     Boolean(forgeParsedCv) ||
@@ -78,7 +61,11 @@ export function Header() {
     );
 
   const handleClearAll = () => {
-    if (window.confirm("Mevcut CV ve verilerinizi temizlemek istediğinize emin misiniz?")) {
+    if (
+      window.confirm(
+        "Mevcut CV ve verilerinizi temizlemek istediğinize emin misiniz?"
+      )
+    ) {
       resetResume();
       clearForgeCv();
       toast.success("CV temizlendi. Sıfırdan başlayabilirsiniz.");
@@ -123,238 +110,208 @@ export function Header() {
     }
   };
 
-  const linkClass = (active: boolean) =>
-    cn(
-      "text-sm font-semibold tracking-wide transition-colors",
-      active ? "text-indigo-600" : "text-slate-600 hover:text-indigo-600"
-    );
+  const isActive = (path: string) =>
+    pathname === path || pathname.startsWith(`${path}/`);
 
   return (
     <>
-      <motion.header
-        initial={{ y: -12, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed top-0 left-0 right-0 z-50 p-3 md:p-4 pb-0"
-      >
-        <div className="max-w-6xl mx-auto glass-panel rounded-2xl px-4 md:px-6 py-2.5 flex items-center justify-between gap-4">
-          {/* Logo */}
-          <Link
-            href="/"
-            className="flex items-center gap-2.5 group shrink-0"
-            onClick={() => setMobileOpen(false)}
-          >
-            <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center shadow-lg transition-all group-hover:scale-105"
-              style={{
-                background: "linear-gradient(135deg, #6B21A8, #F97316)",
-                boxShadow: "0 8px 20px rgba(107,33,168,0.4)",
-              }}
-            >
-              <Zap className="w-4 h-4 text-white" />
-            </div>
-            <div className="leading-tight">
-              <p className="font-display font-bold text-[13px] tracking-tight text-star-white">
-                CareerForge
-              </p>
-              <p className="text-[10px] text-slate-500 hidden sm:block">
-                SoftBridge · %100 gizli
-              </p>
-            </div>
-          </Link>
-
-          {/* Desktop: sade ana menü + gap-8 */}
-          <nav className="hidden lg:flex items-center gap-8">
-            {primaryLinks.map((link) => {
-              const active =
-                pathname === link.path || pathname.startsWith(`${link.path}/`);
-              return (
-                <Link key={link.path} href={link.path} className={linkClass(active)}>
-                  {link.label}
-                </Link>
-              );
-            })}
-
-            {/* Daha fazla → hamburger tarzı dropdown */}
-            <div className="relative" ref={moreRef}>
-              <button
-                type="button"
-                onClick={() => setMoreOpen((v) => !v)}
-                className={cn(
-                  "inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors cursor-pointer",
-                  moreOpen && "text-indigo-600"
-                )}
-              >
-                <MoreHorizontal className="w-4 h-4" />
-                Daha fazla
-              </button>
-              <AnimatePresence>
-                {moreOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    className="absolute right-0 top-full mt-2 w-48 rounded-2xl border border-slate-200 bg-white/95 backdrop-blur-md shadow-lg p-2 dark:bg-panel dark:border-white/10"
-                  >
-                    {moreLinks.map((link) => {
-                      const Icon = link.icon;
-                      const active =
-                        pathname === link.path ||
-                        pathname.startsWith(`${link.path}/`);
-                      return (
-                        <Link
-                          key={link.path}
-                          href={link.path}
-                          onClick={() => setMoreOpen(false)}
-                          className={cn(
-                            "flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors",
-                            active
-                              ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15"
-                              : "text-slate-600 hover:bg-slate-50 hover:text-indigo-600 dark:hover:bg-white/5"
-                          )}
-                        >
-                          <Icon className="w-4 h-4" />
-                          {link.label}
-                        </Link>
-                      );
-                    })}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </nav>
-
-          {/* Sağ kontroller */}
-          <div className="flex items-center gap-2">
-            {hasContent && (
-              <div className="hidden md:inline-flex items-center gap-1.5">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleClearAll}
-                  className="h-9 text-xs text-sunset-coral hover:bg-sunset-coral/8 gap-1 px-2"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  Temizle
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleExport}
-                  className="h-9 text-xs gap-1 px-2 text-slate-600 border border-slate-200 hover:text-indigo-600"
-                >
-                  <FileDown className="w-3.5 h-3.5" />
-                  PDF
-                </Button>
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="h-9 w-9 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-colors cursor-pointer"
-              title={theme === "dark" ? "Açık tema" : "Koyu tema"}
-            >
-              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-
-            <AiStatusDot />
-
-            <div
-              className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-600 to-orange-500 flex items-center justify-center text-white shadow-sm"
-              title="Profil"
-            >
-              <User className="w-4 h-4" />
-            </div>
-
+      <header className="fixed top-0 left-0 right-0 z-50">
+        {/* Üst cam bar */}
+        <div className="border-b border-white/10 bg-white/75 backdrop-blur-xl dark:bg-[#0c0614]/90 dark:border-white/5">
+          <div className="max-w-6xl mx-auto h-16 px-4 sm:px-6 flex items-center justify-between gap-6">
+            {/* Logo */}
             <Link
-              href="/forge"
-              className="hidden sm:inline-flex h-9 items-center rounded-xl px-4 text-xs font-bold text-white bg-indigo-600 shadow-lg transition-colors hover:bg-indigo-700"
+              href="/"
+              className="flex items-center gap-3 shrink-0 group"
+              onClick={() => setMobileOpen(false)}
             >
-              Forge&apos;u Aç
+              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 via-violet-600 to-orange-500 shadow-lg shadow-indigo-500/25 transition-transform group-hover:scale-105">
+                <Zap className="h-4 w-4 text-white" />
+              </div>
+              <div className="hidden sm:block leading-none">
+                <p className="font-display text-[15px] font-bold tracking-tight text-slate-900 dark:text-white">
+                  CareerForge
+                </p>
+                <p className="mt-1 text-[10px] font-medium tracking-wide text-slate-500">
+                  SoftBridge
+                </p>
+              </div>
             </Link>
 
-            <button
-              type="button"
-              className="lg:hidden h-9 w-9 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 cursor-pointer"
-              onClick={() => setMobileOpen((v) => !v)}
-              aria-label="Menü"
+            {/* Desktop nav — geniş aralıklı, modern pill active */}
+            <nav
+              className="hidden lg:flex items-center gap-1"
+              aria-label="Ana menü"
             >
-              {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobil menü */}
-        <AnimatePresence>
-          {mobileOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="lg:hidden max-w-6xl mx-auto mt-2 glass-panel rounded-2xl p-3 flex flex-col gap-1"
-            >
-              {[...primaryLinks, ...moreLinks].map((link) => {
-                const active =
-                  pathname === link.path || pathname.startsWith(`${link.path}/`);
-                const Icon = link.icon;
+              {NAV.map((item) => {
+                const active = isActive(item.path);
                 return (
                   <Link
-                    key={link.path}
-                    href={link.path}
-                    onClick={() => setMobileOpen(false)}
+                    key={item.path}
+                    href={item.path}
                     className={cn(
-                      "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors",
+                      "relative px-4 py-2 rounded-full text-[13px] font-semibold tracking-tight transition-all duration-200",
                       active
-                        ? "bg-indigo-600 text-white"
-                        : "text-slate-600 hover:text-indigo-600 hover:bg-slate-50 dark:hover:bg-white/5"
+                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
+                        : "text-slate-600 hover:text-indigo-600 hover:bg-slate-100/80 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-indigo-300"
                     )}
                   >
-                    <Icon className="w-4 h-4" />
-                    {link.label}
+                    {item.label}
                   </Link>
                 );
               })}
+            </nav>
+
+            {/* Sağ aksiyonlar */}
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              {hasContent && (
+                <div className="hidden xl:flex items-center gap-1 mr-1">
+                  <button
+                    type="button"
+                    onClick={handleClearAll}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors dark:hover:bg-rose-500/10"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    Temizle
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleExport}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors dark:text-slate-300 dark:hover:bg-white/5"
+                  >
+                    <FileDown className="h-3.5 w-3.5" />
+                    PDF
+                  </button>
+                </div>
+              )}
+
+              <div className="hidden sm:flex items-center gap-2 pl-1 border-l border-slate-200/80 dark:border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-indigo-600 transition-colors dark:hover:bg-white/5 cursor-pointer"
+                  title={theme === "dark" ? "Açık tema" : "Koyu tema"}
+                >
+                  {theme === "dark" ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                </button>
+                <AiStatusDot />
+              </div>
+
+              <Link
+                href="/forge"
+                className="inline-flex h-9 sm:h-10 items-center rounded-full bg-indigo-600 px-4 sm:px-5 text-[12px] sm:text-[13px] font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:bg-indigo-500 hover:shadow-indigo-500/40 active:scale-[0.98]"
+              >
+                Analiz Başlat
+              </Link>
+
+              <button
+                type="button"
+                className="lg:hidden flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 dark:border-white/10 dark:text-slate-300 cursor-pointer"
+                onClick={() => setMobileOpen((v) => !v)}
+                aria-label={mobileOpen ? "Menüyü kapat" : "Menüyü aç"}
+                aria-expanded={mobileOpen}
+              >
+                {mobileOpen ? (
+                  <X className="h-4 w-4" />
+                ) : (
+                  <Menu className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Yol haritası şeridi — navbar ile bütünleşik */}
+          <div className="border-t border-slate-100/80 dark:border-white/5">
+            <JourneyStepper className="!border-0 !bg-transparent" />
+          </div>
+        </div>
+
+        {/* Mobil panel */}
+        <AnimatePresence>
+          {mobileOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="lg:hidden overflow-hidden border-b border-slate-200/80 bg-white/95 backdrop-blur-xl dark:bg-[#0c0614]/95 dark:border-white/10"
+            >
+              <nav className="max-w-6xl mx-auto px-4 py-4 grid grid-cols-2 gap-2">
+                {NAV.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.path);
+                  return (
+                    <Link
+                      key={item.path}
+                      href={item.path}
+                      className={cn(
+                        "flex items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-semibold transition-colors",
+                        active
+                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20"
+                          : "bg-slate-50 text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-indigo-500/10"
+                      )}
+                    >
+                      <Icon className="h-4 w-4 shrink-0 opacity-80" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+              <div className="max-w-6xl mx-auto px-4 pb-4 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 text-sm font-semibold text-slate-600 dark:border-white/10 dark:text-slate-300"
+                >
+                  {theme === "dark" ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                  Tema
+                </button>
+                <div className="flex h-10 items-center rounded-2xl border border-slate-200 px-3 dark:border-white/10">
+                  <AiStatusDot />
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
+      </header>
 
-        <div className="max-w-6xl mx-auto mt-2 mb-2">
-          <div className="glass-panel rounded-2xl overflow-hidden">
-            <JourneyStepper />
-          </div>
-        </div>
-      </motion.header>
-
-      {/* Mobil alt nav — sadece ana 3 yol */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass-panel border-t border-slate-200/60 py-2 px-4 flex items-center justify-around">
-        {primaryLinks.map((link) => {
-          const active =
-            pathname === link.path || pathname.startsWith(`${link.path}/`);
-          const Icon = link.icon;
-          return (
-            <Link
-              key={link.path}
-              href={link.path}
-              className="flex flex-col items-center gap-0.5 py-1 min-w-[64px]"
-            >
-              <Icon
+      {/* Mobil alt bar — ferah 4 ana rota */}
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-slate-200/80 bg-white/90 backdrop-blur-xl pb-[env(safe-area-inset-bottom)] dark:bg-[#0c0614]/95 dark:border-white/10">
+        <div className="flex items-stretch justify-around px-2 py-2">
+          {NAV.slice(0, 4).map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.path);
+            return (
+              <Link
+                key={item.path}
+                href={item.path}
                 className={cn(
-                  "w-5 h-5",
-                  active ? "text-indigo-600" : "text-slate-500"
-                )}
-              />
-              <span
-                className={cn(
-                  "text-[10px] font-semibold",
+                  "flex flex-1 flex-col items-center gap-1 rounded-xl py-2 transition-colors",
                   active ? "text-indigo-600" : "text-slate-500"
                 )}
               >
-                {link.label}
-              </span>
-            </Link>
-          );
-        })}
+                <span
+                  className={cn(
+                    "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
+                    active && "bg-indigo-50 dark:bg-indigo-500/15"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                </span>
+                <span className="text-[10px] font-semibold tracking-tight">
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </nav>
     </>
   );

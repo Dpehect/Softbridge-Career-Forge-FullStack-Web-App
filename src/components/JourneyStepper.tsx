@@ -29,22 +29,21 @@ export function JourneyStepper({ className }: { className?: string }) {
   return (
     <nav
       aria-label="Kariyer yol haritası"
-      className={cn(
-        "w-full border-b border-white/10 bg-white/40 backdrop-blur-sm dark:bg-black/20",
-        className
-      )}
+      className={cn("w-full", className)}
     >
-      <ol className="max-w-6xl mx-auto px-4 md:px-8 py-2.5 flex items-center justify-center gap-1 sm:gap-2">
+      <ol className="max-w-6xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-center gap-2 sm:gap-3">
         {STEPS.map((step, i) => {
           const isActive = active === step.id;
           const isDone = active > step.id;
           return (
-            <li key={step.id} className="flex items-center gap-1 sm:gap-2">
+            <li key={step.id} className="flex items-center gap-2 sm:gap-3">
               {i > 0 && (
                 <span
                   className={cn(
-                    "hidden sm:block w-6 md:w-10 h-0.5 rounded-full",
-                    isDone || isActive ? "bg-indigo-400" : "bg-slate-200 dark:bg-white/10"
+                    "w-4 sm:w-8 h-px rounded-full",
+                    isDone || isActive
+                      ? "bg-indigo-400/80"
+                      : "bg-slate-200 dark:bg-white/10"
                   )}
                   aria-hidden
                 />
@@ -52,21 +51,29 @@ export function JourneyStepper({ className }: { className?: string }) {
               <Link
                 href={step.href}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-bold tracking-tight transition-colors",
-                  isActive && "bg-indigo-600 text-white shadow-sm",
-                  isDone && !isActive && "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300",
-                  !isActive && !isDone && "bg-white/60 text-slate-500 border border-slate-200/80 dark:bg-white/5 dark:border-white/10"
+                  "inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] sm:text-xs font-semibold tracking-tight transition-colors",
+                  isActive && "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300",
+                  isDone &&
+                    !isActive &&
+                    "text-indigo-600/80 dark:text-indigo-400/80",
+                  !isActive &&
+                    !isDone &&
+                    "text-slate-500 hover:text-indigo-600 dark:text-slate-400"
                 )}
               >
                 <span
                   className={cn(
-                    "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-extrabold",
-                    isActive ? "bg-white/20 text-white" : isDone ? "bg-indigo-600 text-white" : "bg-slate-200 text-slate-600"
+                    "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
+                    isActive
+                      ? "bg-indigo-600 text-white"
+                      : isDone
+                        ? "bg-indigo-200 text-indigo-800 dark:bg-indigo-500/30 dark:text-indigo-200"
+                        : "bg-slate-100 text-slate-500 dark:bg-white/10"
                   )}
                 >
                   {step.id}
                 </span>
-                <span className="hidden xs:inline sm:inline">{step.label}</span>
+                <span className="hidden sm:inline">{step.label}</span>
               </Link>
             </li>
           );

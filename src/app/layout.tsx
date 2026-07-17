@@ -94,7 +94,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body className="min-h-full flex flex-col bg-background text-primary font-sans mesh-bg selection:bg-cosmic-teal/20">
         <Header />
-        <main className="flex-1 pt-[7.5rem] md:pt-[8.25rem] pb-16 lg:pb-0">{children}</main>
+        <main className="flex-1 pt-[6.75rem] sm:pt-[7rem] pb-20 lg:pb-8">{children}</main>
         <Footer />
         <Toaster
           theme="system"
