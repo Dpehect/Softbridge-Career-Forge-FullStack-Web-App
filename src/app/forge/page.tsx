@@ -154,11 +154,22 @@ export default function ForgePage() {
     }
   }, [forgeParsedCv, careerGoalId, ats, forgeAnalysis, cvFeedback]);
 
-  if (!mounted) {
+  if (!mounted || isLoadingModel) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
-          style={{ borderColor: "#A855F7", borderTopColor: "transparent" }} />
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-4 py-16">
+        <div
+          className="w-12 h-12 rounded-full border-[3px] border-t-transparent animate-spin"
+          style={{ borderColor: "#4F46E5", borderTopColor: "transparent" }}
+        />
+        <div className="text-center space-y-1">
+          <p className="font-extrabold tracking-tighter text-lg text-star-white">
+            Kariyer Asistanı Hazırlanıyor…
+          </p>
+          <p className="text-sm text-slate-500 max-w-sm">
+            {statusMessage ||
+              "İlk seferde model tarayıcınıza iner (5–10 sn). Verileriniz cihazınızda kalır."}
+          </p>
+        </div>
       </div>
     );
   }
@@ -291,7 +302,7 @@ export default function ForgePage() {
           toast.error("Önce iş ilanı (JD) metnini yapıştırın.");
           return;
         }
-        setModelBanner("Analyzing… (first run may download the model)");
+        setModelBanner("Analiz ediliyor… (ilk seferde model indirilebilir)");
         const semantic = await analyzeInBrowser(
           cvText || JSON.stringify(forgeParsedCv),
           jdText,
@@ -322,7 +333,7 @@ export default function ForgePage() {
         });
         pushForgeHistory({
           action: "analyze",
-          summary: `Browser AI · Match %${analysis.matchScore} · ATS %${analysis.atsScore}`,
+          summary: `Tarayıcı AI · Eşleşme %${analysis.matchScore} · ATS %${analysis.atsScore}`,
           payload: analysis,
         });
         setModelBanner(null);
@@ -386,7 +397,7 @@ export default function ForgePage() {
     run(async () => {
       try {
         if (!forgeParsedCv) return;
-        setModelBanner("Analyzing…");
+        setModelBanner("Analiz ediliyor…");
         // Prefer semantic ATS when JD present; else structural local scan
         if (jdText.trim()) {
           const semantic = await analyzeInBrowser(
@@ -418,7 +429,7 @@ export default function ForgePage() {
           });
           pushForgeHistory({
             action: "ats",
-            summary: `Browser AI ATS %${semantic.atsScore}`,
+            summary: `Tarayıcı AI ATS %${semantic.atsScore}`,
             payload: semantic,
           });
           toast.success(`ATS: %${semantic.atsScore} (tarayıcı AI)`);
@@ -539,17 +550,20 @@ export default function ForgePage() {
             <h1 className="font-display text-3xl font-bold tracking-tight text-star-white">{t("forgeTitle")}</h1>
             <p className="text-sm text-muted-steel mt-1 max-w-xl leading-relaxed">{t("forgeDesc")}</p>
             <p className="text-xs text-indigo-600 mt-2 font-semibold">
-              100% tarayıcı AI (Transformers.js) · sunucu / API anahtarı yok
+              %100 tarayıcı AI · sunucu yok · API anahtarı yok · verileriniz gizli
             </p>
-            {(isLoadingModel || analyzing || modelBanner) && (
+            {(analyzing || modelBanner) && (
               <div className="mt-3 inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/90 px-3 py-2 text-xs font-semibold text-indigo-800 dark:bg-indigo-500/10 dark:border-indigo-500/30 dark:text-indigo-200">
                 <LoadingSpinner />
-                {modelBanner || statusMessage || "Analyzing…"}
+                {modelBanner || statusMessage || "Analiz ediliyor…"}
               </div>
             )}
             {clientAiError && (
               <div className="mt-2">
-                <ErrorAlert title="Browser AI" message={clientAiError} />
+                <ErrorAlert
+                  title="Analiz şu an yapılamıyor"
+                  message="Bağlantını kontrol et veya sayfayı yenile. Model indirilemediyse tekrar dene — verilerin güvende."
+                />
               </div>
             )}
           </div>
@@ -918,7 +932,10 @@ export default function ForgePage() {
             <div className="glass-panel rounded-3xl p-6 min-h-[460px]" style={{ border: "1px solid rgba(168,85,247,0.12)" }}>
               {clientAiError && (
                 <div className="mb-4">
-                  <ErrorAlert title="Browser AI" message={clientAiError} />
+                  <ErrorAlert
+                    title="Analiz şu an yapılamıyor"
+                    message="Bağlantını kontrol et veya sayfayı yenile. Verilerin güvende."
+                  />
                 </div>
               )}
               
@@ -1101,7 +1118,7 @@ export default function ForgePage() {
                     >
                       {isLoading ? (
                         <>
-                          <LoadingSpinner /> Analyzing…
+                          <LoadingSpinner /> Analiz ediliyor…
                         </>
                       ) : (
                         "Check Match Score"
@@ -1112,7 +1129,10 @@ export default function ForgePage() {
                     </Button>
                   </div>
                   {clientAiError && (
-                    <ErrorAlert title="Browser AI" message={clientAiError} />
+                    <ErrorAlert
+                      title="Analiz şu an yapılamıyor"
+                      message="Bağlantını kontrol et veya sayfayı yenile."
+                    />
                   )}
 
                   {forgeAnalysis && (

@@ -13,7 +13,7 @@ import {
  */
 export function AiStatusDot({ className }: { className?: string }) {
   const [status, setStatus] = useState<ClientAiStatus>("idle");
-  const [message, setMessage] = useState("Browser AI");
+  const [message, setMessage] = useState("Kariyer asistanı");
 
   useEffect(() => {
     const unsub = subscribeClientAi((p) => {
@@ -47,7 +47,13 @@ export function AiStatusDot({ className }: { className?: string }) {
         )}
       />
       <span className="hidden text-[10px] font-semibold tracking-wide text-slate-500 sm:inline">
-        {loading ? "AI loading…" : ready ? "Browser AI" : error ? "AI error" : "AI"}
+        {loading
+          ? "Hazırlanıyor…"
+          : ready
+            ? "AI hazır"
+            : error
+              ? "Analiz yok"
+              : "AI"}
       </span>
     </div>
   );

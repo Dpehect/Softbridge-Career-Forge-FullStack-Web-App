@@ -106,7 +106,7 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="max-w-6xl mx-auto relative space-y-16 py-8">
+        <div className="max-w-6xl mx-auto relative space-y-16 py-16">
           {/* Hero — sonuç odaklı */}
           <motion.div {...fadeUp(0)} className="max-w-3xl space-y-6">
             <motion.div
@@ -133,13 +133,18 @@ export default function HomePage() {
               çizgisi değil — SoftBridge kariyer asistanınızın ilk adımı.
             </motion.p>
 
-            {/* Güven rozeti — USP */}
+            {/* Güven mesajı — USP (büyük ve belirgin) */}
             <motion.div
               {...fadeUp(0.18)}
-              className="inline-flex items-center gap-2 rounded-full border-2 border-emerald-400/50 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-800 shadow-sm dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-300"
+              className="inline-flex flex-col sm:flex-row sm:items-center gap-2 rounded-2xl border-2 border-emerald-400/60 bg-emerald-50 px-5 py-3 text-sm font-bold text-emerald-900 shadow-md dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-200"
             >
-              <Lock className="w-4 h-4 shrink-0" />
-              Verileriniz asla buluta çıkmaz · %100 gizlilikle yerel cihazınızda işlenir
+              <span className="inline-flex items-center gap-2">
+                <Lock className="w-5 h-5 shrink-0" />
+                Verileriniz Cihazınızda Kalır.
+              </span>
+              <span className="font-semibold opacity-90">
+                %100 Gizli · %100 Yerel İşleme · API anahtarı yok
+              </span>
             </motion.div>
           </motion.div>
 

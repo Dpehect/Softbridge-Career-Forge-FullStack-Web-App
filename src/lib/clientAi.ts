@@ -54,12 +54,12 @@ export function subscribeClientAi(fn: (p: ClientAiProgress) => void): () => void
     status,
     message:
       status === "ready"
-        ? "Browser AI ready"
+        ? "Kariyer asistanı hazır"
         : status === "loading"
-          ? "Loading model…"
+          ? "Kariyer Asistanı Hazırlanıyor…"
           : status === "error"
-            ? lastError || "Model error"
-            : "Browser AI idle",
+            ? lastError || "Analiz şu an yapılamıyor"
+            : "Kariyer asistanı",
   });
   return () => {
     listeners.delete(fn);
@@ -99,7 +99,11 @@ export async function loadBrowserAi(): Promise<FeaturePipeline> {
 
   loadPromise = (async () => {
     try {
-      emit({ status: "loading", message: "Downloading AI model (first time only)…", progress: 0.1 });
+      emit({
+        status: "loading",
+        message: "Kariyer Asistanı Hazırlanıyor… (ilk seferde model indirilir)",
+        progress: 0.1,
+      });
 
       const { pipeline, env } = await import("@xenova/transformers");
 
@@ -107,7 +111,11 @@ export async function loadBrowserAi(): Promise<FeaturePipeline> {
       env.allowLocalModels = false;
       env.useBrowserCache = true;
 
-      emit({ status: "loading", message: "Initializing MiniLM embeddings…", progress: 0.4 });
+      emit({
+        status: "loading",
+        message: "Kariyer Asistanı Hazırlanıyor… embedding modeli yükleniyor",
+        progress: 0.4,
+      });
 
       const pipe = (await pipeline(
         "feature-extraction",
@@ -117,10 +125,13 @@ export async function loadBrowserAi(): Promise<FeaturePipeline> {
       )) as FeaturePipeline;
 
       extractor = pipe;
-      emit({ status: "ready", message: "Browser AI ready", progress: 1 });
+      emit({ status: "ready", message: "Kariyer asistanı hazır", progress: 1 });
       return pipe;
     } catch (err) {
-      lastError = err instanceof Error ? err.message : "Failed to load browser AI";
+      lastError =
+        err instanceof Error
+          ? "Analiz şu an yapılamıyor, bağlantını kontrol et ve sayfayı yenile."
+          : "Analiz şu an yapılamıyor.";
       emit({ status: "error", message: lastError });
       loadPromise = null;
       throw err;
@@ -166,7 +177,7 @@ export async function analyzeCvJobInBrowser(
   jobDescription: string,
   skills: string[] = []
 ): Promise<SemanticMatchResult> {
-  emit({ status: "loading", message: "Analyzing…", progress: 0.5 });
+  emit({ status: "loading", message: "Analiz ediliyor…", progress: 0.5 });
 
   const cv = cvText.replace(/\s+/g, " ").trim();
   const jd = jobDescription.replace(/\s+/g, " ").trim();
@@ -239,7 +250,7 @@ export async function analyzeCvJobInBrowser(
 
   const summary = `Browser AI match %${matchScore} · ATS %${atsScore} · ${missingKeywords.length} keyword gaps. 100% on-device — no server.`;
 
-  emit({ status: "ready", message: "Analysis complete", progress: 1 });
+  emit({ status: "ready", message: "Analiz tamamlandı", progress: 1 });
 
   return {
     matchScore,

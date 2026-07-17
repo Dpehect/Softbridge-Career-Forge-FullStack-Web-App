@@ -15,7 +15,7 @@ import {
 export function useClientAi() {
   const [progress, setProgress] = useState<ClientAiProgress>({
     status: "idle",
-    message: "Browser AI idle",
+    message: "Kariyer asistanı",
   });
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
