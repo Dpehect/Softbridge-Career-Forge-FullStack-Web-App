@@ -46,8 +46,8 @@ export function JourneyResults({ insight, className, issues }: Props) {
       {/* 1 — Mevcut durum */}
       <section className={cn(glass, "p-5 space-y-4")}>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-indigo-500/15 flex items-center justify-center">
-            <Target className="w-4 h-4 text-indigo-600" />
+          <div className="w-8 h-8 rounded-xl bg-purple-500/15 flex items-center justify-center">
+            <Target className="w-4 h-4 text-purple-600 dark:text-[#C084FC]" />
           </div>
           <div>
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
@@ -71,8 +71,8 @@ export function JourneyResults({ insight, className, issues }: Props) {
         )}
 
         {/* Danışmanlık kutusu — puan + 3 yetenek + tek tık aksiyon */}
-        <div className="rounded-xl border border-indigo-200/70 bg-indigo-50/90 p-4 space-y-3 dark:border-indigo-500/25 dark:bg-indigo-500/10">
-          <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-200 leading-relaxed">
+        <div className="rounded-xl border border-purple-200/70 bg-purple-50/90 p-4 space-y-3 dark:border-purple-500/25 dark:bg-purple-500/10">
+          <p className="text-sm font-semibold text-purple-900 dark:text-purple-200 leading-relaxed">
             Puanınızı <strong>85</strong> yapmak için şu 3 yeteneği ekleyin:
             {topSkills.length > 0 ? (
               <span className="font-extrabold"> [{topSkills.join(", ")}]</span>
@@ -88,7 +88,7 @@ export function JourneyResults({ insight, className, issues }: Props) {
                   type="button"
                   disabled={adding}
                   onClick={() => handleAddSkills([k])}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors"
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white border border-purple-200 text-purple-700 hover:bg-purple-100 transition-colors"
                 >
                   <Plus className="w-3 h-3" />
                   {k}
@@ -99,15 +99,20 @@ export function JourneyResults({ insight, className, issues }: Props) {
                 disabled={adding}
                 onClick={() => handleAddSkills(topSkills, true)}
                 className={cn(
-                  "inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-bold text-white bg-indigo-600 shadow-lg hover:bg-indigo-700",
+                  "inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-bold text-white shadow-lg transition-transform hover:scale-102",
                   adding && "opacity-50 pointer-events-none"
                 )}
+                style={{
+                  background: "linear-gradient(135deg, #6B21A8, #A855F7)",
+                  boxShadow: "0 4px 12px rgba(107, 33, 168, 0.25)",
+                }}
               >
                 <Plus className="w-3.5 h-3.5" />
                 Düzenleyiciye Ekle
               </button>
             </div>
           )}
+
         </div>
       </section>
 
@@ -137,7 +142,7 @@ export function JourneyResults({ insight, className, issues }: Props) {
       </section>
 
       {/* 3 — Sırada ne var */}
-      <section className={cn(glass, "p-5 space-y-4 border-indigo-200/50 dark:border-indigo-500/20")}>
+      <section className={cn(glass, "p-5 space-y-4 border-purple-200/50 dark:border-purple-500/20")}>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-emerald-500/15 flex items-center justify-center">
             <TrendingUp className="w-4 h-4 text-emerald-600" />
@@ -161,8 +166,8 @@ export function JourneyResults({ insight, className, issues }: Props) {
             </p>
             <p className="text-[11px] text-slate-500">şu an güçlü başvuru</p>
           </div>
-          <div className="rounded-xl bg-indigo-50 dark:bg-indigo-500/10 p-3">
-            <p className="text-2xl font-extrabold tracking-tighter text-indigo-600">
+          <div className="rounded-xl bg-purple-50 dark:bg-purple-500/10 p-3">
+            <p className="text-2xl font-extrabold tracking-tighter text-purple-600 dark:text-[#C084FC]">
               {insight.jobsAfter}
             </p>
             <p className="text-[11px] text-slate-500">düzeltme sonrası potansiyel</p>
@@ -171,7 +176,7 @@ export function JourneyResults({ insight, className, issues }: Props) {
         <ul className="space-y-2 text-sm text-slate-500">
           {insight.nextStepsTr.map((s, i) => (
             <li key={i} className="flex gap-2">
-              <Compass className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+              <Compass className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />
               <span>{s}</span>
             </li>
           ))}
@@ -179,7 +184,11 @@ export function JourneyResults({ insight, className, issues }: Props) {
         <div className="flex flex-wrap gap-2 pt-1">
           <Link
             href="/resume"
-            className="inline-flex h-10 items-center gap-1.5 rounded-xl px-4 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700"
+            className="inline-flex h-10 items-center gap-1.5 rounded-xl px-4 text-sm font-bold text-white shadow-lg transition-transform hover:scale-102"
+            style={{
+              background: "linear-gradient(135deg, #6B21A8, #A855F7, #F97316)",
+              boxShadow: "0 4px 12px rgba(107, 33, 168, 0.3)",
+            }}
           >
             Özgeçmiş Düzenleyici <ArrowRight className="w-4 h-4" />
           </Link>
@@ -197,6 +206,7 @@ export function JourneyResults({ insight, className, issues }: Props) {
           </Link>
         </div>
       </section>
+
     </div>
   );
 }

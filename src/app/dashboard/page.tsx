@@ -219,8 +219,8 @@ export default function DashboardPage() {
 
         {/* Anlamlı özet kartı — veri değil ilişki */}
         {(lastAnalysisMeta || forgeParsedCv) && (
-          <section className={cn(glass, "p-6 space-y-3 border-indigo-200/40")}>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-600">
+          <section className={cn(glass, "p-6 space-y-3 border-purple-200/40 dark:border-purple-500/10")}>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-purple-600 dark:text-[#C084FC]">
               Kariyer özeti
             </p>
             <p className="text-sm md:text-base font-semibold text-star-white leading-relaxed">
@@ -237,7 +237,7 @@ export default function DashboardPage() {
                   "hedef rolünüz"}
               </strong>{" "}
               hedefiyle analiz yaptınız. Puanınız:{" "}
-              <strong className="text-indigo-600">%{journey.atsScore}</strong>.
+              <strong className="text-purple-600 dark:text-[#C084FC]">%{journey.atsScore}</strong>.
               {journey.missingSkills[0] ? (
                 <>
                   {" "}
@@ -251,7 +251,11 @@ export default function DashboardPage() {
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/resume?from=analiz"
-                className="inline-flex h-9 items-center rounded-xl px-3 text-xs font-bold text-white bg-indigo-600 shadow-lg hover:bg-indigo-700"
+                className="inline-flex h-9 items-center rounded-xl px-3 text-xs font-bold text-white transition-all hover:opacity-95 hover:scale-[1.02]"
+                style={{
+                  background: "linear-gradient(135deg, #6B21A8, #A855F7)",
+                  boxShadow: "0 4px 12px rgba(107, 33, 168, 0.25)",
+                }}
               >
                 Düzenleyicide iyileştir
               </Link>
@@ -269,8 +273,8 @@ export default function DashboardPage() {
         <section className={cn(glass, "p-6 md:p-8 space-y-6")}>
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div className="flex items-start gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-indigo-500/15 flex items-center justify-center shrink-0">
-                <Target className="w-5 h-5 text-indigo-600" />
+              <div className="w-11 h-11 rounded-2xl bg-purple-500/15 flex items-center justify-center shrink-0">
+                <Target className="w-5 h-5 text-purple-600 dark:text-[#C084FC]" />
               </div>
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
@@ -307,14 +311,17 @@ export default function DashboardPage() {
               <p className="text-sm font-semibold text-star-white">
                 Kariyer hedefine yaklaşma
               </p>
-              <p className="text-sm font-extrabold tabular-nums text-indigo-600">
+              <p className="text-sm font-extrabold tabular-nums text-purple-600 dark:text-[#C084FC]">
                 %{journey.progressPct}
               </p>
             </div>
-            <div className="h-3 w-full overflow-hidden rounded-full bg-indigo-500/15">
+            <div className="h-3 w-full overflow-hidden rounded-full bg-purple-500/15">
               <div
-                className="h-full rounded-full bg-indigo-600 transition-all duration-700"
-                style={{ width: `${journey.progressPct}%` }}
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${journey.progressPct}%`,
+                  background: "linear-gradient(90deg, #6B21A8, #A855F7, #F97316)",
+                }}
               />
             </div>
             <p className="text-sm text-slate-500 leading-relaxed">
@@ -354,7 +361,11 @@ export default function DashboardPage() {
             <div className="flex flex-wrap gap-2 pt-2">
               <Link
                 href="/resume"
-                className="inline-flex h-9 items-center gap-1 rounded-xl px-3 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700"
+                className="inline-flex h-9 items-center gap-1 rounded-xl px-3 text-xs font-bold text-white transition-all hover:opacity-95 hover:scale-[1.02]"
+                style={{
+                  background: "linear-gradient(135deg, #6B21A8, #A855F7)",
+                  boxShadow: "0 4px 12px rgba(107, 33, 168, 0.25)",
+                }}
               >
                 {isTR ? "Bugün: CV'ye ekle" : "Today: add to CV"}
               </Link>
@@ -384,9 +395,9 @@ export default function DashboardPage() {
           <div className="p-12 border-2 border-dashed border-slate-200 rounded-xl text-center space-y-4 bg-white/40 dark:bg-white/[0.02] dark:border-slate-600">
             <div
               className="mx-auto w-14 h-14 rounded-2xl flex items-center justify-center"
-              style={{ background: "rgba(99,102,241,0.12)" }}
+              style={{ background: "rgba(168,85,247,0.12)" }}
             >
-              <FileSearch className="w-7 h-7 text-indigo-600" />
+              <FileSearch className="w-7 h-7 text-purple-600 dark:text-[#C084FC]" />
             </div>
             <h2 className="font-display text-xl md:text-2xl font-extrabold tracking-tighter text-star-white">
               Henüz bir analiz başlatmadınız
@@ -397,7 +408,11 @@ export default function DashboardPage() {
             </p>
             <Link
               href="/forge"
-              className="inline-flex h-11 items-center gap-2 rounded-2xl px-6 text-sm font-bold text-white bg-indigo-600 shadow-lg transition-colors hover:bg-indigo-700"
+              className="inline-flex h-11 items-center gap-2 rounded-2xl px-6 text-sm font-bold text-white transition-all hover:scale-[1.02]"
+              style={{
+                background: "linear-gradient(135deg, #6B21A8, #A855F7, #F97316)",
+                boxShadow: "0 4px 14px rgba(107, 33, 168, 0.3)",
+              }}
             >
               İlk CV&apos;mi yükle <ArrowRight className="w-4 h-4" />
             </Link>
@@ -411,7 +426,7 @@ export default function DashboardPage() {
             label="Analiz Edilen CV"
             value={analyzedCvCount}
             sub="toplam işlem"
-            color="#6366F1"
+            color="#6B21A8"
             href="/forge"
           />
           <div className={cn(glass, "p-5 space-y-4 h-full")}>
@@ -442,14 +457,14 @@ export default function DashboardPage() {
                 {journey.missingSkills.slice(0, 5).map((s) => (
                   <span
                     key={s}
-                    className="text-[11px] font-semibold px-2 py-0.5 rounded-full border border-indigo-200 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:border-indigo-500/30 dark:text-indigo-300"
+                    className="text-[11px] font-semibold px-2 py-0.5 rounded-full border border-purple-200 bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:border-purple-500/30 dark:text-[#C084FC]"
                   >
                     {s}
                   </span>
                 ))}
               </div>
             )}
-            <Link href="/forge" className="text-xs font-semibold text-indigo-600 hover:underline">
+            <Link href="/forge" className="text-xs font-semibold text-purple-600 hover:text-purple-700 dark:text-[#C084FC] hover:underline">
               Detaylı çözüm yolculuğu →
             </Link>
           </div>
@@ -474,7 +489,7 @@ export default function DashboardPage() {
               <History className="w-4 h-4 text-cosmic-teal" />
               {t("recentActivity")}
             </h2>
-            <Link href="/forge#history" className="text-xs font-semibold text-indigo-600 hover:underline">
+            <Link href="/forge#history" className="text-xs font-semibold text-purple-600 hover:text-purple-700 dark:text-[#C084FC] hover:underline">
               {isTR ? "Forge'da Aç" : "Open in Forge"}
             </Link>
           </div>
@@ -599,7 +614,7 @@ export default function DashboardPage() {
           </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { href: "/forge", icon: Anvil, label: isTR ? "CV Yükle / Analiz Et" : "Upload / Analyze CV", color: "#6366F1" },
+              { href: "/forge", icon: Anvil, label: isTR ? "CV Yükle / Analiz Et" : "Upload / Analyze CV", color: "#6B21A8" },
               { href: "/coach", icon: Brain, label: t("openCoach"), color: "#9333EA" },
               { href: "/jobs", icon: Briefcase, label: isTR ? "İş İlanlarına Bak" : "Browse Jobs", color: "#F472B6" },
               { href: "/paths", icon: TrendingUp, label: isTR ? "Kariyer Yolları" : "Career Paths", color: "#4ADE80" },
@@ -615,7 +630,7 @@ export default function DashboardPage() {
                 >
                   <q.icon className="w-4 h-4" style={{ color: q.color }} />
                 </div>
-                <p className="text-sm font-semibold text-star-white group-hover:text-indigo-600 transition-colors">
+                <p className="text-sm font-semibold text-star-white group-hover:text-purple-600 dark:group-hover:text-[#C084FC] transition-colors">
                   {q.label}
                 </p>
               </Link>
@@ -630,7 +645,7 @@ export default function DashboardPage() {
                 <CheckCircle2 className="w-4 h-4 text-cosmic-teal" />
                 {isTR ? "Başvurularım" : "Applications"}
               </h2>
-              <Link href="/jobs" className="text-xs font-semibold text-indigo-600 hover:underline">
+              <Link href="/jobs" className="text-xs font-semibold text-purple-600 hover:text-purple-700 dark:text-[#C084FC] hover:underline">
                 {isTR ? "İlanlara Bak" : "Browse"}
               </Link>
             </div>

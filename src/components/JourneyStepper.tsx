@@ -42,7 +42,7 @@ export function JourneyStepper({ className }: { className?: string }) {
                   className={cn(
                     "w-4 sm:w-8 h-px rounded-full",
                     isDone || isActive
-                      ? "bg-indigo-400/80"
+                      ? "bg-purple-400/80"
                       : "bg-slate-200 dark:bg-white/10"
                   )}
                   aria-hidden
@@ -52,24 +52,25 @@ export function JourneyStepper({ className }: { className?: string }) {
                 href={step.href}
                 className={cn(
                   "inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] sm:text-xs font-semibold tracking-tight transition-colors",
-                  isActive && "bg-indigo-50 text-indigo-800 dark:bg-indigo-500/15 dark:text-indigo-300",
+                  isActive && "bg-purple-50 text-purple-800 dark:bg-purple-500/15 dark:text-purple-300",
                   isDone &&
                     !isActive &&
-                    "text-indigo-800 dark:text-indigo-400/90",
+                    "text-purple-800 dark:text-purple-400/90",
                   !isActive &&
                     !isDone &&
-                    "text-slate-800 hover:text-indigo-700 dark:text-slate-400"
+                    "text-slate-800 hover:text-purple-700 dark:text-slate-400"
                 )}
               >
                 <span
                   className={cn(
                     "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
                     isActive
-                      ? "bg-indigo-600 text-white"
+                      ? "text-white"
                       : isDone
-                        ? "bg-indigo-200 text-indigo-900 dark:bg-indigo-500/30 dark:text-indigo-200"
+                        ? "bg-purple-200 text-purple-900 dark:bg-purple-500/30 dark:text-purple-200"
                         : "bg-slate-200 text-slate-800 dark:bg-white/10 dark:text-slate-400"
                   )}
+                  style={isActive ? { background: "linear-gradient(135deg, #6B21A8, #A855F7)" } : {}}
                 >
                   {step.id}
                 </span>
@@ -77,6 +78,7 @@ export function JourneyStepper({ className }: { className?: string }) {
               </Link>
             </li>
           );
+
         })}
       </ol>
     </nav>

@@ -12,7 +12,7 @@ const buttonVariants = cva(
         accent:
           "bg-cosmic-teal text-midnight-void shadow-[0_8px_24px_rgba(232,93,59,0.25)] hover:bg-sunset-coral",
         primary:
-          "bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 disabled:opacity-50 rounded-xl",
+          "bg-gradient-to-r from-[#6B21A8] to-[#A855F7] text-white shadow-lg hover:opacity-95 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 rounded-xl",
         outline:
           "border border-black/10 bg-transparent text-star-white hover:border-cosmic-teal/40 hover:text-cosmic-teal",
         ghost: "bg-transparent text-muted-steel hover:bg-black/[0.04] hover:text-star-white",

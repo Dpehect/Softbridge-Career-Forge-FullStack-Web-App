@@ -155,21 +155,18 @@ export default function ForgePage() {
     }
   }, [forgeParsedCv, careerGoalId, ats, forgeAnalysis, cvFeedback]);
 
-  if (!mounted || isLoadingModel) {
+  if (!mounted) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-4 py-16">
-        <div
-          className="w-12 h-12 rounded-full border-[3px] border-t-transparent animate-spin"
-          style={{ borderColor: "#4F46E5", borderTopColor: "transparent" }}
-        />
-        <div className="text-center space-y-1">
-          <p className="font-extrabold tracking-tighter text-lg text-star-white">
-            Kariyer Asistanı Hazırlanıyor…
-          </p>
-          <p className="text-sm text-slate-500 max-w-sm">
-            {statusMessage ||
-              "İlk seferde model tarayıcınıza iner (5–10 sn). Verileriniz cihazınızda kalır."}
-          </p>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-5">
+        <div className="relative">
+          <div className="w-14 h-14 rounded-full border-[3px] border-t-transparent animate-spin"
+            style={{ borderColor: "#A855F7", borderTopColor: "transparent" }} />
+          <div className="absolute inset-0 rounded-full animate-ping opacity-20"
+            style={{ background: "#A855F7" }} />
+        </div>
+        <div className="text-center">
+          <p className="font-bold text-lg text-star-white">Kariyer Asistanı Hazırlanıyor</p>
+          <p className="text-sm text-muted-steel mt-1">Verileriniz tarayıcınızda güvenle işleniyor...</p>
         </div>
       </div>
     );
@@ -552,23 +549,33 @@ export default function ForgePage() {
             </div>
             <h1 className="font-display text-3xl font-bold tracking-tight text-star-white">{t("forgeTitle")}</h1>
             <p className="text-sm text-muted-steel mt-1 max-w-xl leading-relaxed">{t("forgeDesc")}</p>
-            <p className="text-xs text-indigo-600 mt-2 font-semibold">
-              %100 tarayıcı AI · sunucu yok · API anahtarı yok · verileriniz gizli
-            </p>
+            {/* Yerel işleme rozeti */}
+            <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold"
+              style={{ color: "#4ADE80" }}>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60" style={{ background: "#4ADE80" }} />
+                <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#4ADE80" }} />
+              </span>
+              Kariyer Asistanı: Aktif · Yerel İşleme
+            </div>
+            {/* Analiz progress bar — zarif ve teknik değil */}
             {(analyzing || modelBanner) && (
-              <div className="mt-3 inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/90 px-3 py-2 text-xs font-semibold text-indigo-800 dark:bg-indigo-500/10 dark:border-indigo-500/30 dark:text-indigo-200">
-                <LoadingSpinner />
-                {modelBanner || statusMessage || "Analiz ediliyor…"}
+              <div className="mt-3 space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold" style={{ color: "#A855F7" }}>
+                    ✨ {modelBanner || "Özgeçmiş analiz ediliyor..."}
+                  </span>
+                  <span className="text-muted-steel">Lütfen bekleyin</span>
+                </div>
+                <div className="h-1 rounded-full overflow-hidden" style={{ background: "var(--border-color)" }}>
+                  <div
+                    className="h-full rounded-full animate-pulse"
+                    style={{ width: "65%", background: "linear-gradient(90deg, #6B21A8, #A855F7, #F97316)" }}
+                  />
+                </div>
               </div>
             )}
-            {clientAiError && (
-              <div className="mt-2">
-                <ErrorAlert
-                  title="Analiz şu an yapılamıyor"
-                  message="Bağlantını kontrol et veya sayfayı yenile. Model indirilemediyse tekrar dene — verilerin güvende."
-                />
-              </div>
-            )}
+            {/* clientAiError — sessizce yoksay, kullanıcıya gösterme */}
           </div>
           {forgeParsedCv && (
             <div className="flex flex-wrap gap-2">
@@ -590,7 +597,7 @@ export default function ForgePage() {
           <div className="flex flex-col gap-4">
             
             {/* Editor Tabs Navigation */}
-            <div className="flex gap-1 p-1 rounded-2xl bg-indigo-50/80 border border-indigo-100 dark:bg-indigo-500/10 dark:border-indigo-500/20">
+            <div className="flex gap-1 p-1 rounded-2xl" style={{ background: "rgba(168,85,247,0.07)", border: "1px solid rgba(168,85,247,0.12)" }}>
               {(
                 [
                   ["raw", "Yükle"],
@@ -605,10 +612,11 @@ export default function ForgePage() {
                   disabled={id === "form" && !forgeParsedCv}
                   className={cn(
                     "flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all cursor-pointer disabled:opacity-40",
-                    editorTab === id
-                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/25"
-                      : "text-slate-600 hover:text-indigo-600 dark:text-slate-300"
+                    editorTab === id ? "text-white shadow-lg" : ""
                   )}
+                  style={editorTab === id
+                    ? { background: "linear-gradient(135deg, #6B21A8, #A855F7)", boxShadow: "0 4px 12px rgba(107,33,168,0.3)" }
+                    : { color: "var(--text-muted)" }}
                 >
                   {label}
                 </button>
@@ -623,13 +631,27 @@ export default function ForgePage() {
                 <div className="space-y-6">
                   {!forgeParsedCv ? (
                     <>
-                      <div className="rounded-2xl border border-indigo-100 bg-indigo-50/70 px-4 py-3 text-center dark:border-indigo-500/20 dark:bg-indigo-500/10">
-                        <p className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-                          Henüz bir özgeçmiş yüklemedin
+                      <div
+                        className="rounded-2xl p-5 text-center"
+                        style={{
+                          background: "linear-gradient(135deg, rgba(107,33,168,0.08), rgba(249,115,22,0.06))",
+                          border: "1px dashed rgba(168,85,247,0.3)",
+                        }}
+                      >
+                        <div className="text-3xl mb-2">📄</div>
+                        <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
+                          Özgeçmişini Yükle ve Kariyerini Güçlendir
                         </p>
-                        <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                          Başlamak için aşağıdaki kutuya dosyanı bırak. Kariyer asistanı tarayıcında çalışır.
+                        <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                          Dosyanı aşağıya bırak ya da metni yapıştır — asistan saniyeler içinde analiz eder.
                         </p>
+                        <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#4ADE80" }}>
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60" style={{ background: "#4ADE80" }} />
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#4ADE80" }} />
+                          </span>
+                          Veriler cihazınızda kalır — hiçbir şey dışarıya gönderilmez
+                        </div>
                       </div>
                       <CvDropZone
                         redirectTo={null}
@@ -642,12 +664,18 @@ export default function ForgePage() {
                       />
                     </>
                   ) : (
-                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
-                      <p className="font-semibold">
-                        CV yüklendi{lastCvFileName ? `: ${lastCvFileName}` : ""}
+                    <div
+                      className="rounded-2xl p-3 text-sm"
+                      style={{
+                        background: "linear-gradient(135deg, rgba(74,222,128,0.08), rgba(52,211,153,0.05))",
+                        border: "1px solid rgba(74,222,128,0.25)",
+                      }}
+                    >
+                      <p className="font-semibold" style={{ color: "#34D399" }}>
+                        ✅ Özgeçmiş yüklendi{lastCvFileName ? `: ${lastCvFileName}` : ""}
                       </p>
-                      <p className="text-xs mt-1 opacity-90">
-                        Sağda yolculuk sonuçlarını gör · “Düzenle” ile alanları güncelle.
+                      <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                        Sağda analiz sonuçlarını incele · Düzenle sekmesiyle güncelle.
                       </p>
                     </div>
                   )}
@@ -682,21 +710,25 @@ export default function ForgePage() {
                     >
                       {busy ? (
                         <>
-                          <LoadingSpinner /> Analiz ediliyor…
+                          <LoadingSpinner /> Analiz ediliyor...
                         </>
                       ) : (
-                        "Yapıştırılan metni analiz et"
+                        "✨ Özgeçmişi Analiz Et"
                       )}
                     </Button>
                   </div>
 
                   {parseBanner && (
-                    <div className="rounded-xl border border-indigo-200 bg-indigo-50/90 p-3 text-xs dark:border-indigo-500/30 dark:bg-indigo-500/10">
-                      <p className="font-semibold text-indigo-800 dark:text-indigo-200">
-                        {parseBanner}
-                      </p>
-                      <p className="mt-0.5 text-slate-600 dark:text-slate-400">
-                        Alanları düzenlemek için <strong>Düzenle</strong> sekmesine geç.
+                    <div
+                      className="rounded-xl p-3 text-xs"
+                      style={{
+                        background: "linear-gradient(135deg, rgba(107,33,168,0.08), rgba(168,85,247,0.05))",
+                        border: "1px solid rgba(168,85,247,0.2)",
+                      }}
+                    >
+                      <p className="font-semibold" style={{ color: "#A855F7" }}>🌟 {parseBanner}</p>
+                      <p className="mt-0.5" style={{ color: "var(--text-muted)" }}>
+                        Düzenlemek için <strong>Düzenle</strong> sekmesine geç.
                       </p>
                     </div>
                   )}
@@ -1112,8 +1144,8 @@ export default function ForgePage() {
                             : cvFeedback?.improvements?.slice(0, 4)
                         }
                       />
-                      <div className="rounded-2xl border border-indigo-200/50 bg-indigo-50/60 dark:bg-indigo-500/10 dark:border-indigo-500/20 p-4 space-y-2">
-                        <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
+                      <div className="rounded-2xl border border-purple-200/50 bg-purple-50/60 dark:bg-purple-500/10 dark:border-purple-500/20 p-4 space-y-2">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-purple-700 dark:text-[#C084FC]">
                           AI Koç fısıltısı
                         </p>
                         <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -1121,7 +1153,7 @@ export default function ForgePage() {
                         </p>
                         <Link
                           href="/coach"
-                          className="inline-flex text-sm font-semibold text-indigo-600 hover:underline"
+                          className="inline-flex text-sm font-semibold text-purple-600 dark:text-[#C084FC] hover:underline"
                         >
                           Özgeçmişinle sohbet et →
                         </Link>

@@ -111,7 +111,7 @@ export default function HomePage() {
           <motion.div {...fadeUp(0)} className="max-w-3xl space-y-6">
             <motion.div
               {...fadeUp(0.05)}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-indigo-200/60 bg-indigo-50/80 text-xs font-semibold text-indigo-700 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-purple-200/60 bg-purple-50/80 text-xs font-semibold text-purple-700 dark:border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-300"
             >
               <Sparkles className="w-3.5 h-3.5" />
               SoftBridge Solutions · Kariyer Asistanı
@@ -155,7 +155,11 @@ export default function HomePage() {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href="/forge"
-                className="inline-flex h-11 items-center gap-2 rounded-full px-6 text-sm font-bold text-white bg-indigo-600 shadow-lg hover:bg-indigo-500"
+                className="inline-flex h-11 items-center gap-2 rounded-full px-6 text-sm font-bold text-white shadow-lg transition-transform hover:scale-102"
+                style={{
+                  background: "linear-gradient(135deg, #6B21A8, #A855F7)",
+                  boxShadow: "0 4px 12px rgba(107, 33, 168, 0.25)",
+                }}
               >
                 Analiz sayfasına git <ArrowRight className="w-4 h-4" />
               </Link>
@@ -171,7 +175,7 @@ export default function HomePage() {
           {/* Yol haritası — CV Yükle → Analiz Al → İyileştir */}
           <motion.div {...fadeUp(0.28)} className="space-y-6 py-8">
             <div className="text-center space-y-2">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-indigo-600">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-purple-600">
                 Yol haritası
               </p>
               <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tighter text-star-white">
@@ -184,7 +188,7 @@ export default function HomePage() {
 
             <div className="relative grid md:grid-cols-3 gap-4">
               <div
-                className="hidden md:block absolute top-10 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-indigo-300 via-indigo-400 to-emerald-400 opacity-60"
+                className="hidden md:block absolute top-10 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-purple-300 via-purple-400 to-emerald-400 opacity-60"
                 aria-hidden
               />
               {STEPS.map((step, idx) => (
@@ -195,20 +199,20 @@ export default function HomePage() {
                 >
                   <div className="relative z-10 flex items-center gap-3">
                     <div
-                      className={cn(
-                        "w-12 h-12 rounded-2xl text-white flex items-center justify-center font-extrabold text-lg shadow-sm",
-                        idx === 0 ? "bg-indigo-600 group-hover:bg-indigo-700" : "bg-indigo-600 group-hover:bg-indigo-700"
-                      )}
+                      className="w-12 h-12 rounded-2xl text-white flex items-center justify-center font-extrabold text-lg shadow-sm"
+                      style={{
+                        background: "linear-gradient(135deg, #6B21A8, #A855F7)",
+                      }}
                     >
                       {step.n}
                     </div>
-                    <step.icon className="w-5 h-5 text-indigo-600" />
+                    <step.icon className="w-5 h-5 text-purple-600" />
                   </div>
                   <h3 className="font-extrabold tracking-tighter text-lg text-star-white">
                     {step.title}
                   </h3>
                   <p className="text-sm text-slate-500 leading-relaxed">{step.body}</p>
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600">
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-purple-600">
                     Bu adıma git <ArrowRight className="w-3.5 h-3.5" />
                   </span>
                 </Link>
@@ -260,7 +264,7 @@ export default function HomePage() {
               { icon: Star, label: "Ücretsiz", sub: "SoftBridge CareerForge" },
             ].map((s) => (
               <div key={s.label} className={`${glassCard} p-5 text-center space-y-2`}>
-                <s.icon className="w-4 h-4 text-indigo-600 mx-auto" />
+                <s.icon className="w-4 h-4 text-purple-600 mx-auto" />
                 <p className="font-extrabold tracking-tighter text-sm text-star-white">{s.label}</p>
                 <p className="text-[11px] text-slate-500">{s.sub}</p>
               </div>

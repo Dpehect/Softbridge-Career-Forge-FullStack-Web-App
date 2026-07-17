@@ -149,7 +149,7 @@ export function Header() {
               className="group flex shrink-0 items-center gap-3"
               onClick={() => setMobileOpen(false)}
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 via-violet-600 to-orange-500 shadow-lg shadow-indigo-500/25 transition-transform group-hover:scale-105">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#6B21A8] via-[#A855F7] to-[#F97316] shadow-lg shadow-purple-500/25 transition-transform group-hover:scale-105">
                 <Zap className="h-4 w-4 text-white" />
               </div>
               <div className="hidden leading-none sm:block">
@@ -174,10 +174,9 @@ export function Header() {
                     key={item.path}
                     href={item.path}
                     className={cn(
-                      "text-sm font-medium tracking-tight transition-colors",
                       active
-                        ? "text-indigo-600 dark:text-indigo-400"
-                        : "text-black hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400"
+                        ? "text-purple-600 dark:text-[#C084FC]"
+                        : "text-black hover:text-purple-600 dark:text-slate-200 dark:hover:text-[#C084FC]"
                     )}
                   >
                     {item.label}
@@ -200,7 +199,11 @@ export function Header() {
 
               <Link
                 href="/forge"
-                className="inline-flex h-10 items-center rounded-full bg-indigo-600 px-5 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:bg-indigo-500 hover:shadow-indigo-500/40 active:scale-[0.98]"
+                className="inline-flex h-10 items-center rounded-full px-5 text-sm font-bold text-white shadow-lg transition-all hover:opacity-95 hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  background: "linear-gradient(135deg, #6B21A8, #A855F7, #F97316)",
+                  boxShadow: "0 4px 14px rgba(107, 33, 168, 0.3)",
+                }}
               >
                 Başla
               </Link>
@@ -211,13 +214,13 @@ export function Header() {
                   type="button"
                   onClick={() => setProfileOpen((v) => !v)}
                   className={cn(
-                    "flex h-10 items-center gap-2 rounded-full border border-slate-200 bg-white pl-1.5 pr-2.5 transition-colors hover:border-indigo-200 hover:bg-indigo-50/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 cursor-pointer",
-                    profileOpen && "border-indigo-300 bg-indigo-50/80 dark:bg-indigo-500/10"
+                    "flex h-10 items-center gap-2 rounded-full border border-slate-200 bg-white pl-1.5 pr-2.5 transition-colors hover:border-purple-200 hover:bg-purple-50/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 cursor-pointer",
+                    profileOpen && "border-purple-300 bg-purple-50/80 dark:bg-purple-500/10"
                   )}
                   aria-expanded={profileOpen}
                   aria-haspopup="menu"
                 >
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-orange-500 text-white">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#6B21A8] to-[#F97316] text-white">
                     <User className="h-3.5 w-3.5" />
                   </span>
                   <span className="hidden max-w-[72px] truncate text-xs font-semibold text-slate-900 dark:text-slate-100 sm:inline">
@@ -262,7 +265,7 @@ export function Header() {
                               className={cn(
                                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                                 active
-                                  ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300"
+                                  ? "bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300"
                                   : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"
                               )}
                             >
@@ -355,9 +358,10 @@ export function Header() {
                     className={cn(
                       "block rounded-xl px-4 py-3 text-sm font-semibold",
                       isActive(item.path)
-                        ? "bg-indigo-600 text-white"
+                        ? "text-white"
                         : "text-slate-900 hover:bg-slate-50 dark:text-slate-100"
                     )}
+                    style={isActive(item.path) ? { background: "linear-gradient(135deg, #6B21A8, #A855F7)" } : {}}
                   >
                     {item.label}
                   </Link>
@@ -372,7 +376,7 @@ export function Header() {
                     className={cn(
                       "block rounded-xl px-4 py-3 text-sm font-medium",
                       isActive(item.path)
-                        ? "bg-indigo-50 text-indigo-800 dark:bg-indigo-500/15 dark:text-indigo-300"
+                        ? "bg-purple-50 text-purple-800 dark:bg-purple-500/15 dark:text-purple-300"
                         : "text-slate-800 hover:bg-slate-50 dark:text-slate-200"
                     )}
                   >
@@ -400,13 +404,13 @@ export function Header() {
                 href={item.path}
                 className={cn(
                   "flex flex-1 flex-col items-center gap-1 rounded-xl py-2 text-[11px] font-semibold transition-colors",
-                  active ? "text-indigo-700" : "text-slate-800 dark:text-slate-400"
+                  active ? "text-purple-700" : "text-slate-800 dark:text-slate-400"
                 )}
               >
                 <span
                   className={cn(
                     "h-1 w-6 rounded-full transition-colors",
-                    active ? "bg-indigo-600" : "bg-transparent"
+                    active ? "bg-purple-600" : "bg-transparent"
                   )}
                 />
                 {item.label}

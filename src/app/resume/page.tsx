@@ -250,13 +250,18 @@ export default function ResumePage() {
 
         {/* Golden path: analysis → live edit */}
         {hasContent && (
-          <div className="mb-6 rounded-2xl border border-indigo-200/60 bg-indigo-50/80 backdrop-blur-sm p-5 space-y-4 dark:bg-indigo-500/10 dark:border-indigo-500/25">
+          <div className="mb-6 rounded-2xl border border-purple-200/60 bg-purple-50/80 backdrop-blur-sm p-5 space-y-4 dark:bg-purple-500/10 dark:border-purple-500/25">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
+              <div
+                className="w-10 h-10 rounded-xl text-white flex items-center justify-center shrink-0"
+                style={{
+                  background: "linear-gradient(135deg, #6B21A8, #A855F7)",
+                }}
+              >
                 <Sparkles className="w-5 h-5" />
               </div>
               <div className="min-w-0 flex-1 space-y-1">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300">
                   Analiz sonucu · dinamik güncelleme
                 </p>
                 <p className="text-sm font-semibold text-star-white leading-relaxed">
@@ -282,12 +287,13 @@ export default function ResumePage() {
                       const n = addSkills([s]);
                       toast.success(n ? `“${s}” eklendi` : `“${s}” zaten var`);
                     }}
-                    className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-indigo-700 hover:bg-indigo-100"
+                    className="inline-flex items-center gap-1 rounded-full border border-purple-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-purple-700 hover:bg-purple-100 hover:border-purple-300 cursor-pointer"
                   >
                     <Plus className="w-3 h-3" />
                     {s}
                   </button>
                 ))}
+
                 <Button
                   variant="primary"
                   size="sm"

@@ -179,9 +179,9 @@ export default function CoachPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full text-xs font-bold"
-              style={{ background: "rgba(124,58,237,0.12)", color: "#7C3AED" }}>
+              style={{ background: "rgba(168,85,247,0.12)", color: "#A855F7" }}>
               <Brain className="w-3.5 h-3.5" />
-              {isTR ? "Chat with your Resume" : "Chat with your Resume"}
+              {isTR ? "Özgeçmişinle Sohbet Et" : "Chat with your Resume"}
             </div>
             <h1 className="font-display text-3xl font-extrabold tracking-tighter text-star-white">
               {isTR ? "Özgeçmişinle sohbet et" : "Chat with your resume"}
@@ -320,8 +320,8 @@ export default function CoachPage() {
                     size="icon"
                     className="shrink-0 h-[52px] w-[52px] rounded-xl text-white transition-all hover:scale-105"
                     style={{
-                      background: "linear-gradient(135deg,#6D28D9,#9333EA)",
-                      boxShadow: input.trim() ? "0 4px 16px rgba(109,40,217,0.4)" : "none",
+                      background: "linear-gradient(135deg, #6B21A8, #A855F7)",
+                      boxShadow: input.trim() ? "0 4px 16px rgba(107,33,168,0.4)" : "none",
                     }}
                     disabled={!input.trim() || loading}
                     onClick={() => void send(input)}

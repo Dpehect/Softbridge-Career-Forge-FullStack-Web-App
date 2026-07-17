@@ -48,7 +48,11 @@ export class ErrorBoundary extends React.Component<Props, State> {
                   this.setState({ hasError: false });
                   if (typeof window !== "undefined") window.location.reload();
                 }}
-                className="inline-flex h-11 items-center gap-2 rounded-2xl px-5 text-sm font-bold text-white bg-indigo-600 shadow-lg hover:bg-indigo-700"
+                className="inline-flex h-11 items-center gap-2 rounded-2xl px-5 text-sm font-bold text-white shadow-lg transition-transform hover:scale-102"
+                style={{
+                  background: "linear-gradient(135deg, #6B21A8, #A855F7)",
+                  boxShadow: "0 4px 12px rgba(107, 33, 168, 0.25)",
+                }}
               >
                 <RefreshCw className="w-4 h-4" />
                 Sayfayı yenile

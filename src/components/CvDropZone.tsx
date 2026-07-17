@@ -123,8 +123,8 @@ export function CvDropZone({
         compact ? "p-10 md:p-12" : "p-12 md:p-16",
         "bg-white/60 backdrop-blur-sm dark:bg-white/[0.03]",
         dragging
-          ? "border-indigo-500 bg-indigo-50/90 scale-[1.01] shadow-lg"
-          : "border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/50 dark:border-slate-600",
+          ? "border-purple-500 bg-purple-50/90 scale-[1.01] shadow-lg"
+          : "border-slate-300 hover:border-purple-400 hover:bg-purple-50/50 dark:border-slate-600",
         loading && "pointer-events-none opacity-70",
         className
       )}
@@ -141,7 +141,13 @@ export function CvDropZone({
         }}
       />
 
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-500/30">
+      <div
+        className="flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-lg"
+        style={{
+          background: "linear-gradient(135deg, #6B21A8, #A855F7)",
+          boxShadow: "0 4px 12px rgba(107, 33, 168, 0.25)",
+        }}
+      >
         {loading ? (
           <Loader2 className="h-7 w-7 animate-spin" />
         ) : (
@@ -159,7 +165,13 @@ export function CvDropZone({
       </p>
 
       {!loading && (
-        <span className="inline-flex h-11 items-center rounded-full bg-indigo-600 px-6 text-sm font-bold text-white shadow-lg">
+        <span
+          className="inline-flex h-11 items-center rounded-full px-6 text-sm font-bold text-white shadow-lg transition-transform hover:scale-105"
+          style={{
+            background: "linear-gradient(135deg, #6B21A8, #F97316)",
+            boxShadow: "0 4px 12px rgba(107, 33, 168, 0.3)",
+          }}
+        >
           Yükle
         </span>
       )}
@@ -168,6 +180,7 @@ export function CvDropZone({
         <Lock className="w-3.5 h-3.5" />
         🔐 %100 yerel işleme · sunucuya gönderilmez
       </p>
+
     </div>
   );
 }
