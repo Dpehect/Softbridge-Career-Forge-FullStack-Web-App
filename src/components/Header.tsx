@@ -166,9 +166,9 @@ export function Header() {
             <div className="hidden md:flex flex-1" />
 
              {/* Sağ: Menü Linkleri + Sistem Hazır · Başla · Profil */}
-            <div className="flex items-center gap-4 sm:gap-6">
+            <div className="flex items-center gap-6 sm:gap-8">
               {/* Desktop Nav Links on the Right side */}
-              <nav className="hidden items-center gap-6 md:flex" aria-label="Ana menü">
+              <nav className="hidden items-center gap-8 md:flex" aria-label="Ana menü">
                 {MAIN_NAV.map((item) => {
                   const active = isActive(item.path);
                   return (
