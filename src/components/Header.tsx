@@ -177,7 +177,7 @@ export function Header() {
                       "text-sm font-medium tracking-tight transition-colors",
                       active
                         ? "text-indigo-600 dark:text-indigo-400"
-                        : "text-slate-800 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400"
+                        : "text-black hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400"
                     )}
                   >
                     {item.label}
