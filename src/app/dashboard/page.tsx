@@ -83,7 +83,7 @@ export default function DashboardPage() {
   const {
     savedJobIds, appliedJobIds, enrolledPathIds, completedModuleIds,
     resume, forgeParsedCv, forgeHistory, forgeAnalysis,
-    careerGoalId, setCareerGoalId,
+    careerGoalId, setCareerGoalId, lastAnalysisMeta,
   } = useCareerStore();
 
   const { t, lang } = useTranslation();
@@ -216,6 +216,54 @@ export default function DashboardPage() {
             </Link>
           </div>
         </div>
+
+        {/* Anlamlı özet kartı — veri değil ilişki */}
+        {(lastAnalysisMeta || forgeParsedCv) && (
+          <section className={cn(glass, "p-6 space-y-3 border-indigo-200/40")}>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-600">
+              Kariyer özeti
+            </p>
+            <p className="text-sm md:text-base font-semibold text-star-white leading-relaxed">
+              <strong>
+                {lastAnalysisMeta?.at
+                  ? new Date(lastAnalysisMeta.at).toLocaleString("tr-TR")
+                  : "Son oturum"}
+              </strong>{" "}
+              tarihinde{" "}
+              <strong>
+                {lastAnalysisMeta?.targetTitle ||
+                  forgeParsedCv?.title ||
+                  activeGoal?.labelTr ||
+                  "hedef rolünüz"}
+              </strong>{" "}
+              hedefiyle analiz yaptınız. Puanınız:{" "}
+              <strong className="text-indigo-600">%{journey.atsScore}</strong>.
+              {journey.missingSkills[0] ? (
+                <>
+                  {" "}
+                  İyileştirmek için{" "}
+                  <strong>“{journey.missingSkills.slice(0, 2).join(", ")}”</strong> eklemelisiniz.
+                </>
+              ) : (
+                <> Profiliniz hedefe yakın — başvuru adımına geçebilirsiniz.</>
+              )}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/resume?from=analiz"
+                className="inline-flex h-9 items-center rounded-xl px-3 text-xs font-bold text-white bg-indigo-600 shadow-lg hover:bg-indigo-700"
+              >
+                Düzenleyicide iyileştir
+              </Link>
+              <Link
+                href="/jobs"
+                className="inline-flex h-9 items-center rounded-xl px-3 text-xs font-semibold border-2 border-slate-200 text-slate-700 hover:bg-slate-50"
+              >
+                İlanlara bak
+              </Link>
+            </div>
+          </section>
+        )}
 
         {/* Goal card + development progress */}
         <section className={cn(glass, "p-6 md:p-8 space-y-6")}>

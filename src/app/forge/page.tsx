@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Anvil,
@@ -81,8 +82,8 @@ export default function ForgePage() {
     deleteForgeBackup,
   } = useCareerStore();
 
-  const { t, lang } = useTranslation();
-  const isTR = lang === "tr";
+  const { t } = useTranslation();
+  const router = useRouter();
 
   const [editorTab, setEditorTab] = useState<EditorTabId>("raw");
   const [previewTab, setPreviewTab] = useState<PreviewTabId>("preview");
@@ -135,21 +136,32 @@ export default function ForgePage() {
     setBusy(true);
     try {
       await fn();
-    } catch (err: any) {
-      toast.error(err.message || "An error occurred");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "";
+      const offline = /fetch failed|ECONNREFUSED|timeout|offline|Ollama/i.test(message);
+      toast.error(
+        offline
+          ? "Yerel yapay zeka motorumuz şu an yanıt vermiyor. Lütfen ollama serve komutunun çalıştığından emin olun."
+          : message || "Bir sorun oluştu — tekrar deneyin."
+      );
     } finally {
       setBusy(false);
     }
   };
 
-  const runParse = (text: string, source: "manual" | "file" = "manual", fileName?: string) => {
+  const runParse = (
+    text: string,
+    source: "manual" | "file" = "manual",
+    fileName?: string,
+    goToEditor = false
+  ) => {
     if (!text.trim()) {
-      toast.error("Paste your CV text or choose a PDF/TXT file first.");
+      toast.error("Önce CV metnini yapıştırın veya PDF/TXT seçin.");
       return null;
     }
     const cleaned = cleanExtractedText(text);
     if (looksLikeRawPdf(cleaned) || looksLikeRawPdf(text)) {
-      toast.error("This looks like raw PDF code. Please paste readable plain text.");
+      toast.error("Ham PDF kodu gibi görünüyor. Düz metin yapıştırın veya dosya yükleyin.");
       setForgeParsedCv(null);
       setParseBanner(null);
       return null;
@@ -161,15 +173,18 @@ export default function ForgePage() {
       if (fileName) setLastCvFileName(fileName);
       pushForgeHistory({
         action: "parse",
-        summary: `${parsed.name} — ${parsed.skills.length} skills`,
+        summary: `${parsed.name} — ${parsed.skills.length} beceri`,
         payload: parsed,
       });
       setParseBanner(t("readyMsg"));
-      toast.success(t("readyMsg"));
+      toast.success("Analiz hazır — sizi düzenleyiciye alıyoruz.");
       setEditorTab("form");
+      if (goToEditor) {
+        router.push("/resume?from=analiz");
+      }
       return parsed;
     } catch {
-      toast.error("Could not parse clean structure. Try pasting plain text.");
+      toast.error("CV yapısı çözümlenemedi. Düz metin deneyin.");
       setForgeParsedCv(null);
       setParseBanner(null);
       return null;
@@ -179,12 +194,12 @@ export default function ForgePage() {
   const handleCvFile = (text: string, fileName: string) => {
     const cleaned = cleanExtractedText(text);
     if (!cleaned.trim() || looksLikeRawPdf(cleaned) || looksLikeRawPdf(text)) {
-      toast.error("This PDF appears to be scanned. Please paste text manually.");
+      toast.error("Bu PDF taranmış görünüyor. Metin olarak yapıştırın.");
       return;
     }
     setForgeCvText(cleaned);
     run(() => {
-      runParse(cleaned, "file", fileName);
+      runParse(cleaned, "file", fileName, true);
     });
   };
 
@@ -225,7 +240,10 @@ export default function ForgePage() {
     }
   };
 
-  const onParse = () => run(async () => { runParse(cvText, "manual"); });
+  const onParse = () =>
+    run(async () => {
+      runParse(cvText, "manual", undefined, true);
+    });
 
   const onAnalyze = () =>
     run(async () => {

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Anvil, Code2, Menu, X, FileDown, RotateCcw,
   Briefcase, GitCompare, MessageSquare, History,
-  Sun, Moon, User, Zap,
+  Sun, Moon, User, Zap, FileText,
 } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,12 +22,14 @@ import { JourneyStepper } from "@/components/JourneyStepper";
 const GITHUB_REPO =
   "https://github.com/Dpehect/Softbridge-Career-Forge-FullStack-Web-App/tree/main";
 
+/** Primary product path first — Jobs/Paths are complementary */
 const links = [
-  { name: "Forge",     path: "/forge",     icon: Anvil },
-  { name: "Jobs",      path: "/jobs",      icon: Briefcase },
-  { name: "Paths",     path: "/paths",     icon: GitCompare },
-  { name: "Coach",     path: "/coach",     icon: MessageSquare },
-  { name: "Dashboard", path: "/dashboard", icon: History },
+  { name: "Forge", path: "/forge", icon: Anvil, primary: true },
+  { name: "Resume", path: "/resume", icon: FileText, primary: true },
+  { name: "Dashboard", path: "/dashboard", icon: History, primary: true },
+  { name: "Coach", path: "/coach", icon: MessageSquare, primary: false },
+  { name: "Jobs", path: "/jobs", icon: Briefcase, primary: false },
+  { name: "Paths", path: "/paths", icon: GitCompare, primary: false },
 ];
 
 export function Header() {
@@ -44,14 +46,25 @@ export function Header() {
 
   const getNavName = (name: string) => {
     switch (name) {
-      case "Forge":     return t("navForge");
-      case "Jobs":      return t("navJobs");
-      case "Paths":     return t("navPaths");
-      case "Coach":     return t("navCoach");
-      case "Dashboard": return t("navDashboard");
-      default: return name;
+      case "Forge":
+        return "Analiz";
+      case "Resume":
+        return t("navResume");
+      case "Jobs":
+        return t("navJobs");
+      case "Paths":
+        return t("navPaths");
+      case "Coach":
+        return t("navCoach");
+      case "Dashboard":
+        return "Kokpit";
+      default:
+        return name;
     }
   };
+
+  const primaryLinks = links.filter((l) => l.primary);
+  const secondaryLinks = links.filter((l) => !l.primary);
 
   const hasContent =
     Boolean(forgeParsedCv) ||
@@ -130,16 +143,16 @@ export function Header() {
             </div>
           </Link>
 
-          {/* Desktop nav */}
+          {/* Desktop nav — primary path first */}
           <nav className="hidden lg:flex items-center gap-0.5">
-            {links.map((link) => {
+            {primaryLinks.map((link) => {
               const isActive = pathname === link.path || pathname.startsWith(`${link.path}/`);
               return (
                 <Link
                   key={link.name}
                   href={link.path}
                   className={cn(
-                    "relative px-3 py-1.5 rounded-xl text-[11px] font-semibold tracking-wide transition-all duration-200",
+                    "relative px-3 py-1.5 rounded-xl text-[11px] font-bold tracking-wide transition-all duration-200",
                     isActive
                       ? "text-white"
                       : "text-muted-steel hover:text-star-white hover:bg-cosmic-teal/8"
@@ -148,11 +161,28 @@ export function Header() {
                   {isActive && (
                     <motion.div
                       layoutId="active-nav-pill"
-                      className="absolute inset-0 rounded-xl -z-10"
-                      style={{ background: "linear-gradient(135deg, #F97316, #D97706)" }}
+                      className="absolute inset-0 rounded-xl -z-10 bg-indigo-600"
                       transition={{ type: "spring", stiffness: 380, damping: 32 }}
                     />
                   )}
+                  {getNavName(link.name)}
+                </Link>
+              );
+            })}
+            <span className="mx-1 h-4 w-px bg-slate-200 dark:bg-white/10" aria-hidden />
+            {secondaryLinks.map((link) => {
+              const isActive = pathname === link.path || pathname.startsWith(`${link.path}/`);
+              return (
+                <Link
+                  key={link.name}
+                  href={link.path}
+                  className={cn(
+                    "px-2.5 py-1.5 rounded-xl text-[10px] font-semibold tracking-wide transition-colors",
+                    isActive
+                      ? "text-indigo-600 bg-indigo-50 dark:bg-indigo-500/15"
+                      : "text-muted-steel hover:text-star-white hover:bg-cosmic-teal/8"
+                  )}
+                >
                   {getNavName(link.name)}
                 </Link>
               );

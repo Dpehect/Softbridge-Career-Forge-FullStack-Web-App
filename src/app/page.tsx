@@ -18,6 +18,7 @@ import {
   Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CvDropZone } from "@/components/CvDropZone";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -132,29 +133,33 @@ export default function HomePage() {
               çizgisi değil — SoftBridge kariyer asistanınızın ilk adımı.
             </motion.p>
 
-            <motion.div {...fadeUp(0.2)} className="flex flex-wrap gap-4 pt-1">
+            {/* Güven rozeti — USP */}
+            <motion.div
+              {...fadeUp(0.18)}
+              className="inline-flex items-center gap-2 rounded-full border-2 border-emerald-400/50 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-800 shadow-sm dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-300"
+            >
+              <Lock className="w-4 h-4 shrink-0" />
+              Verileriniz asla buluta çıkmaz · %100 gizlilikle yerel cihazınızda işlenir
+            </motion.div>
+          </motion.div>
+
+          {/* Primary PLG: drag & drop — first thing users see to act */}
+          <motion.div {...fadeUp(0.22)} className="max-w-3xl">
+            <CvDropZone />
+            <div className="mt-4 flex flex-wrap gap-3">
               <Link
                 href="/forge"
-                className="inline-flex h-12 items-center gap-2 rounded-2xl px-6 text-sm font-bold text-white bg-indigo-600 shadow-lg transition-colors hover:bg-indigo-700"
+                className="inline-flex h-11 items-center gap-2 rounded-2xl px-5 text-sm font-bold text-white bg-indigo-600 shadow-lg hover:bg-indigo-700"
               >
-                CV yükle ve başla <ArrowRight className="w-4 h-4" />
+                Gelişmiş analiz (Forge) <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/dashboard"
-                className="inline-flex h-12 items-center gap-2 rounded-2xl px-6 text-sm font-semibold border-2 border-slate-200 bg-transparent text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-500 dark:text-slate-200 dark:hover:bg-white/5"
+                className="inline-flex h-11 items-center gap-2 rounded-2xl px-5 text-sm font-semibold border-2 border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-500 dark:text-slate-200"
               >
-                Kariyer Kokpitine git
+                Kariyer Kokpiti
               </Link>
-            </motion.div>
-
-            {/* Güven rozeti */}
-            <motion.div
-              {...fadeUp(0.22)}
-              className="inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50/90 px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
-            >
-              <Lock className="w-3.5 h-3.5 shrink-0" />
-              Verileriniz cihazınızda kalır · %100 yerel · %100 gizli
-            </motion.div>
+            </div>
           </motion.div>
 
           {/* Yol haritası — CV Yükle → Analiz Al → İyileştir */}

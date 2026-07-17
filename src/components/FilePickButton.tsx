@@ -14,7 +14,7 @@ type Props = {
   silentSuccess?: boolean;
   className?: string;
   size?: "default" | "sm" | "lg" | "icon";
-  variant?: "default" | "accent" | "outline" | "ghost" | "soft";
+  variant?: "default" | "accent" | "outline" | "ghost" | "soft" | "primary" | "ghostBorder";
 };
 
 /**
@@ -49,24 +49,20 @@ export function FilePickButton({
       setFileName(file.name);
       onText(text, file.name, { kind });
       if (!silentSuccess) {
-        toast.success(`${file.name} loaded with clean text`);
+        toast.success(`${file.name} yüklendi.`);
       }
     } catch (err) {
       const code = err instanceof Error ? err.message : "";
-      if (code === "PDF_SCANNED") {
+      if (code === "PDF_SCANNED" || code === "PDF_NO_TEXT") {
         toast.error(
-          "This PDF appears to be scanned. Please export as searchable text or paste manually."
-        );
-      } else if (code === "PDF_NO_TEXT") {
-        toast.error(
-          "This PDF appears to be scanned. Please export as searchable text or paste manually."
+          "Bu PDF taranmış görünüyor. Aranabilir metin olarak dışa aktarın veya yapıştırın."
         );
       } else if (code === "UNSUPPORTED") {
-        toast.error("Supported formats: PDF and TXT (also MD).");
+        toast.error("Desteklenen formatlar: PDF ve TXT.");
       } else if (code === "EMPTY") {
-        toast.error("File looks empty.");
+        toast.error("Dosya boş görünüyor.");
       } else {
-        toast.error("Could not read the file.");
+        toast.error("Dosya okunamadı. Tekrar deneyin.");
       }
     } finally {
       setLoading(false);
@@ -82,9 +78,9 @@ export function FilePickButton({
         className="sr-only"
         onChange={onChange}
       />
-      <Button type="button" size={size} variant={variant} onClick={openPicker} disabled={loading}>
+      <Button type="button" size={size} variant={variant} onClick={openPicker} disabled={loading} className={cn(loading && "opacity-50")}>
         <FolderOpen className="w-4 h-4" />
-        {loading ? "Reading…" : label}
+        {loading ? "Okunuyor…" : label}
       </Button>
       {fileName && (
         <span className="text-[11px] text-muted-steel max-w-[140px] truncate" title={fileName}>

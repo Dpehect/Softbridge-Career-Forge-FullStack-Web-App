@@ -1,9 +1,8 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import Link from "next/link";
 import { toast } from "sonner";
-import { Download, Plus, Trash2, RotateCcw, FileText, Camera, Code2 } from "lucide-react";
+import { Download, Plus, Trash2, RotateCcw, FileText, Camera, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FilePickButton } from "@/components/FilePickButton";
 import { CvFeedbackPanel } from "@/components/CvFeedbackPanel";
 import { CvWizard } from "@/components/CvWizard";
+import { AtsProgressBar } from "@/components/AtsProgressBar";
 import { useCareerStore } from "@/store/useCareerStore";
 import {
   parseCV,
@@ -18,6 +18,7 @@ import {
   looksLikeRawPdf,
   generateCvFeedback,
   exportCvAsPdf,
+  buildJourneyInsight,
   type ParsedCV,
 } from "@/lib/forge";
 import type { ResumeProfile } from "@/types";
@@ -75,8 +76,18 @@ function resumeToParsed(resume: ResumeProfile): ParsedCV {
 }
 
 export default function ResumePage() {
-  const { resume, updateResume, setResume, resetResume, pushForgeHistory } = useCareerStore();
-  const { t, lang } = useTranslation();
+  const {
+    resume,
+    updateResume,
+    setResume,
+    resetResume,
+    pushForgeHistory,
+    forgeParsedCv,
+    careerGoalId,
+    addSkills,
+    lastAnalysisMeta,
+  } = useCareerStore();
+  const { t } = useTranslation();
 
   const [mounted, setMounted] = useState(false);
   const [skillDraft, setSkillDraft] = useState("");
@@ -85,1261 +96,13 @@ export default function ResumePage() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
 
-  useState(() => {
-    // React state hydration trigger helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  // Hydration hook
-  useState(() => {
-    // mounted hook
-  });
-
-  // set mounted
-  useState(() => {
-    // mount helper
-  });
-
-  // mount effect
-  useState(() => {
-    // helper
-  });
-
-  // mounted
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // helper
-  });
-
-  useState(() => {
-    // bg check
-  });
-
   useEffect(() => {
     setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-cosmic-teal border-t-transparent animate-spin" />
-      </div>
-    );
-  }
+    if (forgeParsedCv || lastAnalysisMeta) {
+      setShowFeedback(true);
+      setBanner("Analiz tamam — şimdi hataları tek tıkla kapatın.");
+    }
+  }, [forgeParsedCv, lastAnalysisMeta]);
 
   const hasContent =
     Boolean(resume.fullName || resume.headline || resume.summary || resume.skills.length) ||
@@ -1349,6 +112,24 @@ export default function ResumePage() {
     if (!hasContent || !showFeedback) return null;
     return generateCvFeedback(resumeToParsed(resume));
   }, [resume, hasContent, showFeedback]);
+
+  const journey = useMemo(
+    () =>
+      buildJourneyInsight({
+        cv: forgeParsedCv || (hasContent ? resumeToParsed(resume) : null),
+        goalId: careerGoalId,
+        feedback,
+      }),
+    [forgeParsedCv, hasContent, resume, careerGoalId, feedback]
+  );
+
+  if (!mounted) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-cosmic-teal border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   const applyParsed = (cv: ParsedCV, source: string) => {
     setResume(parsedToResume(cv));
@@ -1367,9 +148,7 @@ export default function ResumePage() {
     const cleaned = cleanExtractedText(text);
     if (!cleaned.trim() || looksLikeRawPdf(cleaned) || looksLikeRawPdf(text)) {
       toast.error(
-        lang === "tr" 
-          ? "Bu PDF taranmış görünüyor. Lütfen aranabilir metin olarak dışa aktarın veya manuel yapıştırın."
-          : "This PDF appears to be scanned. Please export as searchable text or paste manually."
+        "Bu PDF taranmış görünüyor. Lütfen aranabilir metin olarak dışa aktarın veya yapıştırın."
       );
       return;
     }
@@ -1378,28 +157,26 @@ export default function ResumePage() {
       applyParsed(cv, fileName);
       setPasteText(cleaned);
     } catch {
-      toast.error(lang === "tr" ? "CV yapısı çözümlenemedi. Düz metin olarak yapıştırmayı deneyin." : "Could not structure this CV. Paste plain text and try again.");
+      toast.error("CV yapısı çözümlenemedi. Düz metin olarak yapıştırmayı deneyin.");
     }
   };
 
   const onParsePaste = () => {
     const cleaned = cleanExtractedText(pasteText);
     if (!cleaned.trim()) {
-      toast.error(lang === "tr" ? "Önce CV metnini yapıştırın veya dosya yükleyin." : "Paste CV text first, or upload a PDF/TXT file.");
+      toast.error("Önce CV metnini yapıştırın veya dosya yükleyin.");
       return;
     }
     if (looksLikeRawPdf(cleaned)) {
       toast.error(
-        lang === "tr"
-          ? "Bu ham PDF kodu gibi görünüyor. Dosya yükleme butonunu kullanın veya düz metin yapıştırın."
-          : "This looks like raw PDF code. Upload the file with Choose CV, or paste readable text."
+        "Bu ham PDF kodu gibi görünüyor. Dosya yükleyin veya düz metin yapıştırın."
       );
       return;
     }
     try {
       applyParsed(parseCV(cleaned), "paste");
     } catch {
-      toast.error(lang === "tr" ? "Metin çözümlenemedi." : "Could not structure this CV text.");
+      toast.error("Metin çözümlenemedi.");
     }
   };
 
@@ -1421,11 +198,18 @@ export default function ResumePage() {
 
   const refreshFeedback = () => {
     if (!hasContent) {
-      toast.error(lang === "tr" ? "Önce bir CV yükleyin." : "Add or upload a CV first.");
+      toast.error("Önce bir CV yükleyin.");
       return;
     }
     setShowFeedback(true);
-    toast.success(lang === "tr" ? "Analiz güncellendi." : "Feedback updated from your current CV.");
+    toast.success("Analiz güncellendi.");
+  };
+
+  const applySuggestedSkills = () => {
+    const n = addSkills(journey.missingSkills.slice(0, 3));
+    if (n === 0) toast.message("Bu yetenekler zaten ekli.");
+    else toast.success(`${n} yetenek eklendi — CV'niz güncellendi.`);
+    setShowFeedback(true);
   };
 
   return (
@@ -1436,36 +220,89 @@ export default function ResumePage() {
         </Badge>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
           <div>
-            <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight text-star-white">
-              {lang === "tr" ? "Özgeçmiş Düzenleme Alanı" : "Your CV workspace"}
+            <h1 className="font-display text-3xl md:text-4xl font-extrabold tracking-tighter text-star-white">
+              Özgeçmiş Düzenleyici
             </h1>
-            <p className="text-muted-steel mt-2 max-w-xl leading-relaxed text-sm">
-              {lang === "tr" 
-                ? "PDF/TXT yükleyin veya metin yapıştırın, şablonu doldurun ve mülakata hazır hale getirin."
-                : "Upload PDF/TXT or paste text, edit a clean structure, get a professional review, and export a polished PDF."
-              }
+            <p className="text-slate-500 mt-2 max-w-xl leading-relaxed text-sm">
+              Analiz sonucu burada kalır — önerilen yetenekleri tek tıkla ekleyin, maddeleri
+              güçlendirin, mülakata hazır PDF alın.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={refreshFeedback} disabled={!hasContent} className="text-star-white">
-              <FileText className="w-4 h-4 mr-1.5" /> {lang === "tr" ? "Analiz Et" : "Review CV"}
+            <Button variant="primary" onClick={refreshFeedback} disabled={!hasContent} className="shadow-lg">
+              <FileText className="w-4 h-4" /> Analiz Et
             </Button>
             <Button
-              variant="outline"
+              variant="ghostBorder"
               disabled={!hasContent}
-              className="text-star-white"
               onClick={async () => {
                 await exportCvAsPdf(resumeToParsed(resume));
                 toast.success(t("exportSuccess"));
               }}
             >
-              <Download className="w-4 h-4 mr-1.5" /> {t("exportPdf")}
+              <Download className="w-4 h-4" /> {t("exportPdf")}
             </Button>
             <Button variant="ghost" onClick={onClear} className="text-sunset-coral">
-              <RotateCcw className="w-4 h-4 mr-1.5" /> {t("clearCv")}
+              <RotateCcw className="w-4 h-4" /> {t("clearCv")}
             </Button>
           </div>
         </div>
+
+        {/* Golden path: analysis → live edit */}
+        {hasContent && (
+          <div className="mb-6 rounded-2xl border border-indigo-200/60 bg-indigo-50/80 backdrop-blur-sm p-5 space-y-4 dark:bg-indigo-500/10 dark:border-indigo-500/25">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div className="min-w-0 flex-1 space-y-1">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
+                  Analiz sonucu · dinamik güncelleme
+                </p>
+                <p className="text-sm font-semibold text-star-white leading-relaxed">
+                  {lastAnalysisMeta?.at
+                    ? `${new Date(lastAnalysisMeta.at).toLocaleString("tr-TR")} tarihinde`
+                    : "Son analizde"}{" "}
+                  hedef <strong>{lastAnalysisMeta?.targetTitle || resume.headline || "rolünüz"}</strong>{" "}
+                  için skor: <strong>%{journey.atsScore}</strong>.
+                  {journey.missingSkills[0]
+                    ? ` İyileştirmek için “${journey.missingSkills.slice(0, 3).join(", ")}” ekleyin.`
+                    : " Güçlü görünüyorsunuz — maddelere metrik ekleyin."}
+                </p>
+              </div>
+            </div>
+            <AtsProgressBar score={journey.atsScore} label="ATS skoru (canlı)" />
+            {journey.missingSkills.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                {journey.missingSkills.slice(0, 5).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      const n = addSkills([s]);
+                      toast.success(n ? `“${s}” eklendi` : `“${s}” zaten var`);
+                    }}
+                    className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-indigo-700 hover:bg-indigo-100"
+                  >
+                    <Plus className="w-3 h-3" />
+                    {s}
+                  </button>
+                ))}
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="shadow-lg"
+                  onClick={applySuggestedSkills}
+                >
+                  Önerilen 3 yeteneği ekle
+                </Button>
+              </div>
+            )}
+            <p className="text-xs text-slate-500">
+              “Analiz sonucun bu, hadi eyvallah” demiyoruz — hataları burada tek tıkla kapatıyorsunuz.
+            </p>
+          </div>
+        )}
 
         {/* CV Builder options */}
         {showWizard ? (
@@ -1477,7 +314,7 @@ export default function ResumePage() {
                 className="text-xs text-star-white"
                 onClick={() => setShowWizard(false)}
               >
-                ✕ {lang === "tr" ? "Sihirbazı Kapat" : "Cancel Wizard"}
+                ✕ Sihirbazı Kapat
               </Button>
             </div>
             <CvWizard
@@ -1508,7 +345,7 @@ export default function ResumePage() {
               </Button>
             </div>
             <p className="text-[11px] text-muted-steel leading-relaxed">
-              <strong>{lang === "tr" ? "Özgeçmiş Metni Yapıştırın" : "Paste CV Text"}</strong> {lang === "tr" ? "veya dosya yükleyin. Taranmış PDF'leri lütfen metin olarak aktarıp yapıştırın." : "below, or upload PDF/TXT."}
+              <strong>Özgeçmiş metni yapıştırın</strong> veya dosya yükleyin. Taranmış PDF’leri metin olarak aktarın.
             </p>
             <Textarea
               value={pasteText}
@@ -1520,7 +357,7 @@ export default function ResumePage() {
               <div className="rounded-xl border border-cosmic-teal/25 bg-cosmic-teal/10 px-4 py-3 text-star-white">
                 <p className="text-sm font-semibold">{banner}</p>
                 <p className="text-xs text-muted-steel mt-1">
-                  {lang === "tr" ? "Ayrıştırılan alanlar ve yapay zeka geri bildirimleri aşağıdadır." : "Structured fields and deep feedback are below."}
+                  Ayrıştırılan alanlar ve öneriler aşağıda — tek tıkla güncelleyin.
                 </p>
               </div>
             )}
@@ -1690,7 +527,7 @@ export default function ResumePage() {
                     })
                   }
                 >
-                  <Plus className="w-4 h-4 mr-1" /> {lang === "tr" ? "Ekle" : "Add"}
+                  <Plus className="w-4 h-4 mr-1" /> Ekle
                 </Button>
               </div>
               {!resume.experience.length && (
@@ -1782,11 +619,11 @@ export default function ResumePage() {
           <div className="lg:sticky lg:top-24 h-fit space-y-4">
             <div className="rounded-3xl border border-slate-200 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 shadow-sm p-6 md:p-8 text-left leading-relaxed">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cosmic-teal mb-4">
-                {lang === "tr" ? "Önizleme" : "Preview"}
+                Önizleme
               </p>
               {!hasContent ? (
                 <p className="text-sm text-muted-steel leading-relaxed">
-                  {lang === "tr" ? "Şablonu doldurdukça özgeçmişinizin canlı önizlemesi burada görünecektir." : "Your structured CV will appear here after you fill the form or upload a file."}
+                  Şablonu doldurdukça canlı önizleme burada görünür.
                 </p>
               ) : (
                 <>
@@ -1873,7 +710,7 @@ export default function ResumePage() {
             </div>
             {hasContent && (
               <Button className="w-full" variant="soft" onClick={refreshFeedback}>
-                {lang === "tr" ? "Analizi Yenile" : "Refresh professional feedback"}
+                Analizi yenile
               </Button>
             )}
           </div>

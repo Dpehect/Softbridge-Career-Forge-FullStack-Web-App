@@ -9,12 +9,12 @@ export function Footer() {
   const { t } = useTranslation();
 
   const productLinks = [
-    { href: "/forge", label: t("navForge") },
-    { href: "/resume", label: t("navResume") },
-    { href: "/jobs", label: t("navJobs") },
-    { href: "/paths", label: t("navPaths") },
-    { href: "/coach", label: t("navCoach") },
-    { href: "/dashboard", label: t("navDashboard") },
+    { href: "/forge", label: "Analiz (Forge)" },
+    { href: "/resume", label: "Özgeçmiş Düzenleyici" },
+    { href: "/dashboard", label: "Kariyer Kokpiti" },
+    { href: "/coach", label: "AI Koç" },
+    { href: "/jobs", label: "İş İlanları" },
+    { href: "/paths", label: "Kariyer Yolları" },
   ] as const;
 
   return (

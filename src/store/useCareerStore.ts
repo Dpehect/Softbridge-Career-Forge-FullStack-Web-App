@@ -93,6 +93,21 @@ interface CareerState {
   /** Solution-center: target role for progress cockpit */
   careerGoalId: string | null;
   setCareerGoalId: (id: string | null) => void;
+  /** Last successful CV analysis meta for dashboard summary */
+  lastAnalysisMeta: {
+    at: string;
+    fileName?: string;
+    candidateName?: string;
+    targetTitle?: string;
+  } | null;
+  setLastAnalysisMeta: (
+    meta: {
+      at: string;
+      fileName?: string;
+      candidateName?: string;
+      targetTitle?: string;
+    } | null
+  ) => void;
   lang: "tr" | "en";
   setLang: (lang: "tr" | "en") => void;
   theme: "light" | "dark";
@@ -152,6 +167,8 @@ export const useCareerStore = create<CareerState>()(
       forgeBackups: [],
       careerGoalId: "fullstack",
       setCareerGoalId: (careerGoalId) => set({ careerGoalId }),
+      lastAnalysisMeta: null,
+      setLastAnalysisMeta: (lastAnalysisMeta) => set({ lastAnalysisMeta }),
       toggleSaveJob: (id) => {
         const { savedJobIds } = get();
         set({
@@ -229,7 +246,19 @@ export const useCareerStore = create<CareerState>()(
         }),
       setForgeCvText: (text) => set({ forgeCvText: text }),
       setForgeJdText: (text) => set({ forgeJdText: text }),
-      setForgeParsedCv: (cv) => set({ forgeParsedCv: cv, resume: cv ? parsedToResume(cv) : emptyResume() }),
+      setForgeParsedCv: (cv) =>
+        set({
+          forgeParsedCv: cv,
+          resume: cv ? parsedToResume(cv) : emptyResume(),
+          lastAnalysisMeta: cv
+            ? {
+                at: new Date().toISOString(),
+                candidateName: cv.name,
+                targetTitle: cv.title,
+                fileName: get().lastAnalysisMeta?.fileName,
+              }
+            : get().lastAnalysisMeta,
+        }),
       setForgeAnalysis: (analysis) => set({ forgeAnalysis: analysis }),
       setForgeTone: (tone) => set({ forgeTone: tone }),
       pushForgeHistory: (item) =>
