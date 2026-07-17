@@ -162,7 +162,7 @@ export function Header() {
               </div>
             </Link>
 
-            {/* Ana menü: Analiz · Özgeçmişim (+ Başla CTA sağda) */}
+            {/* Ana menü: Analiz · Özgeçmişim — gap-8, sade */}
             <nav
               className="hidden items-center gap-8 md:flex"
               aria-label="Ana menü"
@@ -174,9 +174,10 @@ export function Header() {
                     key={item.path}
                     href={item.path}
                     className={cn(
+                      "text-sm font-medium transition-colors",
                       active
-                        ? "text-purple-600 dark:text-[#C084FC]"
-                        : "text-black hover:text-purple-600 dark:text-slate-200 dark:hover:text-[#C084FC]"
+                        ? "text-indigo-600 dark:text-indigo-400"
+                        : "text-black hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400"
                     )}
                   >
                     {item.label}
@@ -185,25 +186,15 @@ export function Header() {
               })}
             </nav>
 
-            {/* Sağ: durum + CTA + profil */}
+            {/* Sağ: Sistem Hazır · Başla · Profil */}
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="hidden items-center gap-3 sm:flex">
+              <div className="hidden sm:block">
                 <AiStatusDot />
-                <span className="hidden text-xs font-medium text-slate-500 lg:inline">
-                  AI:{" "}
-                  <span className="text-emerald-600 dark:text-emerald-400">
-                    Yerel
-                  </span>
-                </span>
               </div>
 
               <Link
                 href="/forge"
-                className="inline-flex h-10 items-center rounded-full px-5 text-sm font-bold text-white shadow-lg transition-all hover:opacity-95 hover:scale-[1.02] active:scale-[0.98]"
-                style={{
-                  background: "linear-gradient(135deg, #6B21A8, #A855F7, #F97316)",
-                  boxShadow: "0 4px 14px rgba(107, 33, 168, 0.3)",
-                }}
+                className="inline-flex h-10 items-center rounded-full bg-indigo-600 px-5 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:bg-indigo-500 active:scale-[0.98]"
               >
                 Başla
               </Link>

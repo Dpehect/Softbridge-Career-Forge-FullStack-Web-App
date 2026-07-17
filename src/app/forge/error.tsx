@@ -25,11 +25,11 @@ export default function ForgeError({
           <AlertTriangle className="w-7 h-7 text-amber-600" />
         </div>
         <h2 className="font-extrabold tracking-tighter text-xl text-star-white">
-          Sistemimiz şu an kendini güncelliyor
+          Kariyer asistanımız şu an dinleniyor
         </h2>
         <p className="text-sm text-slate-500 leading-relaxed">
-          Lütfen 5 saniye bekleyip sayfayı yenileyin. Analiz şu an yapılamıyor olabilir — bağlantınızı
-          kontrol edin. Verileriniz cihazınızda kalır, kaybolmaz.
+          Sistem meşgul, lütfen bağlantınızı kontrol edip tekrar deneyin. Verileriniz cihazınızda
+          güvende — hiçbir şey sunucuya gitmedi.
         </p>
         <div className="flex flex-wrap justify-center gap-3 pt-2">
           <button

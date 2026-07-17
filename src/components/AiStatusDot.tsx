@@ -4,61 +4,60 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { preloadBrowserAi, subscribeClientAi, type ClientAiStatus } from "@/lib/clientAi";
 
+/**
+ * Profesyonel durum ışığı — "Beklemede/Hata" gösterme; yeşil "Sistem Hazır".
+ */
 export function AiStatusDot({ className }: { className?: string }) {
   const [status, setStatus] = useState<ClientAiStatus>("idle");
-  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     const unsub = subscribeClientAi((p) => setStatus(p.status));
     preloadBrowserAi();
-    return () => unsub();
+    return () => {
+      unsub();
+    };
   }, []);
 
-  // Tüm state'ler "ready" gibi davransın — kullanıcıya "hazır" göster
-  const isProcessing = status === "loading";
-
-  const tooltip = isProcessing
-    ? "Asistan hazırlanıyor…"
-    : "Kariyer Asistanı: Aktif (Yerel İşleme)";
+  const warming = status === "loading";
 
   return (
     <div
-      className={cn("relative inline-flex items-center gap-2 cursor-default", className)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      className={cn(
+        "inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50/90 px-2.5 py-1 dark:border-emerald-500/25 dark:bg-emerald-500/10",
+        className
+      )}
+      title={
+        warming
+          ? "Kariyer asistanı hazırlanıyor…"
+          : "Sistem Hazır · %100 yerel işleme"
+      }
       role="status"
-      aria-label={tooltip}
+      aria-label="Sistem Hazır"
     >
-      {/* Pulsing dot */}
-      <span className="relative flex h-2.5 w-2.5 shrink-0">
-        {!isProcessing && (
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60"
-            style={{ background: "#4ADE80" }} />
-        )}
+      <span className="relative flex h-2 w-2 shrink-0">
         <span
           className={cn(
-            "relative inline-flex rounded-full h-2.5 w-2.5 transition-all",
-            isProcessing ? "bg-amber-400 animate-pulse" : ""
+            "absolute inline-flex h-full w-full rounded-full opacity-70",
+            warming ? "bg-amber-400 animate-pulse" : "bg-emerald-500 animate-ping"
           )}
-          style={isProcessing ? {} : { background: "#4ADE80" }}
+        />
+        <span
+          className={cn(
+            "relative inline-flex h-2 w-2 rounded-full",
+            warming ? "bg-amber-400" : "bg-emerald-500"
+          )}
         />
       </span>
-
-      {/* Tooltip on hover */}
-      {hovered && (
-        <div
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-nowrap rounded-xl px-3 py-1.5 text-[11px] font-semibold shadow-lg z-50"
-          style={{
-            background: "var(--panel)",
-            border: "1px solid var(--border-color)",
-            color: isProcessing ? "#F97316" : "#4ADE80",
-          }}
-        >
-          {tooltip}
-          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent"
-            style={{ borderTopColor: "var(--border-color)" }} />
-        </div>
-      )}
+      <span
+        className={cn(
+          "hidden text-[11px] font-semibold tracking-tight sm:inline",
+          warming
+            ? "text-amber-700 dark:text-amber-300"
+            : "text-emerald-800 dark:text-emerald-300"
+        )}
+      >
+        {warming ? "Hazırlanıyor" : "Sistem Hazır"}
+      </span>
     </div>
   );
 }

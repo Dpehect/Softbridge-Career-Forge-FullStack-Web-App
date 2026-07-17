@@ -106,12 +106,12 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="max-w-6xl mx-auto relative space-y-16 py-16">
-          {/* Hero — sonuç odaklı */}
+        <div className="max-w-6xl mx-auto relative space-y-20 py-20">
+          {/* Hero — ne işe yarar? */}
           <motion.div {...fadeUp(0)} className="max-w-3xl space-y-6">
             <motion.div
               {...fadeUp(0.05)}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-purple-200/60 bg-purple-50/80 text-xs font-semibold text-purple-700 dark:border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-300"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-indigo-200/60 bg-indigo-50/80 text-xs font-semibold text-indigo-700 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300"
             >
               <Sparkles className="w-3.5 h-3.5" />
               SoftBridge Solutions · Kariyer Asistanı
@@ -119,32 +119,31 @@ export default function HomePage() {
 
             <motion.h1
               {...fadeUp(0.1)}
-              className="font-display text-4xl sm:text-5xl md:text-[3.1rem] font-bold tracking-tight leading-[1.1] text-balance text-slate-900 dark:text-white"
+              className="font-display text-4xl sm:text-5xl md:text-[3.05rem] font-bold tracking-tight leading-[1.1] text-balance text-slate-900 dark:text-white"
             >
-              Kariyer hedeflerinize uygun,{" "}
-              <span className="gradient-text">ATS uyumlu özgeçmiş analizi</span>
-              {" — "}saniyeler içinde.
+              Özgeçmişinizi 3 saniyede{" "}
+              <span className="gradient-text">ATS dostu</span> hale getirin.
             </motion.h1>
 
             <motion.p
               {...fadeUp(0.15)}
               className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed"
             >
-              CV&apos;nizi yükleyin, hedefinizi seçin ve 3 adımda yükselişe geçin. SoftBridge
-              kariyer asistanı tarayıcınızda çalışır — buluta göndermez.
+              Kariyer hedeflerinize uygun analiz, eksik yetenek önerileri ve net sonraki adımlar —
+              saniyeler içinde. Verileriniz cihazınızdan asla çıkmaz.
             </motion.p>
 
-            {/* Güven rozeti — USP */}
+            {/* Güven rozeti — en büyük USP */}
             <motion.div
               {...fadeUp(0.18)}
               className="inline-flex flex-col sm:flex-row sm:items-center gap-2 rounded-2xl border-2 border-emerald-500/50 bg-emerald-50 px-5 py-3.5 text-sm font-bold text-emerald-950 shadow-md dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-100"
             >
               <span className="inline-flex items-center gap-2">
                 <Lock className="w-5 h-5 shrink-0" />
-                🔐 %100 Yerel İşleme
+                🔐 Verileriniz Asla Buluta Çıkmaz.
               </span>
               <span className="font-semibold opacity-90">
-                Verileriniz cihazınızdan asla çıkmaz · sunucuya gönderilmez
+                %100 Yerel · %100 Güvenli
               </span>
             </motion.div>
           </motion.div>
