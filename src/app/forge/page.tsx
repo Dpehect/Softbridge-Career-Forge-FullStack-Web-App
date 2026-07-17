@@ -24,6 +24,8 @@ import {
   Camera,
   Plus,
   ArrowRight,
+  Lightbulb,
+  Settings,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,6 +37,7 @@ import { useCareerStore } from "@/store/useCareerStore";
 import {
   parseCV,
   analyzeAts,
+  CAREER_GOALS,
   cleanExtractedText,
   looksLikeRawPdf,
   downloadJsonFile,
@@ -61,6 +64,81 @@ import { useClientAi } from "@/hooks/useClientAi";
 type EditorTabId = "raw" | "form" | "versions";
 type PreviewTabId = "preview" | "feedback" | "match" | "cover" | "interview" | "chat";
 
+interface ProTipsPanelProps {
+  editorTab: EditorTabId;
+  previewTab: PreviewTabId;
+  activeSection: "analiz" | "gecmis" | "ayarlar";
+}
+
+function ProTipsPanel({ editorTab, previewTab, activeSection }: ProTipsPanelProps) {
+  let title = "Akıllı İpuçları";
+  let description = "Kariyerinizi güçlendirmek için kişiselleştirilmiş öneriler.";
+  let tips = [
+    "CV'nizi ATS (Aday Takip Sistemi) uyumlu hale getirmek için başlıkları standart tutun (Deneyim, Eğitim, Yetenekler).",
+    "Yetkinliklerinizi sadece listelemek yerine, projelerinizdeki etkileriyle (örn: %20 performans artışı) açıklayın."
+  ];
+  let icon = <Lightbulb className="w-5 h-5 text-amber-500" strokeWidth={1.5} />;
+
+  if (activeSection === "gecmis") {
+    title = "Sürüm Yönetimi";
+    description = "Farklı başvuru tipleri için CV'lerinizi yedekleyin.";
+    tips = [
+      "Farklı şirket kültürleri (örn. kurumsal vs startup) için özelleştirilmiş CV yedekleri oluşturun.",
+      "Yeni bir sürüm indirmeden önce yerel yedek alarak önceki verilerinizi güvenceye alın."
+    ];
+    icon = <History className="w-5 h-5 text-purple-500" strokeWidth={1.5} />;
+  } else if (activeSection === "ayarlar") {
+    title = "Kariyer Hedefleme";
+    description = "Hedef pozisyonunuzu güncel tutmak analiz kalitesini artırır.";
+    tips = [
+      "Seçtiğiniz hedef rol, yapay zekanın mülakat sorularını ve kelime eşleştirme skorlarını belirler.",
+      "Kariyer rotanız değiştikçe hedef rolü güncelleyerek daha nokta atışı tavsiyeler alın."
+    ];
+    icon = <Settings className="w-5 h-5 text-sunset-coral" strokeWidth={1.5} />;
+  } else if (activeSection === "analiz") {
+    if (editorTab === "raw") {
+      title = "Dosya Yükleme İpuçları";
+      description = "Daha iyi bir analiz için dosyalarınızı optimize edin.";
+      tips = [
+        "Metin formatındaki PDF veya DOCX dosyaları en yüksek parse doğruluğunu sağlar.",
+        "Görsel/Tarama formatındaki PDF'ler yerine metin seçilebilen dosyaları tercih edin."
+      ];
+      icon = <FileDown className="w-5 h-5 text-emerald-500" strokeWidth={1.5} />;
+    } else if (editorTab === "form") {
+      title = "Hızlı Düzenleme";
+      description = "CV bilgilerinizi manuel optimize edin.";
+      tips = [
+        "Teknik kelimeleri ve araçları (örn. React, Kubernetes) yetenekler listesine ekleyin.",
+        "Deneyim altındaki açıklamaları kısa ve aksiyon odaklı fiillerle başlatın."
+      ];
+      icon = <Anvil className="w-5 h-5 text-[#A855F7]" strokeWidth={1.5} />;
+    }
+  }
+
+  return (
+    <aside className="w-full xl:w-[260px] flex flex-col gap-4 rounded-3xl p-5 border border-slate-200/60 bg-white/40 dark:border-white/10 dark:bg-[#0f172a]/20 shadow-sm ring-1 ring-slate-100 dark:ring-white/5">
+      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-white/5">
+        {icon}
+        <div className="min-w-0">
+          <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{title}</h3>
+          <p className="text-[10px] text-slate-500 mt-0.5 truncate">{description}</p>
+        </div>
+      </div>
+      <ul className="space-y-3">
+        {tips.map((tip, idx) => (
+          <li key={idx} className="flex gap-2 items-start text-[11px] text-slate-600 dark:text-slate-400 leading-normal">
+            <span className="text-[#A855F7] font-extrabold shrink-0">•</span>
+            <span>{tip}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-4 p-3 rounded-2xl bg-purple-500/5 border border-purple-500/10 text-[10px] text-purple-700 dark:text-purple-300 leading-normal">
+        <strong>💡 Profesyonel İpucu:</strong> CV&apos;nizin ATS taramalarından geçmesi için standart yazı tipleri (Arial, Calibri) tercih edin.
+      </div>
+    </aside>
+  );
+}
+
 export default function ForgePage() {
   const {
     forgeCvText,
@@ -82,6 +160,7 @@ export default function ForgePage() {
     saveForgeBackup,
     restoreForgeBackup,
     deleteForgeBackup,
+    setCareerGoalId,
   } = useCareerStore();
 
   const { t } = useTranslation();
@@ -89,6 +168,7 @@ export default function ForgePage() {
 
   const [editorTab, setEditorTab] = useState<EditorTabId>("raw");
   const [previewTab, setPreviewTab] = useState<PreviewTabId>("preview");
+  const [activeSection, setActiveSection] = useState<"analiz" | "gecmis" | "ayarlar">("analiz");
 
   const [mounted, setMounted] = useState(false);
   const [optimized, setOptimized] = useState<OptimizedCV | null>(null);
@@ -590,41 +670,224 @@ export default function ForgePage() {
           )}
         </div>
 
-        {/* Dynamic Split-View Workspace Grid */}
-        <div className="grid lg:grid-cols-[42%_58%] gap-6 items-start">
+        {/* Dynamic SaaS Layout: Sol Sidebar + Workspace Area */}
+        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-8 items-start">
           
-          {/* Left panel: Editors */}
-          <div className="flex flex-col gap-4">
-            
-            {/* Editor Tabs Navigation */}
-            <div className="flex gap-1 p-1 rounded-2xl" style={{ background: "rgba(168,85,247,0.07)", border: "1px solid rgba(168,85,247,0.12)" }}>
-              {(
-                [
-                  ["raw", "Yükle"],
-                  ["form", "Düzenle"],
-                  ["versions", `Yedekler (${forgeBackups.length})`],
-                ] as const
-              ).map(([id, label]) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setEditorTab(id as EditorTabId)}
-                  disabled={id === "form" && !forgeParsedCv}
-                  className={cn(
-                    "flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all cursor-pointer disabled:opacity-40",
-                    editorTab === id ? "text-white shadow-lg" : ""
-                  )}
-                  style={editorTab === id
-                    ? { background: "linear-gradient(135deg, #6B21A8, #A855F7)", boxShadow: "0 4px 12px rgba(107,33,168,0.3)" }
-                    : { color: "var(--text-muted)" }}
-                >
-                  {label}
-                </button>
-              ))}
+          {/* Sol Sidebar Nav */}
+          <aside className="lg:sticky lg:top-24 flex flex-col gap-6 rounded-3xl p-5 border border-slate-200/60 bg-white/50 dark:border-white/10 dark:bg-[#0f172a]/20 shadow-sm ring-1 ring-slate-100 dark:ring-white/5">
+            <div className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-[#C084FC] flex items-center gap-2">
+              <Anvil className="w-4 h-4 text-purple-600" strokeWidth={1.5} />
+              CareerForge
             </div>
+            <nav className="flex flex-col gap-1.5">
+              <button
+                onClick={() => setActiveSection("analiz")}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer text-left",
+                  activeSection === "analiz" ? "bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300 font-bold" : "text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-[#C084FC]"
+                )}
+              >
+                <Anvil className="w-4 h-4" strokeWidth={1.5} />
+                Analiz & Editör
+              </button>
+              <button
+                onClick={() => setActiveSection("gecmis")}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer text-left",
+                  activeSection === "gecmis" ? "bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300 font-bold" : "text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-[#C084FC]"
+                )}
+              >
+                <History className="w-4 h-4" strokeWidth={1.5} />
+                Geçmiş & Yedekler
+              </button>
+              <button
+                onClick={() => setActiveSection("ayarlar")}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer text-left",
+                  activeSection === "ayarlar" ? "bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300 font-bold" : "text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-[#C084FC]"
+                )}
+              >
+                <Settings className="w-4 h-4" strokeWidth={1.5} />
+                Kariyer Hedefleri
+              </button>
+            </nav>
+            <div className="mt-6 border-t border-slate-100 dark:border-white/5 pt-4">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Gizlilik Notu</p>
+              <p className="text-[10px] text-slate-500 leading-normal">
+                Tüm verileriniz tarayıcınızda (yerel) saklanır.
+              </p>
+            </div>
+          </aside>
 
-            {/* Editor Content Area */}
-            <div className="glass-panel rounded-3xl p-5 min-h-[460px] border border-slate-200/80 dark:border-white/10">
+          {/* Right Workspace Container */}
+          <div className="min-w-0 space-y-6">
+            
+            {activeSection === "gecmis" && (
+              <div className="glass-panel rounded-3xl p-6 border border-slate-200/80 dark:border-white/10 shadow-md">
+                <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-white/5 pb-3">
+                  <div>
+                    <h2 className="text-lg font-bold text-star-white">Geçmiş & Yedek Raporları</h2>
+                    <p className="text-xs text-slate-500 mt-1">CV yedeklerinizi ve sürüm geçmişinizi yerel cihazınızda saklayın.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      id="json-import-editor-sidebar"
+                      accept=".json"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            try {
+                              const parsedData = JSON.parse(reader.result as string);
+                              if (parsedData && parsedData.parsed) {
+                                setForgeParsedCv(parsedData.parsed);
+                                if (parsedData.text) setForgeCvText(parsedData.text);
+                                toast.success("Yedek başarıyla yüklendi!");
+                                setActiveSection("analiz");
+                                setEditorTab("form");
+                              } else {
+                                toast.error("Geçersiz yedek dosyası.");
+                              }
+                            } catch {
+                              toast.error("Dosya okunamadı.");
+                            }
+                          };
+                          reader.readAsText(file);
+                        }
+                      }}
+                    />
+                    <Button size="sm" variant="outline" onClick={() => document.getElementById("json-import-editor-sidebar")?.click()}>
+                      İçe Aktar (Import)
+                    </Button>
+                    <Button size="sm" variant="primary" onClick={onBackupCv}>
+                      Yeni Yedek Oluştur
+                    </Button>
+                  </div>
+                </div>
+
+                {forgeBackups.length === 0 ? (
+                  <p className="text-xs text-slate-500 py-6 text-center">Henüz bu oturumda yedek oluşturulmadı. **Yeni Yedek Oluştur** butonuna tıklayarak profilinizi yedekleyebilirsiniz.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {forgeBackups.map((bak) => (
+                      <li key={bak.id} className="p-4 rounded-2xl border border-slate-100 bg-white/40 dark:bg-white/[0.02] dark:border-white/5 flex justify-between items-center text-xs">
+                        <div>
+                          <p className="font-semibold text-star-white">{bak.label}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">{new Date(bak.createdAt).toLocaleString("tr-TR")}</p>
+                        </div>
+                        <div className="flex gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              restoreForgeBackup(bak.id);
+                              toast.success("Yedek profil başarıyla yüklendi.");
+                              setActiveSection("analiz");
+                              setEditorTab("form");
+                            }}
+                          >
+                            Geri Yükle
+                          </Button>
+                          <Button size="sm" variant="ghost" className="text-rose-500 hover:bg-rose-500/5" onClick={() => deleteForgeBackup(bak.id)}>
+                            ✕
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {activeSection === "ayarlar" && (
+              <div className="glass-panel rounded-3xl p-6 border border-slate-200/80 dark:border-white/10 shadow-md space-y-6">
+                <div className="border-b border-slate-100 dark:border-white/5 pb-3">
+                  <h2 className="text-lg font-bold text-star-white">Kariyer Hedef Yapılandırması</h2>
+                  <p className="text-xs text-slate-500 mt-1">Hedeflediğiniz kariyer hedefini seçin. Analizler ve mülakat hazırlığı bu hedefe göre uyarlanır.</p>
+                </div>
+
+                <div className="space-y-4 max-w-md">
+                  <label className="block space-y-2">
+                    <span className="text-sm font-semibold text-star-white">Hedef Rolünüz</span>
+                    <select
+                      value={careerGoalId ?? ""}
+                      onChange={(e) => {
+                        setCareerGoalId(e.target.value || null);
+                        toast.success("Hedef pozisyon güncellendi.");
+                      }}
+                      className="w-full h-11 rounded-2xl border border-slate-200 bg-white/80 px-4 text-sm font-semibold text-slate-800 dark:bg-panel dark:border-white/10 dark:text-star-white"
+                    >
+                      {CAREER_GOALS.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.labelTr}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <div className="pt-4 border-t border-slate-100 dark:border-white/5 space-y-3">
+                    <h3 className="text-sm font-bold text-rose-500">Tehlikeli Bölge</h3>
+                    <p className="text-xs text-slate-500 leading-normal">
+                      Cihazınızda saklanan tüm CV verilerini, analiz geçmişini ve ayarları tamamen temizleyebilirsiniz. Bu işlem geri alınamaz.
+                    </p>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        if (confirm("Tüm yerel verilerinizi silmek istediğinize emin misiniz?")) {
+                          clearForgeCv();
+                          clearForgeHistory();
+                          toast.success("Tüm veriler başarıyla temizlendi.");
+                        }
+                      }}
+                      className="text-rose-600 border border-rose-200/50 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-2xl h-10 px-4"
+                    >
+                      Tüm Verileri Temizle
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeSection === "analiz" && (
+              <div className="grid grid-cols-1 xl:grid-cols-[1fr_260px] gap-6 items-start">
+                
+                {/* Dynamic Split-View Workspace Grid */}
+                <div className="grid lg:grid-cols-[43%_57%] gap-6 items-start">
+                  
+                  {/* Left panel: Editors */}
+                  <div className="flex flex-col gap-4">
+                    
+                    {/* Editor Tabs Navigation */}
+                    <div className="flex gap-1 p-1 rounded-2xl" style={{ background: "rgba(168,85,247,0.07)", border: "1px solid rgba(168,85,247,0.12)" }}>
+                      {(
+                        [
+                          ["raw", "Yükle"],
+                          ["form", "Düzenle"],
+                        ] as const
+                      ).map(([id, label]) => (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => setEditorTab(id as EditorTabId)}
+                          disabled={id === "form" && !forgeParsedCv}
+                          className={cn(
+                            "flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all cursor-pointer disabled:opacity-40",
+                            editorTab === id ? "text-white shadow-lg" : ""
+                          )}
+                          style={editorTab === id
+                            ? { background: "linear-gradient(135deg, #6B21A8, #A855F7)", boxShadow: "0 4px 12px rgba(107,33,168,0.3)" }
+                            : { color: "var(--text-muted)" }}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Editor Content Area */}
+                    <div className="glass-panel rounded-3xl p-5 min-h-[460px] border border-slate-200/80 dark:border-white/10">
               
               {/* Tab 1: Drop zone + paste */}
               {editorTab === "raw" && (
@@ -893,82 +1156,7 @@ export default function ForgePage() {
                 </div>
               )}
 
-              {/* Tab 3: Backups & Versions */}
-              {editorTab === "versions" && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-sm">Backup files</h3>
-                    <div className="flex gap-2">
-                      <input
-                        type="file"
-                        id="json-import-editor"
-                        accept=".json"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = () => {
-                              try {
-                                const parsedData = JSON.parse(reader.result as string);
-                                if (parsedData && parsedData.parsed) {
-                                  setForgeParsedCv(parsedData.parsed);
-                                  if (parsedData.text) setForgeCvText(parsedData.text);
-                                  toast.success("Backup imported successfully!");
-                                  setEditorTab("form");
-                                } else {
-                                  toast.error("Invalid backup file.");
-                                }
-                              } catch {
-                                toast.error("Could not parse file.");
-                              }
-                            };
-                            reader.readAsText(file);
-                          }
-                        }}
-                      />
-                      <Button size="sm" variant="outline" onClick={() => document.getElementById("json-import-editor")?.click()}>
-                        Import JSON
-                      </Button>
-                      <Button size="sm" variant="accent" onClick={onBackupCv}>
-                        Create Backup
-                      </Button>
-                    </div>
-                  </div>
 
-                  {/* Render Backups */}
-                  {forgeBackups.length === 0 ? (
-                    <p className="text-xs text-muted-steel">No backups created in this session. Click **Create Backup** to download your current status as a backup file.</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {forgeBackups.map((bak) => (
-                        <li key={bak.id} className="p-3 rounded-xl border border-black/5 bg-panel-elevated/50 flex justify-between items-center text-xs">
-                          <div>
-                            <p className="font-semibold">{bak.label}</p>
-                            <p className="text-[10px] text-muted-steel">{new Date(bak.createdAt).toLocaleString()}</p>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                restoreForgeBackup(bak.id);
-                                toast.success("Backup profile loaded.");
-                                setEditorTab("form");
-                              }}
-                            >
-                              Restore
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={() => deleteForgeBackup(bak.id)}>
-                              ✕
-                            </Button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
 
             </div>
           </div>
@@ -1365,9 +1553,16 @@ export default function ForgePage() {
             </div>
           </div>
 
-        </div>
+        </div> {/* Closes Dynamic Split-View Workspace Grid */}
 
+        {/* Right Column: ProTips Panel */}
+        <ProTipsPanel editorTab={editorTab} previewTab={previewTab} activeSection={activeSection} />
       </div>
-    </div>
+    )}
+
+  </div>
+</div>
+</div>
+</div>
   );
 }
