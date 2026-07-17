@@ -121,10 +121,10 @@ export function CvDropZone({
       className={cn(
         "relative flex flex-col items-center gap-4 cursor-pointer rounded-2xl border-2 border-dashed text-center transition-all",
         compact ? "p-10 md:p-12" : "p-12 md:p-16",
-        "bg-white border-slate-200/80 shadow-md dark:bg-slate-900 dark:border-slate-800/80",
+        "bg-slate-900 text-white border-slate-800 shadow-md dark:bg-slate-900 dark:border-slate-800/80",
         dragging
-          ? "border-purple-500 bg-purple-50/90 scale-[1.01] shadow-lg dark:bg-purple-950/20 dark:border-purple-400"
-          : "border-slate-300 hover:border-purple-500 hover:bg-purple-50/10 dark:border-slate-700 dark:hover:border-purple-500 dark:hover:bg-purple-500/[0.01]",
+          ? "border-purple-500 bg-purple-950/20 scale-[1.01] shadow-lg dark:bg-purple-950/20 dark:border-purple-400"
+          : "border-slate-700 hover:border-purple-500 hover:bg-purple-500/[0.01] dark:border-slate-700 dark:hover:border-purple-500 dark:hover:bg-purple-500/[0.01]",
         loading && "pointer-events-none opacity-70",
         className
       )}
@@ -155,10 +155,10 @@ export function CvDropZone({
         )}
       </div>
 
-      <p className="font-bold tracking-tight text-base md:text-lg text-slate-900 dark:text-white">
+      <p className="font-bold tracking-tight text-base md:text-lg text-white">
         {loading ? "Özgeçmişiniz işleniyor..." : "Özgeçmiş Dosyası Yükleyin"}
       </p>
-      <p className="text-xs text-slate-700 dark:text-slate-300 max-w-xs leading-relaxed">
+      <p className="text-xs text-slate-300 max-w-xs leading-relaxed">
         {loading
           ? "Lütfen bekleyin..."
           : "Sürükleyip bırakın veya tıklayıp PDF/TXT seçin"}
@@ -177,7 +177,7 @@ export function CvDropZone({
       )}
 
 
-      <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-400">
+      <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
         <Lock className="w-3.5 h-3.5" />
         🔐 %100 yerel işleme · sunucuya gönderilmez
       </p>

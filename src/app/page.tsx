@@ -27,7 +27,7 @@ const fadeUp = (delay = 0) => ({
 });
 
 const glassCard =
-  "rounded-2xl border border-white/10 bg-white/60 backdrop-blur-sm shadow-sm dark:bg-white/5 dark:border-white/10";
+  "rounded-2xl border border-slate-800 bg-slate-900 shadow-sm text-white dark:bg-slate-900 dark:border-slate-800";
 
 export default function HomePage() {
   const features = [
@@ -160,8 +160,8 @@ export default function HomePage() {
                 >
                   <v.icon className="w-5 h-5" style={{ color: v.color }} />
                 </div>
-                <h3 className="font-extrabold tracking-tighter text-star-white">{v.title}</h3>
-                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{v.body}</p>
+                <h3 className="font-extrabold tracking-tighter text-white dark:text-white">{v.title}</h3>
+                <p className="text-sm text-slate-300 dark:text-slate-300 leading-relaxed">{v.body}</p>
               </div>
             ))}
           </motion.div>
@@ -176,8 +176,8 @@ export default function HomePage() {
             ].map((s) => (
               <div key={s.label} className={`${glassCard} p-5 text-center space-y-2`}>
                 <s.icon className="w-4 h-4 text-purple-600 mx-auto" />
-                <p className="font-extrabold tracking-tighter text-sm text-star-white">{s.label}</p>
-                <p className="text-[11px] text-slate-700 dark:text-slate-300">{s.sub}</p>
+                <p className="font-extrabold tracking-tighter text-sm text-white dark:text-white">{s.label}</p>
+                <p className="text-[11px] text-slate-300 dark:text-slate-300">{s.sub}</p>
               </div>
             ))}
           </motion.div>
@@ -196,8 +196,8 @@ export default function HomePage() {
                 >
                   <f.icon className="w-5 h-5" style={{ color: f.color }} />
                 </div>
-                <h2 className="font-extrabold tracking-tighter text-star-white">{f.title}</h2>
-                <p className="text-sm text-slate-700 dark:text-slate-300 mt-2 leading-relaxed">{f.body}</p>
+                <h2 className="font-extrabold tracking-tighter text-white dark:text-white">{f.title}</h2>
+                <p className="text-sm text-slate-300 dark:text-slate-300 mt-2 leading-relaxed">{f.body}</p>
               </Link>
             ))}
           </motion.div>
