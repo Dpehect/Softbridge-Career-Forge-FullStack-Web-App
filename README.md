@@ -13,10 +13,34 @@ Career platform by **Softbridge Solutions** — curated jobs, skill paths, a res
 
 ```bash
 npm install
+cp .env.example .env.local   # optional
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+## Deploy on Vercel
+
+1. Push this repo to GitHub (already: `Dpehect/Softbridge-Career-Forge-FullStack-Web-App`).
+2. [vercel.com/new](https://vercel.com/new) → **Import** the GitHub repo.
+3. Framework: **Next.js** (auto). Root directory: `.` · Node **20+**.
+4. **Environment Variables** (Project → Settings → Environment Variables):
+
+| Name | Value | Notes |
+| ---- | ----- | ----- |
+| `NEXT_PUBLIC_SITE_URL` | `https://your-domain.vercel.app` | Production URL (after first deploy, update) |
+| `OLLAMA_BASE_URL` | *(optional)* | Public HTTPS Ollama endpoint only. **Do not use localhost on Vercel.** |
+| `OLLAMA_MODEL` | `llama3` | Optional |
+
+5. Deploy. Client-side CV analysis works without Ollama. Header AI light will show **offline** on Vercel unless you expose a remote Ollama URL.
+
+```bash
+# CLI alternative
+npx vercel
+npx vercel --prod
+```
+
+Config files: `vercel.json`, `.env.example`, `next.config.ts` (serverActions body limit).
 
 ## Scripts
 

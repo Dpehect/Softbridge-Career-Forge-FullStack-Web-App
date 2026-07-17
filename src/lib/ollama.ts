@@ -2,8 +2,15 @@
  * Local Ollama client — native fetch only (offline-ready).
  */
 
+/**
+ * On Vercel, localhost Ollama is unreachable from serverless.
+ * Leave OLLAMA_BASE_URL unset (or point to a public tunnel) in production.
+ */
+const isVercel = process.env.VERCEL === "1";
+
 export const OLLAMA_BASE_URL =
-  process.env.OLLAMA_BASE_URL?.replace(/\/$/, "") || "http://localhost:11434";
+  process.env.OLLAMA_BASE_URL?.replace(/\/$/, "") ||
+  (isVercel ? "" : "http://localhost:11434");
 
 export const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3";
 
@@ -20,6 +27,20 @@ export async function checkOllamaServer(timeoutMs = 2500): Promise<OllamaStatus>
   const baseUrl = OLLAMA_BASE_URL;
   const model = OLLAMA_MODEL;
   const started = Date.now();
+
+  if (!baseUrl) {
+    return {
+      online: false,
+      baseUrl: "(not configured)",
+      model,
+      latencyMs: 0,
+      models: [],
+      error: isVercel
+        ? "Ollama is not configured on Vercel (set OLLAMA_BASE_URL to a public URL)"
+        : "OLLAMA_BASE_URL missing",
+    };
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -78,6 +99,13 @@ export async function analyzeWithOllama(
 ): Promise<{ response: string; model: string }> {
   const model = options.model || OLLAMA_MODEL;
   const timeoutMs = options.timeoutMs ?? 120_000;
+
+  if (!OLLAMA_BASE_URL) {
+    throw new Error(
+      "Yerel AI yapılandırılmadı. Vercel’de OLLAMA_BASE_URL ortam değişkenini ayarlayın veya tarayıcı içi analizi kullanın."
+    );
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 

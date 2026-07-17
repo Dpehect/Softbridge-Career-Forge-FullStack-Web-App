@@ -17,8 +17,14 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "https://careerforge.softbridgesolutions.com");
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://careerforge.softbridgesolutions.com"),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "CareerForge | Kişisel Kariyer Asistanı",
     template: "%s | CareerForge",
@@ -38,6 +44,7 @@ export const metadata: Metadata = {
     title: "CareerForge | Kişisel Kariyer Asistanı",
     description:
       "Profesyonel CV araçları, iş eşleştirme, ATS kontrolü ve mülakat hazırlığı — tarayıcınızda gizli.",
+    url: siteUrl,
     siteName: "CareerForge",
     locale: "tr_TR",
     type: "website",
@@ -48,6 +55,9 @@ export const metadata: Metadata = {
     description: "Yerel AI ile CV analizi ve kariyer hazırlığı.",
   },
   robots: { index: true, follow: true },
+  alternates: {
+    canonical: siteUrl,
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
