@@ -51,11 +51,12 @@ export function useWorkspaceSync(enabled: boolean) {
       const state = useCareerStore.getState();
       if (event === "SIGNED_OUT" || !session?.user) {
         clearSignedOutWorkspace();
+        useCareerStore.setState({ cloudStatus: "local", cloudUserId: null, cloudHydrated: false });
         return;
       }
-      if (state.cloudUserId && state.cloudUserId !== session.user.id) {
-        saveController.current?.abort();
-        state.clearPrivateWorkspace();
+      if (session.user && state.cloudUserId !== session.user.id) {
+        useCareerStore.setState({ cloudUserId: session.user.id });
+        state.requestCloudReload();
       }
     });
     window.addEventListener("careerforge:signout", clearSignedOutWorkspace);
@@ -73,9 +74,21 @@ export function useWorkspaceSync(enabled: boolean) {
     const sequence = ++loadSequence.current;
     const state = useCareerStore.getState();
     if (state.isDemoMode) return () => controller.abort();
-    state.setCloudLoading();
 
     async function hydrate() {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (controller.signal.aborted || sequence !== loadSequence.current) return;
+
+      if (!session?.user) {
+        useCareerStore.setState({ cloudStatus: "local", cloudUserId: null, cloudHydrated: false });
+        return;
+      }
+
+      useCareerStore.setState({ cloudUserId: session.user.id });
+      state.setCloudLoading();
+
       const preferences = {
         lang: useCareerStore.getState().lang,
         theme: useCareerStore.getState().theme,

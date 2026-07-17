@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo } from "react";
+import { use, useMemo, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -23,6 +23,7 @@ import { useMessages } from "@/i18n/useMessages";
 export default function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { locale } = useMessages();
+  const [showWhy, setShowWhy] = useState(false);
   const job = getLocalizedJob(id, locale);
   if (!job) notFound();
   const company = getLocalizedCompany(job.companyId, locale);
@@ -31,8 +32,10 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
     resume,
     savedJobIds,
     appliedJobIds,
+    jobStages,
     toggleSaveJob,
     applyToJob,
+    updateJobStage,
     addSkills,
   } = useCareerStore();
   const copy = locale === "tr" ? {
@@ -64,59 +67,24 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
     };
   }, [job.tags, resume.skills]);
 
-  if (!mounted) {
-    return <div className="grid min-h-[60vh] place-items-center"><span className="h-6 w-6 animate-spin rounded-full border-2 border-line-strong border-t-brand" /></div>;
-  }
-
   const saved = savedJobIds.includes(job.id);
   const applied = appliedJobIds.includes(job.id);
 
-  return (
-    <main className="product-page">
-      <Link href="/jobs" className="inline-flex items-center gap-2 text-xs font-semibold text-ink-3 transition-colors hover:text-ink">
-        <ArrowLeft className="h-3.5 w-3.5" /> {copy.back}
-      </Link>
-
-      <header className="mt-7 grid gap-8 border-b border-line pb-10 lg:grid-cols-[1fr_auto] lg:items-end">
-        <div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-ink-3">
-            <span className="grid h-9 w-9 place-items-center rounded-[var(--radius-control)] border border-line bg-surface-2 font-bold text-ink-2">{company?.logo || "CF"}</span>
-            <span className="font-semibold text-ink">{company?.name}</span>
-            <span>·</span>
-            <span>{copy.seniority[job.seniority]}</span>
-            <span>·</span>
-            <span>{copy.type[job.type]}</span>
+  const renderContent = () => {
+    if (!mounted) {
+      return (
+        <div className="grid gap-12 pt-10 xl:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.75fr)] animate-pulse">
+          <div className="space-y-6">
+            <div className="h-28 rounded bg-surface-2 border border-line" />
+            <div className="h-40 rounded bg-surface-2 border border-line" />
+            <div className="h-40 rounded bg-surface-2 border border-line" />
           </div>
-          <h1 className="page-title-compact mt-5 max-w-3xl">{job.title}</h1>
-          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-ink-3">
-            <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {job.location} · {copy.mode[job.workMode]}</span>
-            <span className="inline-flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {job.applicants} {copy.applicants}</span>
-            <span>{formatRelativeDate(job.postedAt, locale)}</span>
-          </div>
+          <div className="h-64 rounded bg-surface-2 border border-line" />
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            onClick={() => {
-              toggleSaveJob(job.id);
-              toast.success(saved ? copy.removedToast : copy.savedToast);
-            }}
-          >
-            <Bookmark className={cn("h-4 w-4", saved && "fill-current text-signal")} /> {saved ? copy.saved : copy.save}
-          </Button>
-          <Button
-            variant="primary"
-            disabled={applied}
-            onClick={() => {
-              applyToJob(job.id);
-              toast.success(copy.appliedToast);
-            }}
-          >
-            {applied ? <><Check className="h-4 w-4" /> {copy.applied}</> : copy.apply}
-          </Button>
-        </div>
-      </header>
+      );
+    }
 
+    return (
       <div className="grid gap-12 pt-10 xl:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.75fr)]">
         <article className="min-w-0">
           <div className="grid gap-px border border-line bg-line sm:grid-cols-3">
@@ -212,11 +180,119 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                 )) : <p className="text-xs text-positive">{copy.noGap}</p>}
               </div>
             </div>
+            <div className="mt-6 border-t border-line pt-4">
+              <button
+                type="button"
+                onClick={() => setShowWhy(!showWhy)}
+                className="inline-flex min-h-11 items-center gap-1 text-[0.6875rem] font-semibold text-brand-strong hover:underline"
+              >
+                <span>{locale === "tr" ? "Bu skor ne anlama geliyor?" : "What does this score mean?"}</span>
+              </button>
+              {showWhy && (
+                <div className="mt-2 text-[0.6875rem] text-ink-3 leading-relaxed rounded bg-surface-2 p-3 border border-line">
+                  {locale === "tr"
+                    ? `Bu ilan için toplam ${job.tags.length} kritik beceri tanımlanmıştır. Mevcut CV'nizde bunlardan ${match.matched.length} tanesi tespit edilmiştir. Eksik olan ${match.missing.length} beceri, eşleşme skorunu düşürmektedir.`
+                    : `A total of ${job.tags.length} critical skills are defined for this job. Your resume has ${match.matched.length} of them. The missing ${match.missing.length} skills reduce the match score.`}
+                </div>
+              )}
+            </div>
           </div>
           <p className="mt-4 text-[0.6875rem] leading-5 text-ink-3">{copy.trust}</p>
-          <p className="mt-3 border-t border-line pt-3 text-[0.625rem] leading-5 text-ink-3">{copy.sample}</p>
+          <div className="mt-3 flex gap-2 border-t border-line pt-3 text-[0.625rem] text-ink-3 leading-normal items-start">
+            <span className="shrink-0 text-caution mt-0.5">⚠️</span>
+            <p>
+              {locale === "tr"
+                ? "Eşleşme oranları kural tabanlı bir tahmindir; gerçek bir adayın pozisyona uygunluğunu veya işe alım kararını temsil etmez."
+                : "Match percentages are rule-based estimates; they do not represent actual candidate fit or hiring decisions."}
+            </p>
+          </div>
+          <p className="mt-3 text-[0.625rem] leading-5 text-ink-3">{copy.sample}</p>
         </aside>
       </div>
+    );
+  };
+
+  return (
+    <main className="product-page">
+      <Link href="/jobs" className="inline-flex items-center gap-2 text-xs font-semibold text-ink-3 transition-colors hover:text-ink">
+        <ArrowLeft className="h-3.5 w-3.5" /> {copy.back}
+      </Link>
+
+      <header className="mt-7 grid gap-8 border-b border-line pb-10 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-ink-3">
+            <span className="grid h-9 w-9 place-items-center rounded-[var(--radius-control)] border border-line bg-surface-2 font-bold text-ink-2">{company?.logo || "CF"}</span>
+            <span className="font-semibold text-ink">{company?.name}</span>
+            <span>·</span>
+            <span>{copy.seniority[job.seniority]}</span>
+            <span>·</span>
+            <span>{copy.type[job.type]}</span>
+            {job.isDemo && (
+              <span className="ml-2 rounded bg-surface-3 px-1.5 py-0.5 text-[0.625rem] font-mono text-ink-3 uppercase border border-line">
+                {locale === "tr" ? "Demo Veri" : "Demo Data"}
+              </span>
+            )}
+          </div>
+          <h1 className="page-title-compact mt-5 max-w-3xl">{job.title}</h1>
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-ink-3">
+            <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {job.location} · {copy.mode[job.workMode]}</span>
+            <span className="inline-flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {job.applicants} {copy.applicants}</span>
+            <span>{formatRelativeDate(job.postedAt, locale)}</span>
+            {job.source && <span>· {locale === "tr" ? "Kaynak" : "Source"}: {job.source}</span>}
+            {job.expirationDate && (
+              <span>· {locale === "tr" ? "Son Başvuru" : "Deadline"}: {formatRelativeDate(job.expirationDate, locale)}</span>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              toggleSaveJob(job.id);
+              toast.success(saved ? copy.removedToast : copy.savedToast);
+            }}
+          >
+            <Bookmark className={cn("h-4 w-4", saved && "fill-current text-signal")} /> {saved ? copy.saved : copy.save}
+          </Button>
+          <Button
+            variant="primary"
+            disabled={applied}
+            onClick={() => {
+              applyToJob(job.id);
+              toast.success(copy.appliedToast);
+            }}
+          >
+            {applied ? <><Check className="h-4 w-4" /> {copy.applied}</> : copy.apply}
+          </Button>
+          {applied && (
+            <div className="flex items-center">
+              <select
+                value={jobStages?.[job.id] || "applied"}
+                onChange={(e) => {
+                  updateJobStage(job.id, e.target.value);
+                  toast.success(locale === "tr" ? "Başvuru aşaması güncellendi." : "Application stage updated.");
+                }}
+                className="bg-surface border border-line rounded-[var(--radius-control)] px-3 py-1.5 h-11 text-xs font-semibold text-ink transition-colors hover:bg-surface-2 focus:outline-none"
+              >
+                <option value="applied">{locale === "tr" ? "Başvuruldu" : "Applied"}</option>
+                <option value="interviewing">{locale === "tr" ? "Mülakat Aşamasında" : "Interviewing"}</option>
+                <option value="technical">{locale === "tr" ? "Teknik Değerlendirme" : "Technical assessment"}</option>
+                <option value="offer">{locale === "tr" ? "Teklif Alındı" : "Offer received"}</option>
+                <option value="rejected">{locale === "tr" ? "Reddedildi" : "Rejected"}</option>
+              </select>
+            </div>
+          )}
+          {job.applicationUrl && (
+            <a href={job.applicationUrl} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline">
+                {locale === "tr" ? "Resmi İlana Git" : "Apply Externally"}
+              </Button>
+            </a>
+          )}
+        </div>
+      </header>
+
+      {renderContent()}
     </main>
   );
 }

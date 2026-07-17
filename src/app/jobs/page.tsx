@@ -10,8 +10,9 @@ import type { JobType, Seniority, WorkMode } from "@/types";
 import { cn } from "@/lib/utils";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useMessages } from "@/i18n/useMessages";
-import { getLocalizedJobs } from "@/i18n/content";
+import { getLocalizedCompany, getLocalizedJobs } from "@/i18n/content";
 import Link from "next/link";
+import { toast } from "sonner";
 
 const modes: Array<WorkMode | "All"> = ["All", "Remote", "Hybrid", "On-site"];
 const levels: Array<Seniority | "All"> = ["All", "Intern", "Junior", "Mid", "Senior", "Lead", "Principal"];
@@ -35,6 +36,69 @@ export default function JobsPage() {
   const { resume, savedJobIds, loadDemoProfile } = useCareerStore();
   const hasResume = Boolean(resume.fullName || resume.skills.length || resume.experience.length);
 
+  interface SavedFilter {
+    id: string;
+    label: string;
+    query: string;
+    mode: WorkMode | "All";
+    level: Seniority | "All";
+    type: JobType | "All";
+    savedOnly: boolean;
+  }
+
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = localStorage.getItem("cf_saved_search_filters");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const saveCurrentFilter = () => {
+    const label = prompt(
+      locale === "tr"
+        ? "Bu arama filtresi için bir isim girin:"
+        : "Enter a name for this search filter:"
+    );
+    if (!label?.trim()) return;
+    const newFilter: SavedFilter = {
+      id: crypto.randomUUID(),
+      label: label.trim(),
+      query,
+      mode,
+      level,
+      type,
+      savedOnly,
+    };
+    const updated = [...savedFilters, newFilter];
+    setSavedFilters(updated);
+    localStorage.setItem("cf_saved_search_filters", JSON.stringify(updated));
+    toast.success(locale === "tr" ? "Arama filtresi kaydedildi." : "Search filter saved.");
+  };
+
+  const deleteFilter = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const updated = savedFilters.filter((f) => f.id !== id);
+    setSavedFilters(updated);
+    localStorage.setItem("cf_saved_search_filters", JSON.stringify(updated));
+    toast.success(locale === "tr" ? "Filtre silindi." : "Filter deleted.");
+  };
+
+  const applyFilter = (filter: SavedFilter) => {
+    setQuery(filter.query);
+    setMode(filter.mode);
+    setLevel(filter.level);
+    setType(filter.type);
+    setSavedOnly(filter.savedOnly);
+    toast.success(
+      locale === "tr"
+        ? `"${filter.label}" filtresi uygulandı.`
+        : `Applied filter "${filter.label}".`
+    );
+  };
+
   const filtered = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return localizedJobs
@@ -44,7 +108,9 @@ export default function JobsPage() {
         if (type !== "All" && job.type !== type) return false;
         if (savedOnly && !savedJobIds.includes(job.id)) return false;
         if (!normalizedQuery) return true;
-        return [job.title, job.location, job.description, ...job.tags]
+        const company = getLocalizedCompany(job.companyId, locale);
+        const companyName = company?.name || "";
+        return [job.title, job.location, job.description, companyName, ...job.tags]
           .join(" ")
           .toLowerCase()
           .includes(normalizedQuery);
@@ -59,110 +125,167 @@ export default function JobsPage() {
     : [];
   const missing = topMatch?.tags.filter((tag) => !skillCoverage.includes(tag)) ?? [];
 
-  if (!mounted) {
-    return <div className="grid min-h-[60vh] place-items-center"><span className="h-6 w-6 animate-spin rounded-full border-2 border-line-strong border-t-brand" /></div>;
-  }
+  const renderContent = () => {
+    if (!mounted) {
+      return (
+        <div className="space-y-6 mt-6 animate-pulse">
+          <div className="h-12 w-full rounded bg-surface-2 border border-line" />
+          <div className="grid gap-6 lg:grid-cols-[1fr_minmax(18rem,0.45fr)]">
+            <div className="space-y-4">
+              <div className="h-28 rounded bg-surface-2 border border-line" />
+              <div className="h-28 rounded bg-surface-2 border border-line" />
+              <div className="h-28 rounded bg-surface-2 border border-line" />
+            </div>
+            <div className="h-80 rounded bg-surface-2 border border-line" />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        {!hasResume && (
+          <section className="mt-6 grid gap-4 border border-info/25 bg-[var(--info-wash)] p-5 sm:grid-cols-[1fr_auto] sm:items-center">
+            <div><h2 className="text-sm font-semibold text-ink">{messages.empty.jobsTitle}</h2><p className="mt-1 text-xs leading-5 text-ink-2">{messages.empty.jobsBody}</p></div>
+            <div className="flex flex-wrap gap-2"><Link href="/forge"><Button variant="primary">{messages.empty.upload}</Button></Link><Button variant="outline" onClick={loadDemoProfile}>{messages.demo.open}</Button></div>
+          </section>
+        )}
+
+        <section className="mt-6 surface-panel p-3">
+          <div className="grid gap-2 lg:grid-cols-[minmax(15rem,1fr)_repeat(3,minmax(9rem,auto))]">
+            <label className="relative">
+              <span className="sr-only">{copy.searchLabel}</span>
+              <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-ink-3" />
+              <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.search} className="pl-9" />
+            </label>
+            <label>
+              <span className="sr-only">{copy.workMode}</span>
+              <select value={mode} onChange={(event) => setMode(event.target.value as WorkMode | "All")} className="h-10 w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]">
+                {modes.map((item) => <option key={item} value={item}>{copy.work} · {labels[item]}</option>)}
+              </select>
+            </label>
+            <label>
+              <span className="sr-only">{copy.seniority}</span>
+              <select value={level} onChange={(event) => setLevel(event.target.value as Seniority | "All")} className="h-10 w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]">
+                {levels.map((item) => <option key={item} value={item}>{copy.level} · {labels[item]}</option>)}
+              </select>
+            </label>
+            <label>
+              <span className="sr-only">{copy.type}</span>
+              <select value={type} onChange={(event) => setType(event.target.value as JobType | "All")} className="h-10 w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]">
+                {types.map((item) => <option key={item} value={item}>{copy.contract} · {labels[item]}</option>)}
+              </select>
+            </label>
+          </div>
+
+          {/* Saved Searches Row */}
+          {savedFilters.length > 0 && (
+            <div className="mt-3 border-t border-line pt-3 flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] font-semibold text-ink-3 uppercase mr-1">
+                {locale === "tr" ? "Kayıtlı Aramalar:" : "Saved Searches:"}
+              </span>
+              {savedFilters.map((filter) => (
+                <div
+                  key={filter.id}
+                  className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-0.5 text-xs text-ink font-medium"
+                >
+                  <button
+                    type="button"
+                    onClick={() => applyFilter(filter)}
+                    className="hover:text-brand-strong transition-colors"
+                  >
+                    {filter.label}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => deleteFilter(e, filter.id)}
+                    className="ml-1 text-ink-3 hover:text-negative font-bold"
+                    aria-label="Delete filter"
+                  >
+                    &times;
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="mt-2.5 flex justify-end">
+            <button
+              type="button"
+              onClick={saveCurrentFilter}
+              className="inline-flex items-center gap-1 text-[10px] font-semibold text-brand-strong hover:underline"
+            >
+              + {locale === "tr" ? "Mevcut Aramayı Filtre Olarak Kaydet" : "Save Current Search as Filter"}
+            </button>
+          </div>
+        </section>
+
+        <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_minmax(18rem,0.45fr)]">
+          <section aria-label={copy.title}>
+            {filtered.length ? (
+              <div>{filtered.map((job) => <JobCard key={job.id} job={job} />)}</div>
+            ) : (
+              <div className="py-16 text-center">
+                <Search className="mx-auto h-5 w-5 text-ink-3" />
+                <p className="mt-3 text-sm font-semibold text-ink">{copy.noResult}</p>
+                <button type="button" onClick={() => { setQuery(""); setMode("All"); setLevel("All"); setType("All"); setSavedOnly(false); }} className="mt-2 min-h-11 text-xs font-semibold text-brand-strong hover:underline">{copy.clearFilters}</button>
+              </div>
+            )}
+          </section>
+
+          <aside className="xl:sticky xl:top-32 xl:self-start">
+            <div className="surface-subtle p-6">
+              <div className="flex items-center justify-between"><p className="section-label">{copy.strongest}</p><span className="text-[0.625rem] text-ink-3">{copy.sourceDemo}</span></div>
+              {topMatch ? (
+                <>
+                  <div className="mt-4 flex items-end justify-between gap-4">
+                    <div>
+                      <h2 className="text-base font-semibold text-ink">{topMatch.title}</h2>
+                      <p className="mt-1 text-xs text-ink-3">{topMatch.location} · {topMatch.workMode}</p>
+                    </div>
+                    <strong className="metric-number text-3xl font-semibold text-brand-strong">{topFit}%</strong>
+                  </div>
+                  <div className="mt-6 border-t border-line pt-5">
+                    <p className="text-[0.6875rem] font-semibold text-positive">{copy.matched}</p>
+                    <p className="mt-2 text-xs leading-5 text-ink-2">{skillCoverage.join(" · ") || copy.noSkills}</p>
+                  </div>
+                  <div className="mt-5 border-t border-line pt-5">
+                    <p className="text-[0.6875rem] font-semibold text-caution">{copy.missing}</p>
+                    <p className="mt-2 text-xs leading-5 text-ink-2">{missing.join(" · ") || copy.noCriticalGap}</p>
+                  </div>
+                </>
+              ) : (
+                <p className="mt-4 text-sm text-ink-3">{copy.filterHint}</p>
+              )}
+            </div>
+            <p className="mt-4 text-[0.6875rem] leading-5 text-ink-3">{copy.scoreNote}</p>
+          </aside>
+        </div>
+      </>
+    );
+  };
 
   return (
     <main className="product-page">
       <header className="grid gap-6 border-b border-line pb-8 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
-          <p className="page-kicker"><BriefcaseBusiness className="h-3.5 w-3.5" /> {copy.kicker}</p>
-          <h1 className="page-title-compact mt-4">{copy.title}</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-2">{copy.lede}</p>
+          <p className="page-kicker"><BriefcaseBusiness className="h-3.5 w-3.5" /> {copy?.kicker || "İşler"}</p>
+          <h1 className="page-title-compact mt-4">{copy?.title || "İş Fırsatları"}</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-2">{copy?.lede}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setSavedOnly((value) => !value)}
-          className={cn(
-            "inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border px-3 text-xs font-semibold transition-colors",
-            savedOnly ? "border-signal/30 bg-[var(--signal-wash)] text-signal" : "border-line bg-surface text-ink-2 hover:bg-surface-2"
-          )}
-        >
-          <Bookmark className={cn("h-3.5 w-3.5", savedOnly && "fill-current")} /> {copy.saved} {savedJobIds.length ? `(${savedJobIds.length})` : ""}
-        </button>
-      </header>
-
-      {!hasResume && (
-        <section className="mt-6 grid gap-4 border border-info/25 bg-[var(--info-wash)] p-5 sm:grid-cols-[1fr_auto] sm:items-center">
-          <div><h2 className="text-sm font-semibold text-ink">{messages.empty.jobsTitle}</h2><p className="mt-1 text-xs leading-5 text-ink-2">{messages.empty.jobsBody}</p></div>
-          <div className="flex flex-wrap gap-2"><Link href="/forge"><Button variant="primary">{messages.empty.upload}</Button></Link><Button variant="outline" onClick={loadDemoProfile}>{messages.demo.open}</Button></div>
-        </section>
-      )}
-
-      <section className="mt-6 surface-panel p-3">
-        <div className="grid gap-2 lg:grid-cols-[minmax(15rem,1fr)_repeat(3,minmax(9rem,auto))]">
-          <label className="relative">
-            <span className="sr-only">{copy.searchLabel}</span>
-            <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-ink-3" />
-            <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.search} className="pl-9" />
-          </label>
-          <label>
-            <span className="sr-only">{copy.workMode}</span>
-            <select value={mode} onChange={(event) => setMode(event.target.value as WorkMode | "All")} className="h-10 w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]">
-              {modes.map((item) => <option key={item} value={item}>{copy.work} · {labels[item]}</option>)}
-            </select>
-          </label>
-          <label>
-            <span className="sr-only">{copy.seniority}</span>
-            <select value={level} onChange={(event) => setLevel(event.target.value as Seniority | "All")} className="h-10 w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]">
-              {levels.map((item) => <option key={item} value={item}>{copy.level} · {labels[item]}</option>)}
-            </select>
-          </label>
-          <label>
-            <span className="sr-only">{copy.type}</span>
-            <select value={type} onChange={(event) => setType(event.target.value as JobType | "All")} className="h-10 w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]">
-              {types.map((item) => <option key={item} value={item}>{copy.contract} · {labels[item]}</option>)}
-            </select>
-          </label>
-        </div>
-      </section>
-
-      <div className="mt-8 grid gap-10 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
-        <section>
-          <div className="flex items-center justify-between border-b border-line pb-3">
-            <p className="text-xs text-ink-3"><strong className="font-semibold text-ink">{filtered.length}</strong> {copy.resultSuffix}</p>
-            <SlidersHorizontal className="h-4 w-4 text-ink-3" />
-          </div>
-          {filtered.length ? (
-            <div>{filtered.map((job) => <JobCard key={job.id} job={job} />)}</div>
-          ) : (
-            <div className="py-16 text-center">
-              <Search className="mx-auto h-5 w-5 text-ink-3" />
-              <p className="mt-3 text-sm font-semibold text-ink">{copy.noResult}</p>
-              <button type="button" onClick={() => { setQuery(""); setMode("All"); setLevel("All"); setType("All"); setSavedOnly(false); }} className="mt-2 min-h-11 text-xs font-semibold text-brand-strong hover:underline">{copy.clearFilters}</button>
-            </div>
-          )}
-        </section>
-
-        <aside className="xl:sticky xl:top-32 xl:self-start">
-          <div className="surface-subtle p-6">
-            <div className="flex items-center justify-between"><p className="section-label">{copy.strongest}</p><span className="text-[0.625rem] text-ink-3">{copy.sourceDemo}</span></div>
-            {topMatch ? (
-              <>
-                <div className="mt-4 flex items-end justify-between gap-4">
-                  <div>
-                    <h2 className="text-base font-semibold text-ink">{topMatch.title}</h2>
-                    <p className="mt-1 text-xs text-ink-3">{topMatch.location} · {topMatch.workMode}</p>
-                  </div>
-                  <strong className="metric-number text-3xl font-semibold text-brand-strong">{topFit}%</strong>
-                </div>
-                <div className="mt-6 border-t border-line pt-5">
-                  <p className="text-[0.6875rem] font-semibold text-positive">{copy.matched}</p>
-                  <p className="mt-2 text-xs leading-5 text-ink-2">{skillCoverage.join(" · ") || copy.noSkills}</p>
-                </div>
-                <div className="mt-5 border-t border-line pt-5">
-                  <p className="text-[0.6875rem] font-semibold text-caution">{copy.missing}</p>
-                  <p className="mt-2 text-xs leading-5 text-ink-2">{missing.join(" · ") || copy.noCriticalGap}</p>
-                </div>
-              </>
-            ) : (
-              <p className="mt-4 text-sm text-ink-3">{copy.filterHint}</p>
+        {mounted && (
+          <button
+            type="button"
+            onClick={() => setSavedOnly((value) => !value)}
+            className={cn(
+              "inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border px-3 text-xs font-semibold transition-colors",
+              savedOnly ? "border-signal/30 bg-[var(--signal-wash)] text-signal" : "border-line bg-surface text-ink-2 hover:bg-surface-2"
             )}
-          </div>
-          <p className="mt-4 text-[0.6875rem] leading-5 text-ink-3">{copy.scoreNote}</p>
-        </aside>
-      </div>
+          >
+            <Bookmark className={cn("h-3.5 w-3.5", savedOnly && "fill-current")} /> {copy.saved} {savedJobIds.length ? `(${savedJobIds.length})` : ""}
+          </button>
+        )}
+      </header>
+      {renderContent()}
     </main>
   );
 }

@@ -32,7 +32,7 @@ export async function updateSession(request: NextRequest) {
   // This refreshes and verifies the token. Authorization still happens in pages/routes.
   try {
     const { data } = await supabase.auth.getClaims();
-    if (!data?.claims && isProtectedWorkspacePath(request.nextUrl.pathname)) {
+    if (!data?.claims && request.nextUrl.pathname.startsWith("/account")) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/login";
       loginUrl.search = "";
@@ -42,7 +42,7 @@ export async function updateSession(request: NextRequest) {
       return redirectResponse;
     }
   } catch {
-    if (isProtectedWorkspacePath(request.nextUrl.pathname)) {
+    if (request.nextUrl.pathname.startsWith("/account")) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/login";
       loginUrl.search = "";

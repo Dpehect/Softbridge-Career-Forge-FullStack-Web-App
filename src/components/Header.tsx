@@ -16,6 +16,8 @@ import {
   Sun,
   Trash2,
   X,
+  Home,
+  MoreHorizontal,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -46,6 +48,7 @@ export function Header() {
   const profileRef = useRef<HTMLDivElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const { locale, messages } = useMessages();
   const {
     resume,
@@ -87,6 +90,7 @@ export function Header() {
   // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
+    setMoreOpen(false);
   }, [pathname]);
 
   const hasResume = Boolean(
@@ -257,70 +261,162 @@ export function Header() {
 
             <button
               type="button"
-              onClick={() => setMobileOpen((value) => !value)}
+              onClick={() => setMoreOpen((value) => !value)}
               className="grid h-11 w-11 place-items-center rounded-[var(--radius-control)] text-ink xl:hidden"
-              aria-label={mobileOpen ? messages.header.closeMenu : messages.header.openMenu}
-              aria-expanded={mobileOpen}
+              aria-label={moreOpen ? messages.header.closeMenu : messages.header.openMenu}
+              aria-expanded={moreOpen}
             >
-              {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              {moreOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </button>
           </div>
         </div>
-
-        {mobileOpen && (
-          <nav className="border-t border-line bg-surface px-4 py-3 xl:hidden" aria-label={messages.nav.mobile}>
-            <div className="grid grid-cols-2 gap-1">
-              {NAV_ITEMS.map((item) => {
-                const Icon = item.icon;
-                const active = pathname === item.path || pathname.startsWith(`${item.path}/`);
-                return (
-                  <Link
-                    key={item.path}
-                    href={item.path}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      "flex items-center gap-2 rounded-[var(--radius-control)] px-3 py-2.5 text-sm",
-                      active ? "bg-[var(--accent-wash)] text-brand-strong font-medium" : "text-ink-2 hover:bg-surface-2"
-                    )}
-                    aria-current={active ? "page" : undefined}
-                  >
-                    <Icon className="h-4 w-4" /> {messages.nav[item.label]}
-                  </Link>
-                );
-              })}
-            </div>
-            <div className="mt-2 border-t border-line pt-2">
-              <AuthControl variant="mobile" onNavigate={() => setMobileOpen(false)} />
-            </div>
-          </nav>
-        )}
       </motion.header>
 
-      {/* Mobile bottom navigation — 4 primary items + overflow */}
+      {/* Fullscreen Mobile Drawer Menu */}
+      {moreOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-md xl:hidden">
+          <div className="flex h-16 items-center justify-between border-b border-line px-4">
+            <span className="text-[0.9375rem] font-semibold text-ink">
+              {locale === "tr" ? "Menü" : "Menu"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setMoreOpen(false)}
+              className="grid h-11 w-11 place-items-center rounded-[var(--radius-control)] text-ink transition-colors hover:bg-surface-2"
+              aria-label="Close menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+            <div className="grid gap-2">
+              <Link
+                href="/forge"
+                onClick={() => setMoreOpen(false)}
+                className={cn(
+                  "flex min-h-[48px] items-center gap-3 rounded-lg border px-4 text-sm font-medium transition-colors",
+                  pathname === "/forge" ? "border-brand bg-[var(--accent-wash)] text-brand-strong" : "border-line bg-surface text-ink hover:bg-surface-2"
+                )}
+              >
+                <ScanLine className="h-5 w-5" /> {messages.nav.analysis}
+              </Link>
+              <Link
+                href="/coach"
+                onClick={() => setMoreOpen(false)}
+                className={cn(
+                  "flex min-h-[48px] items-center gap-3 rounded-lg border px-4 text-sm font-medium transition-colors",
+                  pathname === "/coach" ? "border-brand bg-[var(--accent-wash)] text-brand-strong" : "border-line bg-surface text-ink hover:bg-surface-2"
+                )}
+              >
+                <MessagesSquare className="h-5 w-5" /> {messages.nav.coach}
+              </Link>
+              <Link
+                href="/paths"
+                onClick={() => setMoreOpen(false)}
+                className={cn(
+                  "flex min-h-[48px] items-center gap-3 rounded-lg border px-4 text-sm font-medium transition-colors",
+                  pathname === "/paths" ? "border-brand bg-[var(--accent-wash)] text-brand-strong" : "border-line bg-surface text-ink hover:bg-surface-2"
+                )}
+              >
+                <Route className="h-5 w-5" /> {messages.nav.roadmap}
+              </Link>
+              <Link
+                href="/contact"
+                onClick={() => setMoreOpen(false)}
+                className={cn(
+                  "flex min-h-[48px] items-center gap-3 rounded-lg border px-4 text-sm font-medium transition-colors",
+                  pathname === "/contact" ? "border-brand bg-[var(--accent-wash)] text-brand-strong" : "border-line bg-surface text-ink hover:bg-surface-2"
+                )}
+              >
+                <MessagesSquare className="h-5 w-5" /> {locale === "tr" ? "İletişim & Destek" : "Contact & Support"}
+              </Link>
+            </div>
+
+            <div className="border-t border-line pt-5">
+              <AuthControl variant="mobile" onNavigate={() => setMoreOpen(false)} />
+            </div>
+
+            <div className="border-t border-line pt-5">
+              <p className="section-label mb-3">{locale === "tr" ? "Tercihler" : "Preferences"}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setLang(locale === "tr" ? "en" : "tr")}
+                  className="flex min-h-[48px] items-center justify-center gap-2 rounded-lg border border-line bg-surface px-4 text-xs font-semibold text-ink hover:bg-surface-2"
+                >
+                  <Languages className="h-4.5 w-4.5 text-ink-2" />
+                  <span>{locale.toUpperCase()}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="flex min-h-[48px] items-center justify-center gap-2 rounded-lg border border-line bg-surface px-4 text-xs font-semibold text-ink hover:bg-surface-2"
+                >
+                  {theme === "dark" ? <Sun className="h-4.5 w-4.5 text-ink-2" /> : <Moon className="h-4.5 w-4.5 text-ink-2" />}
+                  <span>{theme === "dark" ? "Light" : "Dark"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile bottom navigation — exactly 4 primary items: Home, Resume, Jobs, More */}
       <nav
         className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] xl:hidden"
         aria-label={messages.nav.quick}
       >
         <div className="grid h-16 grid-cols-4 px-1">
-          {NAV_ITEMS.slice(0, 4).map((item) => {
-            const Icon = item.icon;
-            const active = pathname === item.path || pathname.startsWith(`${item.path}/`);
-            return (
-              <Link
-                key={item.path}
-                href={item.path}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "flex min-w-0 flex-col items-center justify-center gap-1 text-[0.625rem] font-medium transition-colors",
-                  active ? "text-brand-strong" : "text-ink-3 hover:text-ink-2"
-                )}
-                aria-current={active ? "page" : undefined}
-              >
-                <Icon className="h-5 w-5" />
-                <span className="truncate">{messages.nav[item.shortLabel]}</span>
-              </Link>
-            );
-          })}
+          <Link
+            href="/dashboard"
+            className={cn(
+              "flex min-w-0 flex-col items-center justify-center gap-1 text-[0.625rem] font-medium transition-colors min-h-[44px]",
+              pathname === "/dashboard" ? "text-brand-strong" : "text-ink-3 hover:text-ink-2"
+            )}
+            aria-current={pathname === "/dashboard" ? "page" : undefined}
+          >
+            <Home className="h-5 w-5" />
+            <span className="truncate">{locale === "tr" ? "Ana Sayfa" : "Home"}</span>
+          </Link>
+
+          <Link
+            href="/resume"
+            className={cn(
+              "flex min-w-0 flex-col items-center justify-center gap-1 text-[0.625rem] font-medium transition-colors min-h-[44px]",
+              pathname === "/resume" ? "text-brand-strong" : "text-ink-3 hover:text-ink-2"
+            )}
+            aria-current={pathname === "/resume" ? "page" : undefined}
+          >
+            <FileText className="h-5 w-5" />
+            <span className="truncate">{locale === "tr" ? "CV" : "Resume"}</span>
+          </Link>
+
+          <Link
+            href="/jobs"
+            className={cn(
+              "flex min-w-0 flex-col items-center justify-center gap-1 text-[0.625rem] font-medium transition-colors min-h-[44px]",
+              pathname === "/jobs" ? "text-brand-strong" : "text-ink-3 hover:text-ink-2"
+            )}
+            aria-current={pathname === "/jobs" ? "page" : undefined}
+          >
+            <BriefcaseBusiness className="h-5 w-5" />
+            <span className="truncate">{locale === "tr" ? "İşler" : "Jobs"}</span>
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            className={cn(
+              "flex min-w-0 flex-col items-center justify-center gap-1 text-[0.625rem] font-medium transition-colors min-h-[44px]",
+              moreOpen ? "text-brand-strong" : "text-ink-3 hover:text-ink-2"
+            )}
+            aria-expanded={moreOpen}
+            aria-haspopup="true"
+          >
+            <Menu className="h-5 w-5" />
+            <span className="truncate">{locale === "tr" ? "Daha Fazla" : "More"}</span>
+          </button>
         </div>
       </nav>
     </>

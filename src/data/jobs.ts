@@ -1,6 +1,6 @@
 import type { Job } from "@/types";
 
-export const jobs: Job[] = [
+const rawJobs: Job[] = [
   {
     id: "job-1",
     title: "Senior Frontend Engineer",
@@ -279,6 +279,14 @@ export const jobs: Job[] = [
     applicants: 19,
   },
 ];
+
+export const jobs: Job[] = rawJobs.map((job) => ({
+  ...job,
+  isDemo: true,
+  source: "Demo / CareerForge",
+  expirationDate: "2026-12-31T23:59:59.000Z",
+  applicationUrl: `https://careerforge.dev/apply/${job.id}`,
+}));
 
 export function getJob(id: string) {
   return jobs.find((j) => j.id === id);

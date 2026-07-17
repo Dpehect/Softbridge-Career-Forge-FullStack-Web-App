@@ -310,20 +310,46 @@ export function useCoachAI() {
     return questions;
   }, [cvContext, lang]);
 
+  const [modelState, setModelState] = useState<"AI active" | "Local fallback" | "Unavailable">("Local fallback");
+
   // ── Ask Coach ─────────────────────────────────────────────────────────────
   const askCoach = async (text: string) => {
     const query = text.trim();
     if (!query || loading) return;
 
-    addCoachMessage({ role: "user", content: query });
+    // Add user message to UI first
+    const newUserMsg = { role: "user" as const, content: query };
+    addCoachMessage(newUserMsg);
     setLoading(true);
 
-    // Simulate network latency — feels real
-    await new Promise((r) => setTimeout(r, 800 + Math.random() * 600));
+    try {
+      const response = await fetch("/api/coach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [...coachMessages, newUserMsg],
+          cvContext,
+          lang,
+        }),
+      });
 
+      if (response.ok) {
+        const data = await response.json();
+        if (data.fallback === false && data.reply) {
+          addCoachMessage({ role: "assistant", content: data.reply });
+          setModelState("AI active");
+          setLoading(false);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("Failed calling Gemini API. Falling back to local coach.", e);
+    }
+
+    // Local Fallback Mode
     const reply = generateCoachReply(query);
     addCoachMessage({ role: "assistant", content: reply });
-
+    setModelState("Local fallback");
     setLoading(false);
   };
 
@@ -344,5 +370,6 @@ export function useCoachAI() {
     clearCoach,
     coachMessages,
     hasCv,
+    modelState,
   };
 }

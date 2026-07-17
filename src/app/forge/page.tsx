@@ -93,18 +93,17 @@ export default function ForgePage() {
     toast.success(copy.matchReady);
   };
 
-  if (!mounted) {
-    return <div className="grid min-h-[60vh] place-items-center" role="status"><span className="h-6 w-6 animate-spin rounded-full border-2 border-line-strong border-t-brand" /><span className="sr-only">{messages.common.loading}</span></div>;
-  }
+  const renderContent = () => {
+    if (!mounted) {
+      return (
+        <div className="space-y-8 mt-8">
+          <div className="h-64 animate-pulse rounded bg-surface-2 border border-line" />
+        </div>
+      );
+    }
 
-  return (
-    <main className="product-page">
-      <header className="grid gap-7 border-b border-line pb-9 lg:grid-cols-[1fr_auto] lg:items-end">
-        <div><p className="page-kicker"><FileSearch className="h-3.5 w-3.5" /> {copy.kicker}</p><h1 className="page-title-compact mt-4 max-w-3xl">{copy.title}</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-ink-2">{copy.lede}</p></div>
-        <div className="flex items-center gap-2 text-xs font-semibold text-positive"><ShieldCheck className="h-4 w-4" /> {copy.local}</div>
-      </header>
-
-      {!forgeParsedCv ? (
+    if (!forgeParsedCv) {
+      return (
         <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.55fr)]">
           <section className="surface-panel p-6 sm:p-8" aria-labelledby="empty-analysis-title">
             <h2 id="empty-analysis-title" className="text-xl font-semibold text-ink">{copy.emptyTitle}</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-ink-2">{copy.emptyBody}</p>
@@ -116,12 +115,15 @@ export default function ForgePage() {
           </section>
           <aside className="surface-subtle p-6"><p className="section-label">{locale === "tr" ? "Veri sınırları" : "Data boundaries"}</p><p className="mt-4 text-sm leading-6 text-ink-2">{copy.privacy}</p><div className="mt-7 border-t border-line pt-5"><p className="text-xs font-semibold text-ink">{messages.ats.explanation}</p><ul className="mt-3 space-y-2 text-xs text-ink-3">{[messages.ats.structure, messages.ats.completeness, messages.ats.experience, messages.ats.keywords, messages.ats.impact, messages.ats.contact].map((item) => <li key={item} className="flex gap-2"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-positive" />{item}</li>)}</ul></div></aside>
         </div>
-      ) : (
-        <>
-          <section className="mt-7 flex flex-col gap-4 border border-line bg-surface p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div><p className="section-label">{copy.loaded}</p><h2 className="mt-2 text-lg font-semibold text-ink">{forgeParsedCv.name}</h2><p className="mt-1 text-xs text-ink-3">{forgeParsedCv.title} · {forgeParsedCv.skills.length} {locale === "tr" ? "beceri" : "skills"}</p></div>
-            <div className="flex flex-wrap gap-2"><FilePickButton label={copy.replace} silentSuccess onText={(text, fileName) => parseResume(text, fileName)} /><Link href="/resume" className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] bg-brand px-4 text-sm font-semibold text-[var(--action-primary-ink)]">{copy.edit} <ArrowRight className="h-4 w-4" /></Link><Button size="icon" variant="ghost" aria-label={copy.clear} title={copy.clear} onClick={() => { clearForgeCv(); setParseError(null); }}><RotateCcw className="h-4 w-4" /></Button></div>
-          </section>
+      );
+    }
+
+    return (
+      <>
+        <section className="mt-7 flex flex-col gap-4 border border-line bg-surface p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div><p className="section-label">{copy.loaded}</p><h2 className="mt-2 text-lg font-semibold text-ink">{forgeParsedCv.name}</h2><p className="mt-1 text-xs text-ink-3">{forgeParsedCv.title} · {forgeParsedCv.skills.length} {locale === "tr" ? "beceri" : "skills"}</p></div>
+          <div className="flex flex-wrap gap-2"><FilePickButton label={copy.replace} silentSuccess onText={(text, fileName) => parseResume(text, fileName)} /><Link href="/resume" className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] bg-brand px-4 text-sm font-semibold text-[var(--action-primary-ink)]">{copy.edit} <ArrowRight className="h-4 w-4" /></Link><Button size="icon" variant="ghost" aria-label={copy.clear} title={copy.clear} onClick={() => { clearForgeCv(); setParseError(null); }}><RotateCcw className="h-4 w-4" /></Button></div>
+        </section>
 
           <nav className="mt-7 flex overflow-x-auto border-b border-line" aria-label={copy.kicker}>{([{ id: "analysis", label: copy.analysis, icon: FileSearch }, { id: "match", label: copy.match, icon: Target }, { id: "history", label: copy.history, icon: History }] as const).map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => setView(id)} className={cn("inline-flex min-h-11 items-center gap-2 border-b-2 px-4 text-xs font-semibold", view === id ? "border-brand text-ink" : "border-transparent text-ink-3 hover:text-ink")} aria-current={view === id ? "page" : undefined}><Icon className="h-4 w-4" />{label}</button>)}</nav>
 
@@ -147,8 +149,17 @@ export default function ForgePage() {
           )}
 
           <p className="mt-10 border-t border-line pt-5 text-[0.6875rem] leading-5 text-ink-3">{copy.privacy}</p>
-        </>
-      )}
+      </>
+    );
+  };
+
+  return (
+    <main className="product-page">
+      <header className="grid gap-7 border-b border-line pb-9 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div><p className="page-kicker"><FileSearch className="h-3.5 w-3.5" /> {copy?.kicker || "Analiz"}</p><h1 className="page-title-compact mt-4 max-w-3xl">{copy?.title || "CV Analiz"}</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-ink-2">{copy?.lede}</p></div>
+        <div className="flex items-center gap-2 text-xs font-semibold text-positive"><ShieldCheck className="h-4 w-4" /> {copy?.local || "Yerel"}</div>
+      </header>
+      {renderContent()}
     </main>
   );
 }

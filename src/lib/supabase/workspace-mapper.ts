@@ -29,6 +29,53 @@ const resumeEducationSchema = z.object({
   year: z.string(),
 });
 
+const resumeProjectSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  url: z.string().optional(),
+});
+
+const resumeCertificationSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  issuer: z.string(),
+  date: z.string(),
+});
+
+const resumeLanguageSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  level: z.string(),
+});
+
+const resumeAwardSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  issuer: z.string(),
+  date: z.string(),
+});
+
+const resumePublicationSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  publisher: z.string(),
+  date: z.string(),
+  url: z.string().optional(),
+});
+
+const resumeSocialLinkSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  url: z.string(),
+});
+
+const resumeCustomizationSchema = z.object({
+  template: z.enum(["classic", "modern", "minimal"]).default("classic"),
+  fontFamily: z.string().default("sans"),
+  primaryColor: z.string().default("brand"),
+});
+
 const resumeSchema = z.object({
   fullName: z.string(),
   headline: z.string(),
@@ -40,6 +87,15 @@ const resumeSchema = z.object({
   experience: z.array(resumeExperienceSchema),
   education: z.array(resumeEducationSchema),
   photoDataUrl: z.string().nullable().optional(),
+  website: z.string().optional(),
+  projects: z.array(resumeProjectSchema).optional().default([]),
+  certifications: z.array(resumeCertificationSchema).optional().default([]),
+  languages: z.array(resumeLanguageSchema).optional().default([]),
+  awards: z.array(resumeAwardSchema).optional().default([]),
+  publications: z.array(resumePublicationSchema).optional().default([]),
+  socialLinks: z.array(resumeSocialLinkSchema).optional().default([]),
+  customization: resumeCustomizationSchema.optional(),
+  sectionVisibility: z.record(z.string(), z.boolean()).optional(),
 });
 
 const parsedExperienceSchema = z.object({
@@ -109,7 +165,7 @@ const lastAnalysisMetaSchema = z.object({
   targetTitle: z.string().optional(),
 });
 
-const resumeSectionOrderSchema = z.array(z.enum(["profile", "experience", "skills", "education"]));
+const resumeSectionOrderSchema = z.array(z.enum(["profile", "experience", "skills", "education", "projects", "certifications", "languages", "awards", "publications", "socialLinks"]));
 const stringArraySchema = z.array(z.string());
 const forgeToneSchema = z.enum(["Profesyonel", "Girişimci", "Teknik"]);
 
@@ -131,6 +187,7 @@ export interface WorkspaceStateSnapshot {
   forgeBackups: CvBackup[];
   savedJobIds: string[];
   appliedJobIds: string[];
+  jobStages: Record<string, string>;
   enrolledPathIds: string[];
   completedModuleIds: string[];
   lastAnalysisMeta: CareerState["lastAnalysisMeta"];
@@ -150,6 +207,30 @@ export function createEmptyResume(): ResumeProfile {
     experience: [],
     education: [],
     photoDataUrl: null,
+    website: "",
+    projects: [],
+    certifications: [],
+    languages: [],
+    awards: [],
+    publications: [],
+    socialLinks: [],
+    customization: {
+      template: "classic",
+      fontFamily: "sans",
+      primaryColor: "brand",
+    },
+    sectionVisibility: {
+      profile: true,
+      experience: true,
+      skills: true,
+      education: true,
+      projects: true,
+      certifications: true,
+      languages: true,
+      awards: true,
+      publications: true,
+      socialLinks: true,
+    },
   };
 }
 
@@ -163,7 +244,7 @@ export function createEmptyHydrationData(
     theme: preferences.theme,
     careerGoalId: null,
     resume: createEmptyResume(),
-    resumeSectionOrder: ["profile", "experience", "skills", "education"],
+    resumeSectionOrder: ["profile", "experience", "skills", "education", "projects", "certifications", "languages", "awards", "publications", "socialLinks"],
     coachMessages: [],
     forgeCvText: "",
     forgeJdText: "",
@@ -174,6 +255,7 @@ export function createEmptyHydrationData(
     forgeBackups: [],
     savedJobIds: [],
     appliedJobIds: [],
+    jobStages: {},
     enrolledPathIds: [],
     completedModuleIds: [],
     lastAnalysisMeta: null,
@@ -201,7 +283,7 @@ function uniqueStrings(value: unknown): string[] {
 function normalizeSectionOrder(value: unknown): ResumeSectionId[] {
   const parsed = parseOr(resumeSectionOrderSchema, value, []);
   const valid = [...new Set(parsed)];
-  const defaults: ResumeSectionId[] = ["profile", "experience", "skills", "education"];
+  const defaults: ResumeSectionId[] = ["profile", "experience", "skills", "education", "projects", "certifications", "languages", "awards", "publications", "socialLinks"];
   return [...valid, ...defaults.filter((item) => !valid.includes(item))];
 }
 
@@ -293,11 +375,29 @@ export function createWorkspaceUpsertFromState(
     forge_history: toJson(history),
     forge_backups: toJson(backups),
     saved_job_ids: toJson(uniqueStrings(state.savedJobIds)),
-    applied_job_ids: toJson(uniqueStrings(state.appliedJobIds)),
+    applied_job_ids: toJson(
+      uniqueStrings(state.appliedJobIds).map((id) => {
+        const stage = state.jobStages?.[id] || "applied";
+        return `${id}:${stage}`;
+      })
+    ),
     enrolled_path_ids: toJson(uniqueStrings(state.enrolledPathIds)),
     completed_module_ids: toJson(uniqueStrings(state.completedModuleIds)),
     last_analysis_meta: state.lastAnalysisMeta ? toJson(state.lastAnalysisMeta) : null,
   };
+}
+
+function parseAppliedJobs(rawIds: string[]): { appliedJobIds: string[]; jobStages: Record<string, string> } {
+  const appliedJobIds: string[] = [];
+  const jobStages: Record<string, string> = {};
+  rawIds.forEach((item) => {
+    const parts = item.split(":");
+    const id = parts[0];
+    const stage = parts[1] || "applied";
+    appliedJobIds.push(id);
+    jobStages[id] = stage;
+  });
+  return { appliedJobIds, jobStages };
 }
 
 export function createStoreHydrationData(
@@ -334,7 +434,7 @@ export function createStoreHydrationData(
     forgeHistory: parseOr(z.array(forgeHistorySchema), workspace.forge_history, []),
     forgeBackups: normalizeBackups(workspace.forge_backups),
     savedJobIds: uniqueStrings(workspace.saved_job_ids),
-    appliedJobIds: uniqueStrings(workspace.applied_job_ids),
+    ...parseAppliedJobs(uniqueStrings(workspace.applied_job_ids)),
     enrolledPathIds: uniqueStrings(workspace.enrolled_path_ids),
     completedModuleIds: uniqueStrings(workspace.completed_module_ids),
     lastAnalysisMeta: parseNullable(lastAnalysisMetaSchema, workspace.last_analysis_meta),
@@ -365,7 +465,7 @@ export function createLegacyHydrationData(
     forgeHistory: parseOr(z.array(forgeHistorySchema), value.forgeHistory, []),
     forgeBackups: normalizeBackups(value.forgeBackups),
     savedJobIds: uniqueStrings(value.savedJobIds),
-    appliedJobIds: uniqueStrings(value.appliedJobIds),
+    ...parseAppliedJobs(uniqueStrings(value.appliedJobIds)),
     enrolledPathIds: uniqueStrings(value.enrolledPathIds),
     completedModuleIds: uniqueStrings(value.completedModuleIds),
     lastAnalysisMeta: parseNullable(lastAnalysisMetaSchema, value.lastAnalysisMeta),

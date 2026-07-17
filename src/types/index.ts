@@ -32,6 +32,10 @@ export interface Job {
   postedAt: string;
   featured?: boolean;
   applicants: number;
+  isDemo?: boolean;
+  source?: string;
+  expirationDate?: string;
+  applicationUrl?: string;
 }
 
 export interface CareerPath {
@@ -66,6 +70,62 @@ export interface ResumeProfile {
   experience: ResumeExperience[];
   education: ResumeEducation[];
   photoDataUrl?: string | null;
+  website?: string;
+  projects?: ResumeProject[];
+  certifications?: ResumeCertification[];
+  languages?: ResumeLanguage[];
+  awards?: ResumeAward[];
+  publications?: ResumePublication[];
+  socialLinks?: ResumeSocialLink[];
+  customization?: ResumeCustomization;
+  sectionVisibility?: Record<string, boolean>;
+}
+
+export interface ResumeProject {
+  id: string;
+  title: string;
+  description: string;
+  url?: string;
+}
+
+export interface ResumeCertification {
+  id: string;
+  name: string;
+  issuer: string;
+  date: string;
+}
+
+export interface ResumeLanguage {
+  id: string;
+  name: string;
+  level: string;
+}
+
+export interface ResumeAward {
+  id: string;
+  title: string;
+  issuer: string;
+  date: string;
+}
+
+export interface ResumePublication {
+  id: string;
+  title: string;
+  publisher: string;
+  date: string;
+  url?: string;
+}
+
+export interface ResumeSocialLink {
+  id: string;
+  label: string;
+  url: string;
+}
+
+export interface ResumeCustomization {
+  template: "classic" | "modern" | "minimal";
+  fontFamily: string;
+  primaryColor: string;
 }
 
 export interface ResumeExperience {

@@ -20,10 +20,26 @@ export function computeJobMatch(userSkills: string[], jobTags: string[]): number
 export function JobCard({ job }: { job: Job; index?: number }) {
   const { locale } = useMessages();
   const company = getLocalizedCompany(job.companyId, locale);
-  const { resume, savedJobIds, appliedJobIds, toggleSaveJob } = useCareerStore();
+  const { resume, savedJobIds, appliedJobIds, jobStages, toggleSaveJob } = useCareerStore();
   const saved = savedJobIds.includes(job.id);
   const applied = appliedJobIds.includes(job.id);
   const match = computeJobMatch(resume.skills, job.tags);
+  const stage = jobStages?.[job.id] || "applied";
+  const stageLabels: Record<string, string> = locale === "tr" ? {
+    applied: "Başvuruldu",
+    interviewing: "Mülakat",
+    technical: "Teknik Değerlendirme",
+    offer: "Teklif Alındı",
+    rejected: "Reddedildi",
+  } : {
+    applied: "Applied",
+    interviewing: "Interviewing",
+    technical: "Technical",
+    offer: "Offer",
+    rejected: "Rejected",
+  };
+  const stageLabel = stageLabels[stage] || "Applied";
+  
   const copy = locale === "tr" ? {
     featured: "Öne çıkan",
     applied: "Başvuruldu",
@@ -59,8 +75,9 @@ export function JobCard({ job }: { job: Job; index?: number }) {
           <Link href={`/jobs/${job.id}`} className="font-semibold text-ink before:absolute before:inset-0">
             {job.title}
           </Link>
+          {job.isDemo && <span className="rounded bg-surface-3 px-1.5 py-0.5 text-[0.625rem] font-mono text-ink-3 uppercase border border-line">{locale === "tr" ? "Demo" : "Demo Data"}</span>}
           {job.featured && <span className="rounded-full bg-[var(--accent-wash)] px-2 py-0.5 text-[0.625rem] font-semibold text-brand-strong">{copy.featured}</span>}
-          {applied && <span className="rounded-full bg-[var(--positive-wash)] px-2 py-0.5 text-[0.625rem] font-semibold text-positive">{copy.applied}</span>}
+          {applied && <span className={cn("rounded-full px-2 py-0.5 text-[0.625rem] font-semibold", stage === "rejected" ? "bg-[var(--negative-wash)] text-negative" : stage === "offer" ? "bg-[var(--positive-wash)] text-positive" : "bg-[var(--accent-wash)] text-brand-strong")}>{stageLabel}</span>}
         </div>
         <p className="mt-1 text-xs text-ink-3">{company?.name} · {copy.type[job.type]}</p>
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.6875rem] text-ink-3">

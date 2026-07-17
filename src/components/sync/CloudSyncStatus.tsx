@@ -10,6 +10,7 @@ import { useCareerStore, type CloudSyncStatus as SyncStatus } from "@/store/useC
 import { cn } from "@/lib/utils";
 
 const icons: Record<SyncStatus, typeof Cloud> = {
+  local: CloudOff,
   idle: Cloud,
   loading: LoaderCircle,
   saving: LoaderCircle,
@@ -41,23 +42,25 @@ export function CloudSyncStatus({ className }: { className?: string }) {
   })));
   const isTr = lang === "tr";
   const labels: Record<SyncStatus, string> = isTr ? {
-    idle: "Kaydedilmeyi bekliyor",
-    loading: "Çalışma alanı yükleniyor",
-    saving: "Kaydediliyor",
-    saved: "Buluta kaydedildi",
-    offline: "Çevrimdışı, değişiklikler bekliyor",
-    error: "Senkronizasyon başarısız",
+    local: "Sadece yerel (Giriş yapılmadı)",
+    idle: "Eşitlenmeyi bekliyor",
+    loading: "Eşitleniyor...",
+    saving: "Eşitleniyor...",
+    saved: "Bulutla eşitlendi",
+    offline: "Çevrimdışı",
+    error: "Eşitleme başarısız",
     conflict: "Yerel veri çakışması",
-    demo: "Demo verileri eşitlenmez",
+    demo: "Demo sürümü (Eşitlenmez)",
   } : {
-    idle: "Waiting to save",
-    loading: "Loading workspace",
-    saving: "Saving",
-    saved: "Saved to cloud",
-    offline: "Offline, changes waiting",
+    local: "Local only (Not signed in)",
+    idle: "Waiting to sync",
+    loading: "Syncing...",
+    saving: "Syncing...",
+    saved: "Synced to cloud",
+    offline: "Offline",
     error: "Sync failed",
     conflict: "Local data conflict",
-    demo: "Demo data is not synced",
+    demo: "Demo mode (Not synced)",
   };
   const Icon = icons[cloudStatus];
   const isAnimated = cloudStatus === "loading" || cloudStatus === "saving";

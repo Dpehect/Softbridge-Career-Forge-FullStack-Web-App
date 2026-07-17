@@ -25,6 +25,7 @@ export function parsedToResume(cv: ParsedCV): ResumeProfile {
     summary: cv.summary || "",
     skills: cv.skills || [],
     photoDataUrl: cv.photoDataUrl || null,
+    website: "",
     experience: (cv.experience || []).map((e, i) => ({
       id: `exp-${Date.now()}-${i}`,
       role: e.position,
@@ -39,6 +40,29 @@ export function parsedToResume(cv: ParsedCV): ResumeProfile {
       degree: e.degree,
       year: e.year,
     })),
+    projects: [],
+    certifications: [],
+    languages: [],
+    awards: [],
+    publications: [],
+    socialLinks: [],
+    customization: {
+      template: "classic",
+      fontFamily: "sans",
+      primaryColor: "brand",
+    },
+    sectionVisibility: {
+      profile: true,
+      experience: true,
+      skills: true,
+      education: true,
+      projects: true,
+      certifications: true,
+      languages: true,
+      awards: true,
+      publications: true,
+      socialLinks: true,
+    },
   };
 }
 
@@ -89,7 +113,7 @@ export function resumeToParsed(resume: ResumeProfile): ParsedCV {
 
 const defaultResume: ResumeProfile = emptyResume();
 
-export type ResumeSectionId = "profile" | "experience" | "skills" | "education";
+export type ResumeSectionId = "profile" | "experience" | "skills" | "education" | "projects" | "certifications" | "languages" | "awards" | "publications" | "socialLinks";
 
 function coachWelcome(lang: Locale, reset = false): CoachMessage {
   return {
@@ -106,13 +130,14 @@ function coachWelcome(lang: Locale, reset = false): CoachMessage {
   };
 }
 
-export type CloudSyncStatus = "idle" | "loading" | "saving" | "saved" | "offline" | "error" | "conflict" | "demo";
+export type CloudSyncStatus = "local" | "idle" | "loading" | "saving" | "saved" | "offline" | "error" | "conflict" | "demo";
 
 export interface CareerState {
   profileFullName: string;
   profileAvatarPath: string | null;
   savedJobIds: string[];
   appliedJobIds: string[];
+  jobStages: Record<string, string>;
   enrolledPathIds: string[];
   completedModuleIds: string[];
   isDemoMode: boolean;
@@ -170,6 +195,7 @@ export interface CareerState {
   setTheme: (theme: "light" | "dark") => void;
   toggleSaveJob: (id: string) => void;
   applyToJob: (id: string) => void;
+  updateJobStage: (id: string, stage: string) => void;
   enrollPath: (id: string) => void;
   toggleModule: (id: string) => void;
   updateResume: (patch: Partial<ResumeProfile>) => void;
@@ -221,13 +247,14 @@ export const useCareerStore = create<CareerState>()(
       setTheme: (theme) => set((state) => ({ theme, ...cloudMutation(state) })),
       savedJobIds: [],
       appliedJobIds: [],
+      jobStages: {},
       enrolledPathIds: [],
       completedModuleIds: [],
       isDemoMode: false,
       resume: defaultResume,
       resumePast: [],
       resumeFuture: [],
-      resumeSectionOrder: ["profile", "experience", "skills", "education"],
+      resumeSectionOrder: ["profile", "experience", "skills", "education", "projects", "certifications", "languages", "awards", "publications", "socialLinks"],
       coachMessages: [coachWelcome("tr")],
       forgeCvText: "",
       forgeJdText: "",
@@ -239,7 +266,7 @@ export const useCareerStore = create<CareerState>()(
       cloudUserId: null,
       cloudHydrated: false,
       cloudDirty: false,
-      cloudStatus: "idle",
+      cloudStatus: "local",
       cloudError: null,
       cloudLastSyncedAt: null,
       cloudChangeVersion: 0,
@@ -300,7 +327,7 @@ export const useCareerStore = create<CareerState>()(
           cloudUserId: null,
           cloudHydrated: false,
           cloudDirty: false,
-          cloudStatus: "idle",
+          cloudStatus: "local",
           cloudError: null,
           cloudLastSyncedAt: null,
           cloudReloadVersion: cloudReloadVersion + 1,
@@ -325,11 +352,19 @@ export const useCareerStore = create<CareerState>()(
         }));
       },
       applyToJob: (id) => {
-        const { appliedJobIds, savedJobIds } = get();
+        const { appliedJobIds, savedJobIds, jobStages } = get();
         if (appliedJobIds.includes(id)) return;
         set((state) => ({
           appliedJobIds: [...appliedJobIds, id],
           savedJobIds: savedJobIds.includes(id) ? savedJobIds : [...savedJobIds, id],
+          jobStages: { ...jobStages, [id]: "applied" },
+          ...cloudMutation(state),
+        }));
+      },
+      updateJobStage: (id, stage) => {
+        const { jobStages } = get();
+        set((state) => ({
+          jobStages: { ...jobStages, [id]: stage },
           ...cloudMutation(state),
         }));
       },
