@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BriefcaseBusiness,
-  ChevronDown,
   FileDown,
   FileText,
   LayoutDashboard,
@@ -24,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { resumeToParsed, useCareerStore } from "@/store/useCareerStore";
 import { exportCvAsPdf } from "@/lib/forge";
 import { JourneyStepper } from "@/components/JourneyStepper";
+import { AuthControl } from "@/components/auth/AuthControl";
 import { useMessages } from "@/i18n/useMessages";
 
 const NAV_ITEMS = [
@@ -79,10 +79,6 @@ export function Header() {
   );
   const firstName =
     forgeParsedCv?.name?.split(" ")[0] || resume.fullName.trim().split(" ")[0] || messages.header.profile;
-  const activeItem = NAV_ITEMS.find(
-    (item) => pathname === item.path || pathname.startsWith(`${item.path}/`)
-  );
-
   const exportResume = async () => {
     const cv = forgeParsedCv ?? (hasResume ? resumeToParsed(resume) : null);
 
@@ -114,12 +110,7 @@ export function Header() {
             <span className="text-[0.9375rem] font-semibold text-ink">CareerForge</span>
           </Link>
 
-          <span className="hidden h-5 w-px bg-line lg:block" aria-hidden />
-          <span className="hidden min-w-24 text-xs text-ink-3 lg:block">
-            {activeItem ? messages.nav[activeItem.label] : messages.header.workspace}
-          </span>
-
-          <nav className="mx-auto hidden items-stretch self-stretch md:flex" aria-label={messages.nav.primary}>
+          <nav className="mx-auto hidden items-stretch self-stretch xl:flex" aria-label={messages.nav.primary}>
             {NAV_ITEMS.map((item) => {
               const active = pathname === item.path || pathname.startsWith(`${item.path}/`);
               return (
@@ -127,12 +118,12 @@ export function Header() {
                   key={item.path}
                   href={item.path}
                   className={cn(
-                    "relative flex items-center px-3 text-[0.8125rem] font-medium transition-colors duration-150",
+                    "relative flex items-center px-2 text-xs font-medium transition-colors duration-150",
                     active ? "text-ink" : "text-ink-3 hover:text-ink"
                   )}
                 >
                   {messages.nav[item.label]}
-                  {active && <span className="absolute inset-x-3 bottom-0 h-0.5 bg-brand" />}
+                  {active && <span className="absolute inset-x-2 bottom-0 h-0.5 bg-brand" />}
                 </Link>
               );
             })}
@@ -159,19 +150,21 @@ export function Header() {
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
 
+            <AuthControl />
+
             <div ref={profileRef} className="relative hidden sm:block">
               <button
                 type="button"
                 onClick={() => setProfileOpen((value) => !value)}
-                className="flex h-11 items-center gap-2 rounded-[var(--radius-control)] border border-line bg-surface px-2.5 text-xs font-medium text-ink transition-colors hover:bg-surface-2"
+                className="grid h-11 w-11 place-items-center rounded-[var(--radius-control)] border border-line bg-surface text-xs font-medium text-ink transition-colors hover:bg-surface-2"
                 aria-expanded={profileOpen}
                 aria-haspopup="menu"
+                aria-label={messages.header.localProfile}
+                title={messages.header.localProfile}
               >
-                <span className="grid h-5 w-5 place-items-center rounded-full bg-[var(--accent-wash)] text-[0.625rem] font-bold text-brand-strong">
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-[var(--accent-wash)] text-[0.625rem] font-bold text-brand-strong">
                   {firstName.slice(0, 1).toUpperCase()}
                 </span>
-                <span className="max-w-20 truncate">{firstName}</span>
-                <ChevronDown className="h-3 w-3 text-ink-3" />
               </button>
 
               {profileOpen && (
@@ -203,7 +196,7 @@ export function Header() {
             <button
               type="button"
               onClick={() => setMobileOpen((value) => !value)}
-              className="grid h-11 w-11 place-items-center rounded-[var(--radius-control)] text-ink md:hidden"
+              className="grid h-11 w-11 place-items-center rounded-[var(--radius-control)] text-ink xl:hidden"
               aria-label={mobileOpen ? messages.header.closeMenu : messages.header.openMenu}
               aria-expanded={mobileOpen}
             >
@@ -212,10 +205,10 @@ export function Header() {
           </div>
         </div>
 
-        <JourneyStepper className="hidden border-t border-line bg-background md:block" />
+        <JourneyStepper className="hidden border-t border-line bg-background xl:block" />
 
         {mobileOpen && (
-          <nav className="border-t border-line bg-surface px-4 py-3 md:hidden" aria-label={messages.nav.mobile}>
+          <nav className="border-t border-line bg-surface px-4 py-3 xl:hidden" aria-label={messages.nav.mobile}>
             <div className="grid grid-cols-2 gap-1">
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
@@ -235,11 +228,14 @@ export function Header() {
                 );
               })}
             </div>
+            <div className="mt-2 border-t border-line pt-2">
+              <AuthControl variant="mobile" onNavigate={() => setMobileOpen(false)} />
+            </div>
           </nav>
         )}
       </header>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-6 border-t border-line bg-surface px-1 pb-[env(safe-area-inset-bottom)] md:hidden" aria-label={messages.nav.quick}>
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-6 border-t border-line bg-surface px-1 pb-[env(safe-area-inset-bottom)] xl:hidden" aria-label={messages.nav.quick}>
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.path || pathname.startsWith(`${item.path}/`);

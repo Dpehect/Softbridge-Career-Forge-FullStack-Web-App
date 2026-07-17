@@ -22,7 +22,7 @@ const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
   (process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
-    : "https://careerforge.softbridgesolutions.com");
+    : "https://softbridge-career-forge-full-stack-brown.vercel.app");
 
 export const metadata: Metadata = {
   applicationName: "CareerForge",

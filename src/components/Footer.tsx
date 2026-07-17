@@ -13,10 +13,13 @@ export function Footer() {
     <footer className="border-t border-line bg-surface py-6">
       <div className="mx-auto flex w-[min(100%-2rem,80rem)] flex-col gap-3 text-xs text-ink-3 sm:flex-row sm:items-center sm:justify-between">
         <p>{messages.footer.statement}</p>
-        <nav className="flex gap-4" aria-label={messages.footer.menu}>
+        <nav className="flex flex-wrap gap-x-4 gap-y-2" aria-label={messages.footer.menu}>
           <Link href="/forge" className="hover:text-ink">{messages.nav.analysis}</Link>
           <Link href="/jobs" className="hover:text-ink">{messages.nav.jobs}</Link>
           <Link href="/coach" className="hover:text-ink">{messages.nav.coach}</Link>
+          <Link href="/privacy" className="hover:text-ink">{messages.footer.privacy}</Link>
+          <Link href="/terms" className="hover:text-ink">{messages.footer.terms}</Link>
+          <Link href="/login" className="hover:text-ink">{messages.footer.login}</Link>
         </nav>
       </div>
     </footer>

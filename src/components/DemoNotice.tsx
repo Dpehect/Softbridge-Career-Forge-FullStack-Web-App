@@ -1,16 +1,18 @@
 "use client";
 
 import { FlaskConical, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { useCareerStore } from "@/store/useCareerStore";
 import { useMessages } from "@/i18n/useMessages";
 
 export function DemoNotice() {
+  const pathname = usePathname();
   const isDemoMode = useCareerStore((state) => state.isDemoMode);
   const exitDemoMode = useCareerStore((state) => state.exitDemoMode);
   const { messages } = useMessages();
 
-  if (!isDemoMode) return null;
+  if (!isDemoMode || ["/login", "/account", "/privacy", "/terms"].includes(pathname)) return null;
 
   return (
     <div className="border-b border-signal/30 bg-[var(--signal-wash)]" role="status">
