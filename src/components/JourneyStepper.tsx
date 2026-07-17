@@ -52,13 +52,13 @@ export function JourneyStepper({ className }: { className?: string }) {
                 href={step.href}
                 className={cn(
                   "inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] sm:text-xs font-semibold tracking-tight transition-colors",
-                  isActive && "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300",
+                  isActive && "bg-indigo-50 text-indigo-800 dark:bg-indigo-500/15 dark:text-indigo-300",
                   isDone &&
                     !isActive &&
-                    "text-indigo-600/80 dark:text-indigo-400/80",
+                    "text-indigo-800 dark:text-indigo-400/90",
                   !isActive &&
                     !isDone &&
-                    "text-slate-500 hover:text-indigo-600 dark:text-slate-400"
+                    "text-slate-800 hover:text-indigo-700 dark:text-slate-400"
                 )}
               >
                 <span
@@ -67,8 +67,8 @@ export function JourneyStepper({ className }: { className?: string }) {
                     isActive
                       ? "bg-indigo-600 text-white"
                       : isDone
-                        ? "bg-indigo-200 text-indigo-800 dark:bg-indigo-500/30 dark:text-indigo-200"
-                        : "bg-slate-100 text-slate-500 dark:bg-white/10"
+                        ? "bg-indigo-200 text-indigo-900 dark:bg-indigo-500/30 dark:text-indigo-200"
+                        : "bg-slate-200 text-slate-800 dark:bg-white/10 dark:text-slate-400"
                   )}
                 >
                   {step.id}

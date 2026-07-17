@@ -174,10 +174,10 @@ export function Header() {
                     key={item.path}
                     href={item.path}
                     className={cn(
-                      "text-sm font-medium tracking-tight transition-colors",
+                      "text-sm font-semibold tracking-tight transition-colors",
                       active
-                        ? "text-indigo-600"
-                        : "text-slate-600 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400"
+                        ? "text-indigo-700 dark:text-indigo-400"
+                        : "text-slate-900 hover:text-indigo-700 dark:text-slate-200 dark:hover:text-indigo-300"
                     )}
                   >
                     {item.label}
@@ -220,7 +220,7 @@ export function Header() {
                   <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-orange-500 text-white">
                     <User className="h-3.5 w-3.5" />
                   </span>
-                  <span className="hidden max-w-[72px] truncate text-xs font-semibold text-slate-700 dark:text-slate-200 sm:inline">
+                  <span className="hidden max-w-[72px] truncate text-xs font-semibold text-slate-900 dark:text-slate-100 sm:inline">
                     {displayName}
                   </span>
                   <ChevronDown
@@ -356,13 +356,13 @@ export function Header() {
                       "block rounded-xl px-4 py-3 text-sm font-semibold",
                       isActive(item.path)
                         ? "bg-indigo-600 text-white"
-                        : "text-slate-700 hover:bg-slate-50 dark:text-slate-200"
+                        : "text-slate-900 hover:bg-slate-50 dark:text-slate-100"
                     )}
                   >
                     {item.label}
                   </Link>
                 ))}
-                <p className="px-4 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <p className="px-4 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   Diğer
                 </p>
                 {PROFILE_LINKS.map((item) => (
@@ -372,8 +372,8 @@ export function Header() {
                     className={cn(
                       "block rounded-xl px-4 py-3 text-sm font-medium",
                       isActive(item.path)
-                        ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15"
-                        : "text-slate-600 hover:bg-slate-50 dark:text-slate-300"
+                        ? "bg-indigo-50 text-indigo-800 dark:bg-indigo-500/15 dark:text-indigo-300"
+                        : "text-slate-800 hover:bg-slate-50 dark:text-slate-200"
                     )}
                   >
                     {item.label}
@@ -400,7 +400,7 @@ export function Header() {
                 href={item.path}
                 className={cn(
                   "flex flex-1 flex-col items-center gap-1 rounded-xl py-2 text-[11px] font-semibold transition-colors",
-                  active ? "text-indigo-600" : "text-slate-500"
+                  active ? "text-indigo-700" : "text-slate-800 dark:text-slate-400"
                 )}
               >
                 <span
