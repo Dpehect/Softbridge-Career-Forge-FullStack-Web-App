@@ -1,674 +1,279 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
   Bookmark,
-  FileText,
-  Sparkles,
-  Briefcase,
-  TrendingUp,
-  CheckCircle2,
-  History,
-  AlertTriangle,
+  BriefcaseBusiness,
+  Check,
   FileSearch,
+  FileText,
+  Flag,
+  Route,
   Target,
-  ChevronRight,
-  Award,
-  Info,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { jobs } from "@/data/jobs";
 import { careerPaths } from "@/data/paths";
 import { getCompany } from "@/data/companies";
-import {
-  MOCK_ATS_ANALYSIS,
-  MOCK_DASHBOARD_STATS,
-  MOCK_RECENT_ACTIVITY,
-  USE_MOCK_DATA,
-} from "@/data/mockData";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { useCareerStore } from "@/store/useCareerStore";
-import { formatSalary } from "@/lib/utils";
-import { generateCvFeedback, CAREER_GOALS, buildJourneyInsight, getGoal } from "@/lib/forge";
-import { useTranslation } from "@/lib/forge/i18n";
-import { cn } from "@/lib/utils";
+import { useCareerStore, resumeToParsed } from "@/store/useCareerStore";
+import { buildJourneyInsight, CAREER_GOALS, generateCvFeedback, getGoal } from "@/lib/forge";
+import { useHydrated } from "@/hooks/useHydrated";
 
-// ─── Metric Card (S2 Elevation) ──────────────────────────────────────────────
-function RadialGauge({
-  value,
-  max = 100,
-  size = 80,
-  stroke = 7,
-  color = "#3B82F6",
-  label,
-  sub,
-}: {
-  value: number;
-  max?: number;
-  size?: number;
-  stroke?: number;
-  color?: string;
-  label: string;
-  sub: string;
-}) {
-  const r = (size - stroke) / 2;
-  const circ = 2 * Math.PI * r;
-  const pct = Math.min(value / max, 1);
-  const dash = circ * pct;
-
-  return (
-    <div className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white dark:bg-[#0B1329] border border-slate-200/60 dark:border-slate-800 shadow-[var(--shadow-s2)] hover:shadow-[var(--shadow-s3)] transition-all">
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="-rotate-90">
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={r}
-            fill="none"
-            stroke="rgba(0, 0, 0, 0.04)"
-            className="dark:stroke-white/5"
-            strokeWidth={stroke}
-          />
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={r}
-            fill="none"
-            stroke={color}
-            strokeWidth={stroke}
-            strokeDasharray={`${dash} ${circ}`}
-            strokeLinecap="round"
-            style={{ transition: "stroke-dasharray 1s cubic-bezier(0.16, 1, 0.3, 1)" }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-sm font-black text-slate-800 dark:text-[#E2E8F0]">{label}</span>
-        </div>
-      </div>
-      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{sub}</span>
-    </div>
+function jobFit(userSkills: string[], tags: string[]) {
+  if (!userSkills.length) return 0;
+  const normalized = userSkills.map((skill) => skill.toLowerCase());
+  const matched = tags.filter((tag) =>
+    normalized.some((skill) => skill.includes(tag.toLowerCase()) || tag.toLowerCase().includes(skill))
   );
-}
-
-// ─── Feature KPI Card (S2 Elevation + Lift) ──────────────────────────────────
-function MetricCard({
-  icon: Icon,
-  label,
-  value,
-  sub,
-  color,
-  href,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string | number;
-  sub: string;
-  color: string;
-  href?: string;
-}) {
-  const content = (
-    <div className="bg-white dark:bg-[#0B1329] border border-slate-200/60 dark:border-slate-800 p-5 space-y-3 rounded-2xl shadow-[var(--shadow-s2)] hover:translate-y-[-2px] hover:shadow-[var(--shadow-s3)] transition-all text-left h-full block">
-      <div
-        className="w-9 h-9 rounded-xl flex items-center justify-center"
-        style={{ background: `${color}12` }}
-      >
-        <Icon className="w-4.5 h-4.5" style={{ color }} />
-      </div>
-      <div>
-        <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-550 dark:text-slate-400">{label}</h4>
-        <p className="text-xl font-black tracking-tight text-slate-900 dark:text-[#E2E8F0] mt-1">
-          {value}
-        </p>
-        <p className="text-[10px] text-slate-500 mt-0.5">{sub}</p>
-      </div>
-    </div>
-  );
-
-  return href ? (
-    <Link href={href} className="no-underline">
-      {content}
-    </Link>
-  ) : (
-    content
-  );
+  return Math.round((matched.length / tags.length) * 100);
 }
 
 export default function DashboardPage() {
+  const mounted = useHydrated();
   const {
+    resume,
+    forgeParsedCv,
+    forgeAnalysis,
+    forgeHistory,
     savedJobIds,
     appliedJobIds,
     enrolledPathIds,
     completedModuleIds,
-    resume,
-    forgeParsedCv,
-    forgeHistory,
-    forgeAnalysis,
     careerGoalId,
     setCareerGoalId,
   } = useCareerStore();
 
-  const { t, lang } = useTranslation();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const savedJobs = useMemo(() => jobs.filter((j) => savedJobIds.includes(j.id)), [savedJobIds]);
-  const appliedJobs = useMemo(() => jobs.filter((j) => appliedJobIds.includes(j.id)), [appliedJobIds]);
-  const enrolledPaths = useMemo(() => careerPaths.filter((p) => enrolledPathIds.includes(p.id)), [enrolledPathIds]);
-  
-  const totalModules = enrolledPaths.reduce((n, p) => n + p.modules.length, 0);
+  const hasResume = Boolean(
+    forgeParsedCv || resume.fullName || resume.summary || resume.skills.length || resume.experience.length
+  );
+  const parsed = forgeParsedCv ?? (hasResume ? resumeToParsed(resume) : null);
+  const feedback = useMemo(() => (parsed ? generateCvFeedback(parsed) : null), [parsed]);
+  const journey = useMemo(
+    () =>
+      buildJourneyInsight({
+        cv: parsed,
+        goalId: careerGoalId,
+        atsScore: forgeAnalysis?.atsScore ?? feedback?.atsScore,
+        feedback,
+        missingFromMatch: forgeAnalysis?.missingSkills,
+      }),
+    [parsed, careerGoalId, forgeAnalysis, feedback]
+  );
+  const goal = getGoal(careerGoalId);
+  const firstName = parsed?.name && !["Candidate", "Aday"].includes(parsed.name)
+    ? parsed.name.split(" ")[0]
+    : "";
+  const enrolledPaths = careerPaths.filter((path) => enrolledPathIds.includes(path.id));
+  const totalModules = enrolledPaths.reduce((sum, path) => sum + path.modules.length, 0);
   const doneModules = enrolledPaths.reduce(
-    (n, p) => n + p.modules.filter((m) => completedModuleIds.includes(m.id)).length,
+    (sum, path) => sum + path.modules.filter((module) => completedModuleIds.includes(module.id)).length,
     0
   );
-
-  const hasResume =
-    Boolean(resume.fullName || resume.headline || resume.summary) || resume.skills.length > 0;
-  const firstName = resume.fullName?.trim().split(" ")[0] || forgeParsedCv?.name?.split(" ")[0];
-
-  const feedback = useMemo(() => {
-    if (forgeParsedCv) return generateCvFeedback(forgeParsedCv);
-    if (hasResume) {
-      return generateCvFeedback({
-        name: resume.fullName || "Candidate",
-        title: resume.headline || "Professional",
-        email: resume.email,
-        phone: null,
-        location: resume.location || null,
-        summary: resume.summary || null,
-        skills: resume.skills,
-        experience: resume.experience.map((e) => ({
-          company: e.company,
-          position: e.role,
-          duration: `${e.start} – ${e.end}`,
-          description: e.highlights,
-        })),
-        education: resume.education.map((e) => ({
-          school: e.school,
-          degree: e.degree,
-          year: e.year,
-        })),
-        rawLength: 0,
-      });
-    }
-    return null;
-  }, [forgeParsedCv, hasResume, resume]);
-
-  const analyzedCvCount = USE_MOCK_DATA
-    ? MOCK_DASHBOARD_STATS.analyzedCvCount
-    : Math.max(
-        forgeHistory.filter(
-          (h) => h.action === "parse" || h.action === "analyze" || h.action === "ats"
-        ).length,
-        forgeParsedCv || hasResume ? 1 : 0
-      );
-
-  const latestAtsScore = USE_MOCK_DATA
-    ? MOCK_ATS_ANALYSIS.atsScore
-    : forgeAnalysis?.atsScore ?? feedback?.atsScore ?? null;
-
-  const recentItems = USE_MOCK_DATA
-    ? MOCK_RECENT_ACTIVITY
-    : forgeHistory.slice(0, 4).map((h) => ({
-        id: h.id,
-        title: h.summary,
-        summary: h.action === "parse" ? "CV Çözümleme" : h.action === "analyze" ? "Rol Analizi" : "ATS Taraması",
-        createdAt: h.createdAt,
-      }));
-
-  const isEmpty = !forgeParsedCv && !hasResume && forgeHistory.length === 0;
-
-  const cvScore = feedback?.overallScore ?? (USE_MOCK_DATA ? MOCK_ATS_ANALYSIS.atsScore : 0);
-  const atsScore = latestAtsScore ?? 0;
-  const pathProgress = totalModules > 0 ? Math.round((doneModules / totalModules) * 100) : 0;
-
-  const journey = useMemo(() => {
-    return buildJourneyInsight({
-      cv: forgeParsedCv,
-      goalId: careerGoalId,
-      atsScore: latestAtsScore,
-      feedback,
-      missingFromMatch: forgeAnalysis?.missingSkills,
-    });
-  }, [forgeParsedCv, careerGoalId, latestAtsScore, feedback, forgeAnalysis]);
-
-  const activeGoal = getGoal(careerGoalId);
+  const pathProgress = totalModules ? Math.round((doneModules / totalModules) * 100) : 0;
+  const recommendedJobs = useMemo(
+    () =>
+      jobs
+        .map((job) => ({ job, fit: jobFit(resume.skills, job.tags) }))
+        .sort((a, b) => b.fit - a.fit)
+        .slice(0, 3),
+    [resume.skills]
+  );
 
   if (!mounted) {
+    return <div className="grid min-h-[60vh] place-items-center"><span className="h-6 w-6 animate-spin rounded-full border-2 border-line-strong border-t-brand" /></div>;
+  }
+
+  if (!hasResume) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin border-purple-600" />
-      </div>
+      <main className="product-page">
+        <p className="page-kicker"><FileSearch className="h-3.5 w-3.5" /> Genel bakış</p>
+        <div className="mt-5 grid gap-10 border-t border-line pt-10 lg:grid-cols-[1fr_0.8fr] lg:items-end">
+          <div>
+            <h1 className="page-title-compact max-w-xl">Çalışma alanı bir özgeçmişle başlar.</h1>
+            <p className="page-lede mt-4">Belgenizi eklediğinizde rol uyumu, başvuru seçenekleri ve kişisel çalışma planı burada birbirine bağlanır.</p>
+          </div>
+          <div className="surface-subtle p-6">
+            <p className="section-label">İlk adım</p>
+            <p className="mt-3 text-sm font-semibold text-ink">Özgeçmişinizi cihazınızda çözümleyin</p>
+            <p className="mt-2 text-xs leading-5 text-ink-3">PDF veya düz metin yükleyin. Hiçbir içerik sunucuya gönderilmez.</p>
+            <Link href="/forge" className="mt-5 inline-flex"><Button variant="primary">Analizi başlat <ArrowRight className="h-4 w-4" /></Button></Link>
+          </div>
+        </div>
+      </main>
     );
   }
 
-  // 1. Primary Action Guidance (Hero Card Action)
-  const recommendedAction = (() => {
-    if (isEmpty) {
-      return {
-        title: "Kariyer kokpitinizi etkinleştirmek için ilk CV'nizi yükleyin",
-        desc: "Yapay zeka motorunun size uygun eksik yetenekleri, mülakat hazırlık sorularını ve rol uyum puanlarını listelemesi için özgeçmişinizi yüklemeniz gerekir.",
-        cta: "Analiz Sayfasına Git",
-        href: "/forge",
-        alertType: "warning" as const,
-      };
-    }
-    if (atsScore < 75) {
-      return {
-        title: "Özgeçmişiniz hedeflenen ATS uyumluluk skorunun altında (%75)",
-        desc: `Kariyer hedefiniz olan "${activeGoal?.labelTr || "Seçilen Rol"}" için özgeçmişinizde eksik terimler tespit edildi. Aşağıdaki yetenekleri ekleyerek veya maddeleri metrikler kullanarak düzenleyiciden güncelleyebilirsiniz.`,
-        cta: "Özgeçmiş Düzenleyiciyi Aç",
-        href: "/resume",
-        alertType: "info" as const,
-      };
-    }
-    return {
-      title: "Özgeçmişiniz başvurular için mükemmel durumda!",
-      desc: "ATS puanınız hedefin üzerinde. Size uygun iş ilanlarını listeleyebilir ve doğrudan başvurularınızı gerçekleştirebilirsiniz.",
-      cta: "İş İlanlarını Listele",
-      href: "/jobs",
-      alertType: "success" as const,
-    };
-  })();
+  const focusActions = [
+    {
+      title: journey.missingSkills[0] ? `“${journey.missingSkills[0]}” için gerçek bir kanıt ekleyin` : "En güçlü deneyim maddesini hedef role taşıyın",
+      detail: "Tahmini etki: rol uyumunda 6–9 puan",
+      href: "/resume",
+      done: journey.missingSkills.length === 0,
+    },
+    {
+      title: "Öncelikli iş ilanını özgeçmişinizle karşılaştırın",
+      detail: `${recommendedJobs[0]?.job.title || "Hedef rol"} · ${recommendedJobs[0]?.fit || 0}% mevcut eşleşme`,
+      href: recommendedJobs[0] ? `/jobs/${recommendedJobs[0].job.id}` : "/jobs",
+      done: Boolean(forgeAnalysis),
+    },
+    {
+      title: "En zor davranışsal soruya prova yapın",
+      detail: "CV'nizdeki son ölçülebilir sonuç kullanılır",
+      href: "/coach",
+      done: false,
+    },
+  ];
 
   return (
-    <div className="px-4 md:px-8 pb-20 pt-6 bg-[#F8FAFC] dark:bg-[#020617]">
-      <div className="max-w-7xl mx-auto space-y-6 text-left">
-        
-        {/* Welcome Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 dark:bg-blue-500/10 dark:text-blue-300">
-              <Target className="w-3.5 h-3.5" />
-              Kariyer Paneli
+    <main className="product-page">
+      <header className="grid gap-6 border-b border-line pb-8 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div>
+          <p className="page-kicker"><Flag className="h-3.5 w-3.5" /> Bugünün çalışma alanı</p>
+          <h1 className="page-title-compact mt-4">{firstName ? `${firstName}, sıradaki hamleniz burada.` : "Sıradaki hamleniz burada."}</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-2">
+            Hedef rolünüz, özgeçmiş kanıtlarınız ve fırsatlar tek bir ilerleme akışında tutuluyor.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/forge"><Button variant="outline"><FileSearch className="h-4 w-4" /> Yeni analiz</Button></Link>
+          <Link href="/resume"><Button variant="primary"><FileText className="h-4 w-4" /> Özgeçmişi düzenle</Button></Link>
+        </div>
+      </header>
+
+      <section className="grid border-x border-b border-line bg-surface md:grid-cols-[1.15fr_0.85fr]">
+        <div className="border-b border-line p-6 md:border-b-0 md:border-r md:p-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="section-label">Hedef rol</p>
+              <h2 className="mt-2 text-lg font-semibold text-ink">{goal?.labelTr || "Rol seçilmedi"}</h2>
             </div>
-            <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              {firstName ? `Kariyer kokpitin, ${firstName} 👋` : "Kariyer Kokpiti"}
-            </h1>
-            <p className="text-slate-500 mt-1 max-w-xl text-xs leading-relaxed">
-              Özgeçmiş durumunuzu takip edin, eksik yeteneklerinizi kapatın ve hedeflerinize giden yolda sıradaki adımı tamamlayın.
-            </p>
+            <label>
+              <span className="sr-only">Hedef rolü değiştir</span>
+              <select
+                value={careerGoalId ?? ""}
+                onChange={(event) => setCareerGoalId(event.target.value || null)}
+                className="h-9 rounded-[var(--radius-control)] border border-line bg-surface px-3 text-xs font-medium text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]"
+              >
+                {CAREER_GOALS.map((item) => <option key={item.id} value={item.id}>{item.labelTr}</option>)}
+              </select>
+            </label>
           </div>
-          <div className="flex flex-wrap gap-2 shrink-0">
-            <Link href="/forge">
-              <Button variant="primary" className="gap-1.5 shadow-md">
-                Yeni Analiz Başlat <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-            <Link href="/resume">
-              <Button variant="outline" className="text-slate-700 dark:text-[#CBD5E1]">
-                Özgeçmişi Düzenle
-              </Button>
-            </Link>
+          <div className="mt-7 flex items-end justify-between gap-6">
+            <div className="flex-1">
+              <div className="h-2 overflow-hidden rounded-full bg-surface-3">
+                <div className="h-full rounded-full bg-brand transition-all duration-500" style={{ width: `${journey.progressPct}%` }} />
+              </div>
+              <p className="mt-3 text-xs leading-5 text-ink-3">
+                {journey.missingSkills.length
+                  ? `${journey.missingSkills.slice(0, 3).join(", ")} kanıtları hedef role giden en kısa boşluklar.`
+                  : "Hedef rolün temel sinyalleri özgeçmişinizde görünür durumda."}
+              </p>
+            </div>
+            <strong className="metric-number text-4xl font-semibold text-brand-strong">{journey.progressPct}%</strong>
           </div>
         </div>
 
-        {/* Hero Card Actions */}
-        <section
-          className={cn(
-            "rounded-3xl p-6 border relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-[var(--shadow-s3)]",
-            recommendedAction.alertType === "warning" && "bg-amber-500/[0.03] border-amber-500/20",
-            recommendedAction.alertType === "info" && "bg-blue-500/[0.03] border-blue-500/20",
-            recommendedAction.alertType === "success" && "bg-emerald-500/[0.03] border-emerald-500/20"
-          )}
-        >
-          <div className="space-y-1.5 flex-1">
-            <span
-              className={cn(
-                "text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border",
-                recommendedAction.alertType === "warning" && "bg-amber-50 text-amber-800 dark:bg-amber-950/20 dark:text-amber-300 dark:border-amber-500/20",
-                recommendedAction.alertType === "info" && "bg-blue-50 text-blue-800 dark:bg-blue-950/20 dark:text-blue-300 dark:border-blue-500/20",
-                recommendedAction.alertType === "success" && "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-300 dark:border-emerald-500/20"
-              )}
-            >
-              Önerilen Aksiyon
-            </span>
-            <h3 className="text-sm font-bold text-slate-800 dark:text-white mt-1">
-              {recommendedAction.title}
-            </h3>
-            <p className="text-xs text-slate-500 leading-normal max-w-3xl">
-              {recommendedAction.desc}
-            </p>
+        <dl className="grid grid-cols-3 divide-x divide-line">
+          {[
+            ["ATS", journey.atsScore],
+            ["Yol", pathProgress],
+            ["Başvuru", appliedJobIds.length],
+          ].map(([label, value]) => (
+            <div key={label} className="flex min-h-36 flex-col justify-end p-4 sm:p-6">
+              <dt className="text-[0.6875rem] text-ink-3">{label}</dt>
+              <dd className="metric-number mt-2 text-2xl font-semibold text-ink">{label === "Başvuru" ? value : `${value}%`}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <div className="mt-10 grid gap-10 xl:grid-cols-[minmax(0,1.25fr)_minmax(19rem,0.75fr)]">
+        <section>
+          <div className="flex items-end justify-between border-b border-line pb-4">
+            <div>
+              <p className="section-label">Bu hafta</p>
+              <h2 className="mt-2 text-xl font-semibold text-ink">Üç odak, tek başvuru hikâyesi</h2>
+            </div>
+            <span className="font-mono text-xs text-ink-3">{focusActions.filter((item) => item.done).length}/3</span>
           </div>
-          <Link href={recommendedAction.href} className="shrink-0">
-            <Button variant="primary" className="shadow-md whitespace-nowrap">
-              {recommendedAction.cta}
-            </Button>
-          </Link>
+          <ol>
+            {focusActions.map((action, index) => (
+              <li key={action.title}>
+                <Link href={action.href} className="interactive-row group grid grid-cols-[2rem_1fr_auto] items-center gap-4 border-b border-line py-5">
+                  <span className="grid h-6 w-6 place-items-center rounded-full border border-line-strong text-ink-3">
+                    {action.done ? <Check className="h-3.5 w-3.5 text-positive" /> : <span className="font-mono text-[0.625rem]">0{index + 1}</span>}
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-semibold text-ink">{action.title}</h3>
+                    <p className="mt-1 text-xs text-ink-3">{action.detail}</p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-ink-3 transition-transform group-hover:translate-x-0.5 group-hover:text-ink" />
+                </Link>
+              </li>
+            ))}
+          </ol>
+
+          <div className="mt-10">
+            <div className="flex items-end justify-between border-b border-line pb-4">
+              <div>
+                <p className="section-label">Kanıt haritası</p>
+                <h2 className="mt-2 text-xl font-semibold text-ink">Özgeçmişiniz neyi gerçekten kanıtlıyor?</h2>
+              </div>
+              <Link href="/resume" className="text-xs font-semibold text-brand-strong hover:underline">Düzenle</Link>
+            </div>
+            <div className="grid gap-px bg-line sm:grid-cols-3">
+              {[
+                { label: "Ürün etkisi", value: "Güçlü", note: "%35 performans ve 12k kullanıcı", tone: "positive" },
+                { label: "Teknik derinlik", value: resume.skills.length >= 7 ? "Güçlü" : "Gelişiyor", note: `${resume.skills.length} doğrulanabilir beceri`, tone: "info" },
+                { label: "Takım etkisi", value: resume.experience.length ? "Görünür" : "Eksik", note: "Bileşen kütüphanesi ve ekip kullanımı", tone: "signal" },
+              ].map((item) => (
+                <div key={item.label} className="bg-surface p-5">
+                  <p className="text-[0.6875rem] text-ink-3">{item.label}</p>
+                  <p className="mt-3 text-sm font-semibold text-ink">{item.value}</p>
+                  <p className="mt-2 text-xs leading-5 text-ink-3">{item.note}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
-        {/* Intelligent Empty State */}
-        {isEmpty ? (
-          <div className="bg-white dark:bg-[#0B1329] border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center rounded-3xl max-w-3xl mx-auto space-y-4">
-            <div className="mx-auto w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center">
-              <FileSearch className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+        <aside className="space-y-8">
+          <section className="surface-subtle p-6">
+            <div className="flex items-center justify-between">
+              <p className="section-label">Fırsat kuyruğu</p>
+              <BriefcaseBusiness className="h-4 w-4 text-ink-3" />
             </div>
-            <h3 className="text-base font-bold text-slate-850 dark:text-white">
-              Henüz Özgeçmiş Analizi Yapılmadı
-            </h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-              Kariyer kokpitinin puan kartlarını, eksik yetenek haritalarını ve mülakat asistanını açmak için özgeçmişinizi sisteme yükleyin.
-            </p>
-            <Link href="/forge">
-              <Button variant="primary" className="shadow-md">
-                İlk Özgeçmişimi Yükle
-              </Button>
-            </Link>
-          </div>
-        ) : (
-          <>
-            {/* Core Metrics Split View */}
-            <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6">
-              
-              {/* Action Card: Career Goals */}
-              <div className="bg-white dark:bg-[#0B1329] border border-slate-200/60 dark:border-slate-800 rounded-3xl p-6 space-y-6 shadow-[var(--shadow-s2)]">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5 dark:border-white/5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center shrink-0">
-                      <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm text-slate-850 dark:text-[#E2E8F0] leading-tight">
-                        Hedef Pozisyon: {activeGoal ? activeGoal.labelTr : "Seçilmedi"}
-                      </h3>
-                      <p className="text-[10px] text-slate-450 mt-0.5">
-                        Optimizasyonlar bu hedef role göre yapılır.
-                      </p>
-                    </div>
-                  </div>
-                  <div>
-                    <select
-                      value={careerGoalId ?? ""}
-                      onChange={(e) => setCareerGoalId(e.target.value || null)}
-                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 dark:bg-slate-950 dark:border-white/10 dark:text-[#E2E8F0] outline-none cursor-pointer"
-                    >
-                      {CAREER_GOALS.map((g) => (
-                        <option key={g.id} value={g.id}>
-                          {g.labelTr}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-800 dark:text-slate-350">
-                      Kariyer Rota Uyum Oranı
-                    </span>
-                    <span className="font-black text-blue-600 dark:text-blue-450 tabular-nums">
-                      %{journey.progressPct}
-                    </span>
-                  </div>
-                  <div className="h-3 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-700"
-                      style={{
-                        width: `${journey.progressPct}%`,
-                        background: "linear-gradient(90deg, #3B82F6, #8B5CF6, #06B6D4)",
-                      }}
-                    />
-                  </div>
-                  <p className="text-xs text-slate-500 leading-normal">
-                    Seçtiğiniz hedef rolün gereksinimleri ile özgeçmiş yetenekleriniz karşılaştırıldı. 
-                    {journey.missingSkills.length > 0 ? (
-                      <>
-                        {" "}Gelişim sağlamak için özgeçmişinize{" "}
-                        <strong className="text-slate-850 dark:text-white">
-                          “{journey.missingSkills.slice(0, 2).join(", ")}”
-                        </strong>{" "}
-                        eklemeyi düşünün.
-                      </>
-                    ) : (
-                      " Özgeçmişiniz hedef rolün gerekliliklerini tam olarak karşılıyor."
-                    )}
-                  </p>
-                </div>
-
-                {journey.missingSkills.length > 0 && (
-                  <div className="space-y-3 pt-3 border-t dark:border-white/5">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-                      Eksik Yetkinlikler
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      {journey.missingSkills.slice(0, 4).map((s) => (
-                        <span
-                          key={s}
-                          className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300 bg-amber-50 text-amber-800 dark:bg-amber-950/20 dark:border-amber-500/20 dark:text-amber-300"
-                        >
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Metric Card: Radial Gauges Grid (S2 Elevation) */}
-              <div className="bg-white dark:bg-[#0B1329] border border-slate-200/60 dark:border-slate-800 rounded-3xl p-6 flex flex-row sm:flex-col lg:flex-row gap-4 items-center justify-around shadow-[var(--shadow-s2)]">
-                <RadialGauge
-                  value={cvScore}
-                  label={`${cvScore}%`}
-                  sub="Özgeçmiş Gücü"
-                  color="#3B82F6"
-                />
-                <RadialGauge
-                  value={atsScore}
-                  label={`${atsScore}%`}
-                  sub="ATS Skoru"
-                  color="#8B5CF6"
-                />
-                {totalModules > 0 && (
-                  <RadialGauge
-                    value={pathProgress}
-                    label={`${pathProgress}%`}
-                    sub="Yol İlerlemesi"
-                    color="#06B6D4"
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Feature Cards Grid (S2 Elevation) */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <MetricCard
-                icon={FileText}
-                label="Toplam Analiz"
-                value={analyzedCvCount}
-                sub="cihaz içi işlem"
-                color="#3B82F6"
-                href="/forge"
-              />
-              <MetricCard
-                icon={Briefcase}
-                label="Başvurularım"
-                value={appliedJobIds.length}
-                sub="kayıtlı başvuru"
-                color="#8B5CF6"
-                href="/jobs"
-              />
-              <MetricCard
-                icon={Bookmark}
-                label="Kaydedilenler"
-                value={savedJobIds.length}
-                sub="takip edilen ilan"
-                color="#06B6D4"
-                href="/jobs"
-              />
-              <MetricCard
-                icon={TrendingUp}
-                label="Kayıtlı Yollar"
-                value={enrolledPathIds.length}
-                sub="aktif geliştirme"
-                color="#10B981"
-                href="/paths"
-              />
-            </div>
-
-            {/* Bottom Recommendation & Activity grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6">
-              
-              {/* Recommendation Card: CV Health suggestions (S3 Elevation) */}
-              <div className="bg-white dark:bg-[#0B1329] border border-slate-200/60 dark:border-slate-800 p-6 rounded-3xl space-y-4 shadow-[var(--shadow-s3)]">
-                <div className="flex items-center justify-between border-b pb-4 dark:border-white/5">
-                  <h3 className="font-bold text-slate-850 dark:text-white flex items-center gap-2 text-xs uppercase tracking-wider">
-                    <AlertTriangle className="w-4 h-4 text-amber-500" />
-                    Özgeçmiş Önerileri
-                  </h3>
-                  <Link href="/resume" className="text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline flex items-center gap-0.5">
-                    Düzenle <ChevronRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-
-                <div className="space-y-3 text-left">
-                  {feedback?.improvements && feedback.improvements.length > 0 ? (
-                    feedback.improvements.slice(0, 3).map((imp: string, idx: number) => (
-                      <div
-                        key={idx}
-                        className="flex items-start gap-2.5 p-3 rounded-2xl border border-amber-500/10 bg-amber-500/[0.02] text-xs"
-                      >
-                        <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                        <span className="text-slate-650 dark:text-slate-350 leading-relaxed">{imp}</span>
+            <div className="mt-4">
+              {recommendedJobs.map(({ job, fit }) => {
+                const company = getCompany(job.companyId);
+                return (
+                  <Link key={job.id} href={`/jobs/${job.id}`} className="interactive-row block border-t border-line py-4 first:border-t-0 first:pt-0">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-xs font-semibold text-ink">{job.title}</h3>
+                        <p className="mt-1 text-[0.6875rem] text-ink-3">{company?.name} · {job.workMode}</p>
                       </div>
-                    ))
-                  ) : (
-                    <div className="flex items-start gap-2.5 p-3 rounded-2xl border border-emerald-500/10 bg-emerald-500/[0.02] text-xs">
-                      <Award className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                      <span className="text-slate-600 dark:text-slate-300 leading-normal">
-                        Özgeçmişinizde herhangi bir yapısal hata bulunamadı. Harika bir iş!
-                      </span>
+                      <span className="metric-number text-xs font-semibold text-brand-strong">{fit}%</span>
                     </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Information Card: Activity logs (S2 Elevation) */}
-              <div className="bg-white dark:bg-[#0B1329] border border-slate-200/60 dark:border-slate-800 p-6 rounded-3xl space-y-4 shadow-[var(--shadow-s2)]">
-                <div className="flex items-center justify-between border-b pb-4 dark:border-white/5">
-                  <h3 className="font-bold text-slate-850 dark:text-white flex items-center gap-2 text-xs uppercase tracking-wider">
-                    <History className="w-4 h-4 text-slate-500" />
-                    Son İşlemler
-                  </h3>
-                </div>
-
-                {recentItems.length === 0 ? (
-                  <p className="text-xs text-slate-500 py-6 text-center">İşlem geçmişi boş.</p>
-                ) : (
-                  <ul className="space-y-3">
-                    {recentItems.map((item) => (
-                      <li
-                        key={item.id}
-                        className="flex items-start justify-between gap-3 text-xs p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/30 border dark:border-white/5"
-                      >
-                        <div className="min-w-0 space-y-1">
-                          <p className="font-bold text-slate-800 dark:text-slate-250 truncate">
-                            {item.title}
-                          </p>
-                          <span className="text-[10px] text-slate-500 block">
-                            {item.summary}
-                          </span>
-                        </div>
-                        <span className="text-[10px] text-slate-400 shrink-0">
-                          {new Date(item.createdAt).toLocaleTimeString("tr-TR", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+                  </Link>
+                );
+              })}
             </div>
+            <Link href="/jobs" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-brand-strong hover:underline">İşleri incele <ArrowRight className="h-3.5 w-3.5" /></Link>
+          </section>
 
-            {/* Information Cards: Jobs Grid lists */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
-              {/* Applied jobs lists */}
-              <div className="bg-white dark:bg-[#0B1329] border border-slate-200/60 dark:border-slate-800 p-6 rounded-3xl space-y-4 shadow-[var(--shadow-s2)]">
-                <h3 className="font-bold text-slate-850 dark:text-white border-b pb-4 dark:border-white/5 text-xs uppercase tracking-wider flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  Aktif Başvurularım
-                </h3>
-
-                {appliedJobs.length === 0 ? (
-                  <p className="text-xs text-slate-500 py-6 text-center">
-                    Henüz bir pozisyona başvurmadınız.
-                  </p>
-                ) : (
-                  <ul className="space-y-2">
-                    {appliedJobs.slice(0, 4).map((job) => {
-                      const co = getCompany(job.companyId);
-                      return (
-                        <li key={job.id}>
-                          <Link
-                             href={`/jobs/${job.id}`}
-                             className="flex items-center justify-between gap-3 rounded-2xl p-3 border border-slate-100/60 dark:border-white/5 bg-slate-50 dark:bg-slate-950/30 hover:border-blue-500/30 transition-all"
-                          >
-                            <div className="text-left">
-                              <h4 className="font-bold text-slate-800 dark:text-[#E2E8F0] text-xs">
-                                {job.title}
-                              </h4>
-                              <p className="text-[10px] text-slate-500 mt-0.5">
-                                {co?.name} · {job.location}
-                              </p>
-                            </div>
-                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-300 border dark:border-emerald-500/10">
-                              Başvuruldu
-                            </span>
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-
-              {/* Saved jobs lists */}
-              <div className="bg-white dark:bg-[#0B1329] border border-slate-200/60 dark:border-slate-800 p-6 rounded-3xl space-y-4 shadow-[var(--shadow-s2)]">
-                <h3 className="font-bold text-slate-850 dark:text-white border-b pb-4 dark:border-white/5 text-xs uppercase tracking-wider flex items-center gap-2">
-                  <Bookmark className="w-4 h-4 text-amber-500" />
-                  Kaydedilen İlanlar
-                </h3>
-
-                {savedJobs.length === 0 ? (
-                  <p className="text-xs text-slate-500 py-6 text-center">
-                    Henüz kaydedilen ilan yok.
-                  </p>
-                ) : (
-                  <ul className="space-y-2">
-                    {savedJobs.slice(0, 4).map((job) => {
-                      const co = getCompany(job.companyId);
-                      return (
-                        <li key={job.id}>
-                          <Link
-                            href={`/jobs/${job.id}`}
-                            className="flex items-center justify-between gap-3 rounded-2xl p-3 border border-slate-100/60 dark:border-white/5 bg-slate-50 dark:bg-slate-950/30 hover:border-blue-500/30 transition-all"
-                          >
-                            <div className="text-left">
-                              <h4 className="font-bold text-slate-850 dark:text-[#E2E8F0] text-xs">
-                                {job.title}
-                              </h4>
-                              <p className="text-[10px] text-slate-500 mt-0.5">
-                                {co?.name} · {job.workMode}
-                              </p>
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-slate-450" />
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
+          <section className="border-t border-line pt-6">
+            <p className="section-label">Durum</p>
+            <div className="mt-4 space-y-3 text-xs text-ink-2">
+              <p className="flex items-center justify-between"><span className="flex items-center gap-2"><Bookmark className="h-3.5 w-3.5 text-ink-3" /> Kaydedilen ilan</span><strong className="metric-number">{savedJobIds.length}</strong></p>
+              <p className="flex items-center justify-between"><span className="flex items-center gap-2"><Route className="h-3.5 w-3.5 text-ink-3" /> Aktif kariyer yolu</span><strong className="metric-number">{enrolledPathIds.length}</strong></p>
+              <p className="flex items-center justify-between"><span className="flex items-center gap-2"><Target className="h-3.5 w-3.5 text-ink-3" /> Analiz geçmişi</span><strong className="metric-number">{forgeHistory.length}</strong></p>
             </div>
-          </>
-        )}
+          </section>
+        </aside>
       </div>
-    </div>
+    </main>
   );
 }

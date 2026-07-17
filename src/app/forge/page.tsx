@@ -7,23 +7,12 @@ import { toast } from "sonner";
 import {
   Anvil,
   FileSearch,
-  GitCompare,
-  Sparkles,
-  Mail,
-  ShieldCheck,
-  MessageSquare,
-  Mic2,
   History,
   Copy,
-  Trash2,
   RotateCcw,
-  Save,
-  PenLine,
-  Briefcase,
   FileDown,
   Camera,
   Plus,
-  ArrowRight,
   Lightbulb,
   Settings,
 } from "lucide-react";
@@ -48,9 +37,9 @@ import {
   type OptimizedCV,
   type CoverLetterResult,
   type InterviewResult,
-  type ChatbotResult,
   type AtsResult,
   type ParsedCV,
+  type ParsedExperience,
   type MatchAnalysis,
 } from "@/lib/forge";
 import { cn } from "@/lib/utils";
@@ -60,17 +49,17 @@ import { ErrorAlert } from "@/components/ErrorAlert";
 import { JourneyResults } from "@/components/JourneyResults";
 import { buildJourneyInsight } from "@/lib/forge/journey";
 import { useClientAi } from "@/hooks/useClientAi";
+import { useHydrated } from "@/hooks/useHydrated";
 
 type EditorTabId = "raw" | "form" | "versions";
 type PreviewTabId = "preview" | "feedback" | "match" | "cover" | "interview" | "chat";
 
 interface ProTipsPanelProps {
   editorTab: EditorTabId;
-  previewTab: PreviewTabId;
   activeSection: "analiz" | "gecmis" | "ayarlar";
 }
 
-function ProTipsPanel({ editorTab, previewTab, activeSection }: ProTipsPanelProps) {
+function ProTipsPanel({ editorTab, activeSection }: ProTipsPanelProps) {
   let title = "Akıllı İpuçları";
   let description = "Kariyerinizi güçlendirmek için kişiselleştirilmiş öneriler.";
   let tips = [
@@ -86,7 +75,7 @@ function ProTipsPanel({ editorTab, previewTab, activeSection }: ProTipsPanelProp
       "Farklı şirket kültürleri (örn. kurumsal vs startup) için özelleştirilmiş CV yedekleri oluşturun.",
       "Yeni bir sürüm indirmeden önce yerel yedek alarak önceki verilerinizi güvenceye alın."
     ];
-    icon = <History className="w-5 h-5 text-purple-500" strokeWidth={1.5} />;
+    icon = <History className="w-5 h-5 text-info" strokeWidth={1.5} />;
   } else if (activeSection === "ayarlar") {
     title = "Kariyer Hedefleme";
     description = "Hedef pozisyonunuzu güncel tutmak analiz kalitesini artırır.";
@@ -111,29 +100,29 @@ function ProTipsPanel({ editorTab, previewTab, activeSection }: ProTipsPanelProp
         "Teknik kelimeleri ve araçları (örn. React, Kubernetes) yetenekler listesine ekleyin.",
         "Deneyim altındaki açıklamaları kısa ve aksiyon odaklı fiillerle başlatın."
       ];
-      icon = <Anvil className="w-5 h-5 text-[#A855F7]" strokeWidth={1.5} />;
+      icon = <Anvil className="w-5 h-5 text-brand-strong" strokeWidth={1.5} />;
     }
   }
 
   return (
-    <aside className="w-full xl:w-[260px] flex flex-col gap-4 rounded-3xl p-5 border border-slate-200/60 bg-white/40 dark:border-white/10 dark:bg-[#0f172a]/20 shadow-sm ring-1 ring-slate-100 dark:ring-white/5">
-      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-white/5">
+    <aside className="surface-subtle flex w-full flex-col gap-4 p-5 xl:w-[260px]">
+      <div className="mb-2 flex items-center gap-2 border-b border-line pb-2">
         {icon}
         <div className="min-w-0">
-          <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{title}</h3>
-          <p className="text-[10px] text-slate-500 mt-0.5 truncate">{description}</p>
+          <h3 className="truncate text-xs font-bold text-ink">{title}</h3>
+          <p className="mt-0.5 truncate text-[10px] text-ink-3">{description}</p>
         </div>
       </div>
       <ul className="space-y-3">
         {tips.map((tip, idx) => (
-          <li key={idx} className="flex gap-2 items-start text-[11px] text-slate-600 dark:text-slate-400 leading-normal">
-            <span className="text-[#A855F7] font-extrabold shrink-0">•</span>
+          <li key={idx} className="flex items-start gap-2 text-[11px] leading-normal text-ink-2">
+            <span className="shrink-0 font-extrabold text-brand-strong">•</span>
             <span>{tip}</span>
           </li>
         ))}
       </ul>
-      <div className="mt-4 p-3 rounded-2xl bg-purple-500/5 border border-purple-500/10 text-[10px] text-purple-950 dark:text-purple-200 leading-normal">
-        <strong>💡 Profesyonel İpucu:</strong> CV&apos;nizin ATS taramalarından geçmesi için standart yazı tipleri (Arial, Calibri) tercih edin.
+      <div className="mt-4 rounded-[var(--radius-control)] border border-brand/20 bg-[var(--accent-wash)] p-3 text-[10px] leading-normal text-ink-2">
+        <strong>Profesyonel ipucu:</strong> CV&apos;nizin ATS taramalarından geçmesi için standart yazı tipleri tercih edin.
       </div>
     </aside>
   );
@@ -146,7 +135,6 @@ export default function ForgePage() {
     forgeParsedCv,
     forgeAnalysis,
     forgeTone,
-    forgeHistory,
     forgeBackups,
     careerGoalId,
     setForgeCvText,
@@ -170,8 +158,8 @@ export default function ForgePage() {
   const [previewTab, setPreviewTab] = useState<PreviewTabId>("preview");
   const [activeSection, setActiveSection] = useState<"analiz" | "gecmis" | "ayarlar">("analiz");
 
-  const [mounted, setMounted] = useState(false);
-  const [optimized, setOptimized] = useState<OptimizedCV | null>(null);
+  const mounted = useHydrated();
+  const [, setOptimized] = useState<OptimizedCV | null>(null);
   const [cover, setCover] = useState<CoverLetterResult | null>(null);
   const [interview, setInterview] = useState<InterviewResult | null>(null);
   const [ats, setAts] = useState<AtsResult | null>(null);
@@ -186,7 +174,6 @@ export default function ForgePage() {
   const {
     analyze: analyzeInBrowser,
     analyzing,
-    statusMessage,
     isLoadingModel,
     error: clientAiError,
     ensureReady,
@@ -194,11 +181,10 @@ export default function ForgePage() {
 
   // Sync tab hash routing & hydration mounting
   useEffect(() => {
-    setMounted(true);
     if (typeof window !== "undefined") {
       const hash = window.location.hash.replace("#", "");
       if (hash === "history") {
-        setEditorTab("versions");
+        queueMicrotask(() => setEditorTab("versions"));
       }
     }
     // Warm embedding model once on first Forge visit
@@ -240,9 +226,9 @@ export default function ForgePage() {
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-5">
         <div className="relative">
           <div className="w-14 h-14 rounded-full border-[3px] border-t-transparent animate-spin"
-            style={{ borderColor: "#A855F7", borderTopColor: "transparent" }} />
+            style={{ borderColor: "var(--action-primary)", borderTopColor: "transparent" }} />
           <div className="absolute inset-0 rounded-full animate-ping opacity-20"
-            style={{ background: "#A855F7" }} />
+            style={{ background: "var(--action-primary)" }} />
         </div>
         <div className="text-center">
           <p className="font-bold text-lg text-star-white">Kariyer Asistanı Hazırlanıyor</p>
@@ -274,7 +260,6 @@ export default function ForgePage() {
 
   const runParse = (
     text: string,
-    source: "manual" | "file" = "manual",
     fileName?: string,
     goToEditor = false
   ) => {
@@ -322,7 +307,7 @@ export default function ForgePage() {
     }
     setForgeCvText(cleaned);
     run(() => {
-      runParse(cleaned, "file", fileName, true);
+      runParse(cleaned, fileName, true);
     });
   };
 
@@ -365,7 +350,7 @@ export default function ForgePage() {
 
   const onParse = () =>
     run(async () => {
-      runParse(cvText, "manual", undefined, true);
+      runParse(cvText, undefined, true);
     });
 
   /** Primary path: Transformers.js embeddings in the browser */
@@ -417,7 +402,7 @@ export default function ForgePage() {
         setModelBanner(null);
         toast.success(`Eşleşme: %${analysis.matchScore} (tarayıcı AI)`);
         setPreviewTab("match");
-      } catch (e) {
+      } catch {
         setModelBanner(null);
         toast.error(
           "Yapay zeka motoru şu an meşgul. Lütfen bağlantınızı kontrol edip sayfayı yenileyin."
@@ -523,7 +508,7 @@ export default function ForgePage() {
         }
         setModelBanner(null);
         setPreviewTab("feedback");
-      } catch (e) {
+      } catch {
         setModelBanner(null);
         toast.error(
           "ATS taraması şu an yapılamıyor. Bağlantını kontrol et — sistem birazdan tekrar denenebilir."
@@ -591,7 +576,7 @@ export default function ForgePage() {
     }
   };
 
-  const updateExperience = (index: number, patch: Partial<any>) => {
+  const updateExperience = (index: number, patch: Partial<ParsedExperience>) => {
     if (forgeParsedCv) {
       const updated = [...forgeParsedCv.experience];
       updated[index] = { ...updated[index], ...patch };
@@ -629,23 +614,23 @@ export default function ForgePage() {
   };
 
   return (
-    <div className="px-4 md:px-8 pb-20 pt-6">
-      <div className="max-w-7xl mx-auto">
+    <main className="product-page">
+      <div>
         
         {/* Workspace Title & Intro */}
-        <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="mb-8 flex flex-col gap-5 border-b border-line pb-8 md:flex-row md:items-end md:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full text-xs font-bold bg-purple-100/80 text-purple-800 dark:bg-purple-500/10 dark:text-purple-300">
+            <div className="page-kicker mb-4">
               <Anvil className="w-3.5 h-3.5" />
-              SoftBridge · Workspace
+              Analiz çalışma alanı
             </div>
-            <h1 className="font-display text-3xl font-bold tracking-tight text-star-white">{t("forgeTitle")}</h1>
-            <p className="text-sm text-muted-steel mt-1 max-w-xl leading-relaxed">{t("forgeDesc")}</p>
+            <h1 className="page-title-compact">{t("forgeTitle")}</h1>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-ink-2">{t("forgeDesc")}</p>
             {/* Yerel işleme rozeti */}
-            <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+            <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-positive">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60" style={{ background: "#4ADE80" }} />
-                <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#4ADE80" }} />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-positive opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-positive" />
               </span>
               Kariyer Asistanı: Aktif · Yerel İşleme
             </div>
@@ -653,15 +638,15 @@ export default function ForgePage() {
             {(analyzing || modelBanner) && (
               <div className="mt-3 space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-purple-700 dark:text-purple-300">
-                    ✨ {modelBanner || "Özgeçmiş analiz ediliyor..."}
+                  <span className="font-semibold text-brand-strong">
+                    {modelBanner || "Özgeçmiş analiz ediliyor..."}
                   </span>
                   <span className="text-muted-steel">Lütfen bekleyin</span>
                 </div>
                 <div className="h-1 rounded-full overflow-hidden" style={{ background: "var(--border-color)" }}>
                   <div
                     className="h-full rounded-full animate-pulse"
-                    style={{ width: "65%", background: "linear-gradient(90deg, #6B21A8, #A855F7, #F97316)" }}
+                    style={{ width: "65%", background: "var(--action-primary)" }}
                   />
                 </div>
               </div>
@@ -682,20 +667,20 @@ export default function ForgePage() {
         </div>
 
         {/* Dynamic SaaS Layout: Sol Sidebar + Workspace Area */}
-        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-8 items-start">
+        <div className="grid grid-cols-1 gap-6 items-start">
           
           {/* Sol Sidebar Nav */}
-          <aside className="lg:sticky lg:top-24 flex flex-col gap-6 rounded-3xl p-5 border border-slate-200/80 bg-slate-50/50 dark:border-slate-800/85 dark:bg-slate-900 shadow-sm">
+          <aside className="surface-panel flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
-              <Anvil className="w-4 h-4 text-purple-600 dark:text-[#C084FC]" strokeWidth={1.5} />
+              <Anvil className="w-4 h-4 text-brand-strong" strokeWidth={1.5} />
               CareerForge
             </div>
-            <nav className="flex flex-col gap-1.5">
+            <nav className="flex flex-wrap gap-1.5">
               <button
                 onClick={() => setActiveSection("analiz")}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer text-left",
-                  activeSection === "analiz" ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10" : "text-slate-600 hover:bg-slate-100 hover:text-purple-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-[#C084FC]"
+                  activeSection === "analiz" ? "bg-ink text-background font-bold" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
                 )}
               >
                 <Anvil className="w-4 h-4" strokeWidth={1.5} />
@@ -705,7 +690,7 @@ export default function ForgePage() {
                 onClick={() => setActiveSection("gecmis")}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer text-left",
-                  activeSection === "gecmis" ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10" : "text-slate-600 hover:bg-slate-100 hover:text-purple-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-[#C084FC]"
+                  activeSection === "gecmis" ? "bg-ink text-background font-bold" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
                 )}
               >
                 <History className="w-4 h-4" strokeWidth={1.5} />
@@ -715,14 +700,14 @@ export default function ForgePage() {
                 onClick={() => setActiveSection("ayarlar")}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer text-left",
-                  activeSection === "ayarlar" ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10" : "text-slate-600 hover:bg-slate-100 hover:text-purple-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-[#C084FC]"
+                  activeSection === "ayarlar" ? "bg-ink text-background font-bold" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
                 )}
               >
                 <Settings className="w-4 h-4" strokeWidth={1.5} />
                 Kariyer Hedefleri
               </button>
             </nav>
-            <div className="mt-6 border-t border-slate-200 dark:border-slate-800 pt-4">
+            <div className="border-t border-line pt-3 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Gizlilik Notu</p>
               <p className="text-[10px] text-slate-500 dark:text-slate-300 leading-normal">
                 Tüm verileriniz tarayıcınızda (yerel) saklanır.
@@ -734,7 +719,7 @@ export default function ForgePage() {
           <div className="min-w-0 space-y-6">
             
             {activeSection === "gecmis" && (
-              <div className="glass-panel rounded-3xl p-6 border border-slate-200/80 dark:border-white/10 shadow-md">
+              <div className="surface-panel p-6">
                 <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-white/5 pb-3">
                   <div>
                     <h2 className="text-lg font-bold text-star-white">Geçmiş & Yedek Raporları</h2>
@@ -784,7 +769,7 @@ export default function ForgePage() {
                 ) : (
                   <ul className="space-y-2">
                     {forgeBackups.map((bak) => (
-                      <li key={bak.id} className="p-4 rounded-2xl border border-slate-100 bg-white/40 dark:bg-white/[0.02] dark:border-white/5 flex justify-between items-center text-xs">
+                      <li key={bak.id} className="flex items-center justify-between rounded-[var(--radius-panel)] border border-line bg-surface-2 p-4 text-xs">
                         <div>
                           <p className="font-semibold text-star-white">{bak.label}</p>
                           <p className="text-[10px] text-slate-500 mt-0.5">{new Date(bak.createdAt).toLocaleString("tr-TR")}</p>
@@ -814,7 +799,7 @@ export default function ForgePage() {
             )}
 
             {activeSection === "ayarlar" && (
-              <div className="glass-panel rounded-3xl p-6 border border-slate-200/80 dark:border-white/10 shadow-md space-y-6">
+              <div className="surface-panel space-y-6 p-6">
                 <div className="border-b border-slate-100 dark:border-white/5 pb-3">
                   <h2 className="text-lg font-bold text-star-white">Kariyer Hedef Yapılandırması</h2>
                   <p className="text-xs text-slate-500 mt-1">Hedeflediğiniz kariyer hedefini seçin. Analizler ve mülakat hazırlığı bu hedefe göre uyarlanır.</p>
@@ -829,7 +814,7 @@ export default function ForgePage() {
                         setCareerGoalId(e.target.value || null);
                         toast.success("Hedef pozisyon güncellendi.");
                       }}
-                      className="w-full h-11 rounded-2xl border border-slate-200 bg-white/80 px-4 text-sm font-semibold text-slate-800 dark:bg-panel dark:border-white/10 dark:text-star-white"
+                      className="h-11 w-full rounded-[var(--radius-control)] border border-line bg-surface px-4 text-sm font-semibold text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]"
                     >
                       {CAREER_GOALS.map((g) => (
                         <option key={g.id} value={g.id}>
@@ -872,7 +857,7 @@ export default function ForgePage() {
                   <div className="flex flex-col gap-4">
                     
                     {/* Editor Tabs Navigation */}
-                    <div className="flex gap-1 p-1 rounded-2xl bg-purple-500/5 border border-purple-500/10">
+                    <div className="flex gap-1 rounded-[var(--radius-control)] border border-line bg-surface-2 p-1">
                       {(
                         [
                           ["raw", "Yükle"],
@@ -889,8 +874,8 @@ export default function ForgePage() {
                             className={cn(
                               "flex-1 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer",
                               active
-                                ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10"
-                                : "text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                ? "bg-ink text-background font-bold"
+                                : "text-ink-2 hover:text-ink disabled:opacity-50 disabled:cursor-not-allowed"
                             )}
                           >
                             {label}
@@ -900,25 +885,19 @@ export default function ForgePage() {
                     </div>
 
                     {/* Editor Content Area */}
-                    <div className="glass-panel rounded-3xl p-5 min-h-[460px] border border-slate-200/80 dark:border-white/10">
+                    <div className="surface-panel min-h-[460px] p-5">
               
               {/* Tab 1: Drop zone + paste */}
               {editorTab === "raw" && (
                 <div className="space-y-6">
                   {!forgeParsedCv ? (
                     <>
-                      <div
-                        className="rounded-2xl p-5 text-center"
-                        style={{
-                          background: "linear-gradient(135deg, rgba(107,33,168,0.08), rgba(249,115,22,0.06))",
-                          border: "1px dashed rgba(168,85,247,0.3)",
-                        }}
-                      >
-                        <div className="text-3xl mb-2">📄</div>
-                        <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
+                      <div className="rounded-[var(--radius-panel)] border border-dashed border-brand/40 bg-[var(--accent-wash)] p-5 text-center">
+                        <FileSearch className="mx-auto mb-3 h-6 w-6 text-brand-strong" />
+                        <p className="text-sm font-bold text-ink">
                           Özgeçmişini Yükle ve Kariyerini Güçlendir
                         </p>
-                        <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                        <p className="mt-1 text-xs leading-relaxed text-ink-2">
                           Dosyanı aşağıya bırak ya da metni yapıştır — asistan saniyeler içinde analiz eder.
                         </p>
                         <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-400">
@@ -940,15 +919,9 @@ export default function ForgePage() {
                       />
                     </>
                   ) : (
-                    <div
-                      className="rounded-2xl p-3 text-sm"
-                      style={{
-                        background: "linear-gradient(135deg, rgba(74,222,128,0.08), rgba(52,211,153,0.05))",
-                        border: "1px solid rgba(74,222,128,0.25)",
-                      }}
-                    >
+                    <div className="rounded-[var(--radius-panel)] border border-positive/30 bg-[var(--positive-wash)] p-3 text-sm">
                       <p className="font-semibold text-emerald-800 dark:text-emerald-400">
-                        ✅ Özgeçmiş yüklendi{lastCvFileName ? `: ${lastCvFileName}` : ""}
+                        Özgeçmiş yüklendi{lastCvFileName ? `: ${lastCvFileName}` : ""}
                       </p>
                       <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
                         Sağda analiz sonuçlarını incele · Düzenle sekmesiyle güncelle.
@@ -989,21 +962,15 @@ export default function ForgePage() {
                           <LoadingSpinner /> Analiz ediliyor...
                         </>
                       ) : (
-                        "✨ Özgeçmişi Analiz Et"
+                        "Özgeçmişi Analiz Et"
                       )}
                     </Button>
                   </div>
 
                   {parseBanner && (
-                    <div
-                      className="rounded-xl p-3 text-xs"
-                      style={{
-                        background: "linear-gradient(135deg, rgba(107,33,168,0.08), rgba(168,85,247,0.05))",
-                        border: "1px solid rgba(168,85,247,0.2)",
-                      }}
-                    >
-                      <p className="font-semibold text-purple-700 dark:text-[#C084FC]">🌟 {parseBanner}</p>
-                      <p className="mt-0.5" style={{ color: "var(--text-muted)" }}>
+                    <div className="rounded-[var(--radius-control)] border border-brand/20 bg-[var(--accent-wash)] p-3 text-xs">
+                      <p className="font-semibold text-brand-strong">{parseBanner}</p>
+                      <p className="mt-0.5 text-ink-2">
                         Düzenlemek için <strong>Düzenle</strong> sekmesine geç.
                       </p>
                     </div>
@@ -1017,7 +984,7 @@ export default function ForgePage() {
                   
                   {/* Personal Info */}
                   <div className="space-y-3">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-[#C084FC]">{t("personalInfo")}</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-brand-strong">{t("personalInfo")}</h4>
                     <div className="flex gap-3 items-center">
                       <div className="w-12 h-12 rounded-full bg-abyss-panel overflow-hidden border flex items-center justify-center shrink-0 relative group">
                         {forgeParsedCv.photoDataUrl ? (
@@ -1178,17 +1145,17 @@ export default function ForgePage() {
           <div className="flex flex-col gap-4">
             
             {/* Tool tab links */}
-            <div className="flex flex-wrap gap-1 p-1 rounded-2xl bg-purple-500/5 border border-purple-500/10">
+            <div className="flex flex-wrap gap-1 rounded-[var(--radius-control)] border border-line bg-surface-2 p-1">
               {(
                 [
-                  ["preview", "👁️", t("tabPreview")],
-                  ["feedback", "🎯", t("tabAtsCheck")],
-                  ["match", "🤝", t("tabMatchJd")],
-                  ["cover", "✉️", t("tabCoverLetter")],
-                  ["interview", "🗣️", t("tabInterviewPrep")],
-                  ["chat", "💬", t("tabCoachChat")],
+                  ["preview", t("tabPreview")],
+                  ["feedback", t("tabAtsCheck")],
+                  ["match", t("tabMatchJd")],
+                  ["cover", t("tabCoverLetter")],
+                  ["interview", t("tabInterviewPrep")],
+                  ["chat", t("tabCoachChat")],
                 ] as const
-              ).map(([id, emoji, label]) => {
+              ).map(([id, label]) => {
                 const disabled = !forgeParsedCv && id !== "preview";
                 const active = previewTab === id;
                 return (
@@ -1197,20 +1164,20 @@ export default function ForgePage() {
                     disabled={disabled}
                     onClick={() => setPreviewTab(id)}
                     className={cn(
-                      "flex-1 px-2 py-1.5 rounded-xl text-[11px] font-semibold cursor-pointer transition-all whitespace-nowrap",
+                      "flex-1 whitespace-nowrap rounded-[var(--radius-control)] px-2 py-1.5 text-[11px] font-semibold transition-colors",
                       active
-                        ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10"
-                        : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-100 disabled:opacity-40 disabled:hover:text-slate-600/40"
+                        ? "bg-ink font-bold text-background"
+                        : "text-ink-2 hover:bg-surface hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
                     )}
                   >
-                    {emoji} {label}
+                    {label}
                   </button>
                 );
               })}
             </div>
 
             {/* Tool Output Window */}
-            <div className="glass-panel rounded-3xl p-6 min-h-[460px]" style={{ border: "1px solid rgba(168,85,247,0.12)" }}>
+            <div className="surface-panel min-h-[460px] p-6">
               {clientAiError && (
                 <div className="mb-4">
                   <ErrorAlert
@@ -1229,15 +1196,15 @@ export default function ForgePage() {
                       <p className="text-sm text-muted-steel">{t("noCvLoaded")}</p>
                     </div>
                   ) : (
-                    <div className="bg-white text-slate-800 p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm max-w-full font-sans leading-relaxed text-left">
-                      <div className="flex justify-between items-center border-b border-slate-200 pb-4 mb-4">
+                    <div className="max-w-full rounded-[var(--radius-panel)] border border-[var(--paper-line)] bg-[var(--paper-bg)] p-6 text-left font-sans leading-relaxed text-[var(--paper-ink)] shadow-sm md:p-8">
+                      <div className="mb-4 flex items-center justify-between border-b border-[var(--paper-line)] pb-4">
                         <div>
-                          <p className="text-sm font-semibold text-slate-900 leading-tight">{forgeParsedCv.name}</p>
-                          <p className="text-sm font-semibold mt-0.5 text-purple-700 dark:text-[#C084FC]">{forgeParsedCv.title || "Software Professional"}</p>
-                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 mt-2">
-                            {forgeParsedCv.email && <span>✉ {forgeParsedCv.email}</span>}
-                            {forgeParsedCv.phone && <span>📞 {forgeParsedCv.phone}</span>}
-                            {forgeParsedCv.location && <span>📍 {forgeParsedCv.location}</span>}
+                          <p className="text-sm font-semibold leading-tight text-[var(--paper-ink)]">{forgeParsedCv.name}</p>
+                          <p className="mt-0.5 text-sm font-semibold text-[var(--paper-accent)]">{forgeParsedCv.title || "Software Professional"}</p>
+                          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[var(--paper-muted)]">
+                            {forgeParsedCv.email && <span>{forgeParsedCv.email}</span>}
+                            {forgeParsedCv.phone && <span>{forgeParsedCv.phone}</span>}
+                            {forgeParsedCv.location && <span>{forgeParsedCv.location}</span>}
                           </div>
                         </div>
                         {forgeParsedCv.photoDataUrl && (
@@ -1245,31 +1212,31 @@ export default function ForgePage() {
                           <img
                             src={forgeParsedCv.photoDataUrl}
                             alt="Avatar"
-                            className="w-16 h-16 rounded-full object-cover border-2 border-slate-100 shadow-sm"
+                            className="h-16 w-16 rounded-full border-2 border-[var(--paper-line)] object-cover shadow-sm"
                           />
                         )}
                       </div>
 
                       {forgeParsedCv.summary && (
                         <div className="mb-4">
-                           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 border-purple-600 pl-2 mb-2">Summary</h3>
-                          <p className="text-xs text-slate-600 text-justify">{forgeParsedCv.summary}</p>
+                           <h3 className="mb-2 border-l-4 border-[var(--paper-accent)] pl-2 text-xs font-bold uppercase tracking-wider text-[var(--paper-ink)]">Summary</h3>
+                          <p className="text-justify text-xs text-[var(--paper-copy)]">{forgeParsedCv.summary}</p>
                         </div>
                       )}
 
                       {forgeParsedCv.experience && forgeParsedCv.experience.length > 0 && (
                         <div className="mb-4">
-                           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 border-purple-600 pl-2 mb-2.5">Experience</h3>
+                           <h3 className="mb-2.5 border-l-4 border-[var(--paper-accent)] pl-2 text-xs font-bold uppercase tracking-wider text-[var(--paper-ink)]">Experience</h3>
                           <div className="space-y-3">
                             {forgeParsedCv.experience.map((exp, idx) => (
                               <div key={idx} className="text-xs">
-                                <div className="flex justify-between font-semibold text-slate-800">
+                                <div className="flex justify-between font-semibold text-[var(--paper-ink)]">
                                   <span>{exp.position}</span>
-                                  <span className="text-slate-400 font-normal">{exp.duration}</span>
+                                  <span className="font-normal text-[var(--paper-muted)]">{exp.duration}</span>
                                 </div>
-                                 <p className="font-medium my-0.5 text-purple-700 dark:text-[#C084FC]">{exp.company}</p>
+                                 <p className="my-0.5 font-medium text-[var(--paper-accent)]">{exp.company}</p>
                                 {exp.description && exp.description.length > 0 && (
-                                  <ul className="list-disc list-inside pl-2 space-y-0.5 text-slate-500">
+                                  <ul className="list-inside list-disc space-y-0.5 pl-2 text-[var(--paper-copy)]">
                                     {exp.description.map((b, bIdx) => (
                                       <li key={bIdx}>{b}</li>
                                     ))}
@@ -1283,10 +1250,10 @@ export default function ForgePage() {
 
                       {forgeParsedCv.skills && forgeParsedCv.skills.length > 0 && (
                         <div className="mb-4">
-                           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 border-purple-600 pl-2 mb-2">Skills</h3>
+                           <h3 className="mb-2 border-l-4 border-[var(--paper-accent)] pl-2 text-xs font-bold uppercase tracking-wider text-[var(--paper-ink)]">Skills</h3>
                           <div className="flex flex-wrap gap-1">
                             {forgeParsedCv.skills.map((s, idx) => (
-                              <span key={idx} className="bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] font-medium">{s}</span>
+                              <span key={idx} className="rounded border border-[var(--paper-line)] bg-[var(--paper-accent-wash)] px-2 py-0.5 text-[10px] font-medium text-[var(--paper-accent-strong)]">{s}</span>
                             ))}
                           </div>
                         </div>
@@ -1294,15 +1261,15 @@ export default function ForgePage() {
 
                       {forgeParsedCv.education && forgeParsedCv.education.length > 0 && (
                         <div>
-                           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 border-purple-600 pl-2 mb-2">Education</h3>
+                           <h3 className="mb-2 border-l-4 border-[var(--paper-accent)] pl-2 text-xs font-bold uppercase tracking-wider text-[var(--paper-ink)]">Education</h3>
                           <div className="space-y-2">
                             {forgeParsedCv.education.map((edu, idx) => (
                               <div key={idx} className="text-xs">
-                                <div className="flex justify-between font-semibold text-slate-800">
+                                <div className="flex justify-between font-semibold text-[var(--paper-ink)]">
                                   <span>{edu.school}</span>
-                                  <span className="text-slate-400 font-normal">{edu.year}</span>
+                                  <span className="font-normal text-[var(--paper-muted)]">{edu.year}</span>
                                 </div>
-                                <p className="text-slate-500">{edu.degree}</p>
+                                <p className="text-[var(--paper-copy)]">{edu.degree}</p>
                               </div>
                             ))}
                           </div>
@@ -1352,8 +1319,8 @@ export default function ForgePage() {
                             : cvFeedback?.improvements?.slice(0, 4)
                         }
                       />
-                      <div className="rounded-2xl border border-purple-200/50 bg-purple-50/60 dark:bg-purple-500/10 dark:border-purple-500/20 p-4 space-y-2">
-                        <p className="text-[11px] font-bold uppercase tracking-wider text-purple-700 dark:text-[#C084FC]">
+                      <div className="space-y-2 rounded-[var(--radius-panel)] border border-brand/20 bg-[var(--accent-wash)] p-4">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-brand-strong">
                           AI Koç fısıltısı
                         </p>
                         <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -1361,7 +1328,7 @@ export default function ForgePage() {
                         </p>
                         <Link
                           href="/coach"
-                          className="inline-flex text-sm font-semibold text-purple-600 dark:text-[#C084FC] hover:underline"
+                          className="inline-flex text-sm font-semibold text-brand-strong hover:underline"
                         >
                           Özgeçmişinle sohbet et →
                         </Link>
@@ -1419,7 +1386,7 @@ export default function ForgePage() {
                   {forgeAnalysis && (
                     <div className="space-y-3 pt-2">
                       <div className="flex items-center gap-4 bg-panel-elevated/50 p-4 rounded-xl border border-black/5">
-                        <div className="w-16 h-16 rounded-full border-4 border-purple-600 text-purple-700 dark:border-purple-400 dark:text-purple-300 flex items-center justify-center font-bold text-base">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-brand text-base font-bold text-brand-strong">
                           {forgeAnalysis.matchScore}%
                         </div>
                         <div>
@@ -1529,8 +1496,8 @@ export default function ForgePage() {
               {previewTab === "chat" && (
                 <div className="space-y-3 flex flex-col min-h-[380px] justify-between">
                   <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-                    <div className="p-3 rounded-xl bg-purple-500/5 border border-purple-500/10 text-xs leading-relaxed">
-                      <p className="font-bold text-purple-700 dark:text-purple-300">Kariyer Koçu:</p>
+                    <div className="rounded-[var(--radius-panel)] border border-info/20 bg-[var(--info-wash)] p-3 text-xs leading-relaxed">
+                      <p className="font-bold text-info">Kariyer Koçu:</p>
                       <p className="mt-1">Merhaba! Kariyer stratejileri, mülakat hazırlığı veya özgeçmişinizdeki ifadeleri geliştirme konusunda bana dilediğinizi sorabilirsiniz.</p>
                     </div>
                     {chatHistory.map((msg, idx) => (
@@ -1541,13 +1508,13 @@ export default function ForgePage() {
                             <p className="mt-0.5 text-slate-700 dark:text-slate-300">{msg.text}</p>
                           </div>
                         ) : (
-                          <div className="p-3 rounded-xl bg-purple-500/5 border border-purple-500/10 text-xs leading-relaxed max-w-[90%] mr-auto">
-                            <p className="font-bold text-purple-700 dark:text-purple-300">
+                          <div className="mr-auto max-w-[90%] rounded-[var(--radius-panel)] border border-info/20 bg-[var(--info-wash)] p-3 text-xs leading-relaxed">
+                            <p className="font-bold text-info">
                               Kariyer Koçu {msg.category ? `(${msg.category})` : ""}:
                             </p>
                             <p className="mt-1 text-slate-700 dark:text-slate-300">{msg.text}</p>
                             {msg.actionableTips && msg.actionableTips.length > 0 && (
-                              <ul className="mt-2 space-y-1 text-[11px] text-purple-900/80 dark:text-purple-300/80 list-disc pl-3">
+                              <ul className="mt-2 list-disc space-y-1 pl-3 text-[11px] text-ink-2">
                                 {msg.actionableTips.map((tip, i) => <li key={i}>{tip}</li>)}
                               </ul>
                             )}
@@ -1581,13 +1548,13 @@ export default function ForgePage() {
         </div> {/* Closes Dynamic Split-View Workspace Grid */}
 
         {/* Right Column: ProTips Panel */}
-        <ProTipsPanel editorTab={editorTab} previewTab={previewTab} activeSection={activeSection} />
+        <ProTipsPanel editorTab={editorTab} activeSection={activeSection} />
       </div>
     )}
 
   </div>
 </div>
 </div>
-</div>
+</main>
   );
 }

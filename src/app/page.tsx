@@ -1,567 +1,365 @@
 "use client";
 
-import Link from "next/link";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import {
   ArrowRight,
-  FileUp,
+  BriefcaseBusiness,
+  Check,
+  CircleDot,
+  FileText,
+  LockKeyhole,
+  MessageSquareText,
+  ScanLine,
   Sparkles,
   Target,
-  FileText,
-  ShieldCheck,
-  Mic2,
-  Lock,
-  Zap,
-  Star,
-  FileSearch,
-  Check,
-  AlertTriangle,
-  Award,
-  ChevronRight,
-  ChevronDown,
-  HelpCircle,
-  Code,
-  TrendingUp,
 } from "lucide-react";
-import { useState } from "react";
-import { useCareerStore } from "@/store/useCareerStore";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { FilePickButton } from "@/components/FilePickButton";
+import { useCareerStore } from "@/store/useCareerStore";
+import { cleanExtractedText, parseCV } from "@/lib/forge";
+import { cn } from "@/lib/utils";
 
-const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 15 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] as const },
-});
+type WorkbenchView = "scan" | "match" | "interview";
 
-// ─── FAQ Component ───────────────────────────────────────────────────────────
-function FaqCard({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div
-      onClick={() => setOpen(!open)}
-      className="glass-panel p-5 rounded-2xl cursor-pointer hover:border-blue-500/30 transition-all select-none text-left"
-    >
-      <div className="flex items-center justify-between gap-4">
-        <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200 flex items-center gap-2">
-          <HelpCircle className="w-4 h-4 text-blue-600 shrink-0" />
-          {q}
-        </h4>
-        <div className="text-slate-400">
-          {open ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        </div>
-      </div>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden mt-3 text-xs text-slate-500 leading-relaxed pl-6 border-l border-slate-200 dark:border-slate-800"
-          >
-            {a}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
+const views: Array<{ id: WorkbenchView; label: string; icon: typeof ScanLine }> = [
+  { id: "scan", label: "CV taraması", icon: ScanLine },
+  { id: "match", label: "Rol eşleşmesi", icon: Target },
+  { id: "interview", label: "Mülakat", icon: MessageSquareText },
+];
 
-// ─── Feature Showroom Widget: Keyword Highlight ──────────────────────────────
-function KeywordHighlightDemo() {
-  const [mode, setMode] = useState<"raw" | "highlight">("highlight");
-  return (
-    <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-900 space-y-3">
-      <div className="flex items-center justify-between border-b pb-2 dark:border-white/5">
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-          Anahtar Kelime Tarayıcı (Demo)
-        </span>
-        <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg">
-          <button
-            onClick={() => setMode("raw")}
-            className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
-              mode === "raw" ? "bg-white text-slate-900 dark:bg-slate-700 dark:text-white shadow" : "text-slate-500"
-            }`}
-          >
-            Ham Metin
-          </button>
-          <button
-            onClick={() => setMode("highlight")}
-            className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
-              mode === "highlight" ? "bg-white text-slate-900 dark:bg-slate-700 dark:text-white shadow" : "text-slate-500"
-            }`}
-          >
-            Eşleşen
-          </button>
-        </div>
-      </div>
-      <div className="text-xs leading-relaxed font-mono p-3 bg-slate-50 dark:bg-slate-950 rounded-xl min-h-[90px]">
-        {mode === "raw" ? (
-          <p className="text-slate-500">
-            SoftBridge üzerinde React ve Node.js teknolojileriyle web dashboard panelleri kodladım.
-          </p>
-        ) : (
-          <p className="text-slate-500">
-            SoftBridge üzerinde{" "}
-            <span className="bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 px-1 py-0.5 rounded font-bold">
-              React
-            </span>{" "}
-            ve{" "}
-            <span className="bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 px-1 py-0.5 rounded font-bold">
-              Node.js
-            </span>{" "}
-            teknolojileriyle web{" "}
-            <span className="bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300 px-1 py-0.5 rounded font-bold">
-              dashboard
-            </span>{" "}
-            panelleri kodladım.
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
+const resumeKeywords = ["React", "Next.js", "TypeScript", "12k kullanıcı", "%35 performans"];
+const missingKeywords = ["Testing", "Accessibility", "CI/CD"];
 
-// ─── Feature Showroom Widget: Job Match Simulator ────────────────────────────
-function JobMatchShowroom() {
-  const [skills, setSkills] = useState<string[]>(["React", "TypeScript"]);
-  const required = ["React", "TypeScript", "Next.js", "Docker"];
-  const score = Math.round((skills.length / required.length) * 100);
-
-  const addSkill = (s: string) => {
-    if (skills.includes(s)) return;
-    setSkills([...skills, s]);
-  };
-
-  return (
-    <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-900 space-y-3 text-left">
-      <div className="flex items-center justify-between border-b pb-2 dark:border-white/5">
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-          İlan Eşleşme Simülatörü
-        </span>
-        <span className="text-xs font-black text-blue-600 dark:text-blue-400">% {score} Uyum</span>
-      </div>
-
-      <div className="space-y-2">
-        <p className="text-[11px] text-slate-500 leading-normal">
-          İlana başvurmadan önce eksik yetenekleri ekleyin:
-        </p>
-        <div className="flex flex-wrap gap-1">
-          {required.map((req) => {
-            const has = skills.includes(req);
-            return (
-              <button
-                key={req}
-                onClick={() => addSkill(req)}
-                disabled={has}
-                className={`text-[9px] font-bold px-2 py-0.5 rounded-full border transition-all ${
-                  has
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-300 dark:border-emerald-500/20"
-                    : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 cursor-pointer"
-                }`}
-              >
-                {req} {has ? "✓" : "+ Ekle"}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Feature Showroom Widget: AI Interview Coach Bubble ─────────────────────
-function CoachSimulation() {
-  return (
-    <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-900 space-y-3 text-left">
-      <div className="flex items-center justify-between border-b pb-2 dark:border-white/5">
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-          AI Koç Mülakat Simülasyonu
-        </span>
-      </div>
-      <div className="space-y-2 text-[11px]">
-        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 text-slate-600 dark:text-slate-400 leading-normal">
-          <strong className="text-purple-600 dark:text-[#C084FC] block mb-0.5">AI Koç:</strong>
-          &quot;React hızlandırma projesini anlatırken sayfa açılış süresini %35 düşürdüğünüzü belirtmişsiniz. Bunu hangi optimizasyon teknikleriyle yaptınız?&quot;
-        </div>
-        <div className="p-2.5 rounded-xl bg-blue-500/10 text-slate-700 dark:text-slate-300 border border-blue-500/20">
-          <strong className="text-blue-600 dark:text-blue-400 block mb-0.5">Önerilen STAR Cevap Kalıbı:</strong>
-          &quot;Code-splitting ve resim sıkıştırma mimarilerini kurarak yükü hafiflettim...&quot;
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Main Landing Page Component ─────────────────────────────────────────────
 export default function HomePage() {
   const router = useRouter();
-  const { loadDemoProfile } = useCareerStore();
-  const [activeTab, setActiveTab] = useState<"before" | "after">("after");
+  const {
+    loadDemoProfile,
+    setForgeCvText,
+    setForgeParsedCv,
+    setLastAnalysisMeta,
+    pushForgeHistory,
+  } = useCareerStore();
+  const [view, setView] = useState<WorkbenchView>("scan");
+  const [addedKeywords, setAddedKeywords] = useState<string[]>([]);
 
-  const startDemoMode = () => {
+  const score = Math.min(96, 78 + addedKeywords.length * 6);
+  const matchScore = Math.min(94, 67 + addedKeywords.length * 9);
+  const availableKeywords = missingKeywords.filter((keyword) => !addedKeywords.includes(keyword));
+
+  const primaryInsight = useMemo(() => {
+    if (view === "match") {
+      return {
+        label: "Frontend Engineer",
+        value: `${matchScore}%`,
+        title: matchScore >= 85 ? "Rol dili güçlü biçimde örtüşüyor" : "Üç kanıt başvuruyu güçlendirebilir",
+        detail: "İlan, erişilebilirlik, test disiplini ve CI/CD deneyimini açık kanıtlarla görmek istiyor.",
+      };
+    }
+    if (view === "interview") {
+      return {
+        label: "Hazır soru",
+        value: "01",
+        title: "Performans kazanımını nasıl ölçtünüz?",
+        detail: "Yanıtınızda başlangıç metriğini, yaptığınız teknik seçimi ve kullanıcı etkisini birbirine bağlayın.",
+      };
+    }
+    return {
+      label: "ATS okunabilirliği",
+      value: `${score}%`,
+      title: score >= 90 ? "Başvuruya hazır bir yapı" : "İçerik güçlü, kanıt dağılımı eksik",
+      detail: "Özet ve son deneyim iyi taranıyor. Eksik anahtar kelimeleri yalnızca gerçek deneyimle destekleyebildiğinizde ekleyin.",
+    };
+  }, [matchScore, score, view]);
+
+  const openDemo = () => {
     loadDemoProfile();
-    toast.success("Recruiter Demo Modu Yüklendi! Yusuf Demir adayı için tüm veriler hazırlandı.");
+    toast.success("Demo çalışma alanı hazır.");
     router.push("/dashboard");
   };
 
-  const steps = [
-    { num: "01", title: "Özgeçmiş Yükle", desc: "Belgenizi tarayıcınıza bırakın veya demo hesaba geçin." },
-    { num: "02", title: "Eksikleri İncele", desc: "Anlık anahtar kelime eşleşmesini ve yapısal eksikleri tespit edin." },
-    { num: "03", title: "Tek Tıkla Tamamla", desc: "Canlı editör ve asistan önerileriyle puanınızı artırın." },
-    { num: "04", title: "Başvuruya Hazırlan", desc: "Mülakat simülatörüyle STAR metodunu kullanarak çalışın." },
-  ];
-
-  const faqs = [
-    { q: "Verilerim güvende mi?", a: "Evet. CareerForge %100 yerel (local-first) çalışacak şekilde tasarlanmıştır. Yüklediğiniz dosyalar veya girdiğiniz bilgiler sunuculara gönderilmez." },
-    { q: "ATS skoru nasıl hesaplanıyor?", a: "CV'nizdeki deneyimler ile hedef iş ilanındaki etiketler arasındaki anlamsal eşleşmeler cosine-similarity algoritmasıyla yerel cihazınızda hesaplanır." },
-    { q: "Uygulamayı kullanmak ücretli mi?", a: "Hayır. CareerForge tamamen açık kaynak kodlu ve ücretsizdir. Bulut sunucu maliyetleri olmadığı için sınırsızca ücretsiz kullanabilirsiniz." },
-  ];
+  const handleResumeText = (text: string, fileName: string) => {
+    try {
+      const cleaned = cleanExtractedText(text);
+      const parsed = parseCV(cleaned);
+      setForgeCvText(cleaned);
+      setForgeParsedCv(parsed);
+      setLastAnalysisMeta({
+        at: new Date().toISOString(),
+        fileName,
+        candidateName: parsed.name,
+        targetTitle: parsed.title,
+      });
+      pushForgeHistory({
+        action: "parse",
+        summary: `${parsed.name} özgeçmişi içe aktarıldı`,
+        payload: parsed,
+      });
+      toast.success("Özgeçmişiniz çalışma alanına alındı.");
+      router.push("/forge");
+    } catch {
+      toast.error("Belge okunamadı. Metin içeren PDF veya TXT deneyin.");
+    }
+  };
 
   return (
-    <div className="pb-24 overflow-hidden bg-[#F8FAFC] dark:bg-[#020617] text-slate-800 dark:text-slate-200">
-      
-      {/* 1. Hero & Resume Dropzone / Demo Mode Trigger */}
-      <section className="relative px-4 md:px-8 pt-12 md:pt-20 pb-16 border-b border-slate-200/60 dark:border-white/5">
-        <div className="max-w-7xl mx-auto space-y-16">
-          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-12 items-center">
-            
-            {/* Left Column Hero Pitch */}
-            <motion.div {...fadeUp(0)} className="space-y-6 text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-blue-200 bg-blue-50 text-xs font-bold text-blue-700 dark:border-blue-500/25 dark:bg-blue-500/10 dark:text-blue-300">
-                <Sparkles className="w-3.5 h-3.5" />
-                SoftBridge CareerForge 2.0
+    <main>
+      <section className="product-page pb-0">
+        <div className="mb-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <div>
+            <p className="page-kicker mb-4"><CircleDot className="h-3.5 w-3.5" /> Kariyer çalışma alanı</p>
+            <h1 className="page-title">CareerForge</h1>
+            <p className="page-lede mt-5">
+              Özgeçmişinizdeki kanıtları, hedef rolü ve mülakat hazırlığını tek bir başvuru hattında birleştirin.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+            <FilePickButton
+              label="Özgeçmiş yükle"
+              variant="outline"
+              size="default"
+              silentSuccess
+              onText={handleResumeText}
+            />
+            <Button variant="primary" onClick={openDemo}>
+              Demo alanını aç <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="surface-panel overflow-hidden">
+          <div className="flex flex-col gap-3 border-b border-line bg-surface-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[var(--radius-control)] bg-ink text-background">
+                <FileText className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold text-ink">yusuf-demir-resume.pdf</p>
+                <p className="text-[0.6875rem] text-ink-3">Senior Frontend Engineer · son düzenleme şimdi</p>
               </div>
-
-              <h1 className="font-display text-4xl sm:text-5xl md:text-[3.5rem] font-extrabold tracking-tight leading-[1.05] text-slate-900 dark:text-white">
-                Özgeçmişinizi <span className="text-blue-600 dark:text-blue-400">ATS Robotları</span> için Güçlendirin.
-              </h1>
-
-              <p className="text-base md:text-lg text-slate-600 dark:text-slate-450 max-w-xl leading-relaxed">
-                Yapay zeka ile kişisel verilerinizi sunuculara göndermeden saniyeler içinde analiz edin, eksik yetenekleri tek tıkla kapatın ve işe alım oranınızı artırın.
-              </p>
-
-              {/* Privacy Shield */}
-              <div className="inline-flex flex-col sm:flex-row sm:items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/10 dark:border-emerald-500/20 px-4 py-3 text-xs font-bold shadow-sm">
-                <span className="inline-flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300">
-                  <Lock className="w-4 h-4 text-emerald-600" />
-                  Cihaz Üzerinde Gizli Analiz:
-                </span>
-                <span className="text-slate-500 dark:text-slate-400 font-medium">
-                  Hiçbir veri sunucuya yüklenmez, işlemler tamamen tarayıcınızda gerçekleşir.
-                </span>
-              </div>
-
-              {/* CTAs including recruiter instant demo mode */}
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={startDemoMode}
-                  className="inline-flex h-11 items-center gap-2 rounded-full bg-blue-600 text-white font-bold px-6 py-2.5 text-xs hover:bg-blue-700 transition-all hover:scale-[1.02] shadow-lg shadow-blue-500/15 cursor-pointer"
-                >
-                  Recruiter Demo Modu <ArrowRight className="w-4 h-4" />
-                </button>
-                <Link
-                  href="/forge"
-                  className="inline-flex h-11 items-center rounded-full px-5 text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-white/5 transition-all"
-                >
-                  CV Analiz Aracı
-                </Link>
-              </div>
-            </motion.div>
-
-            {/* Right Column Product Dashboard Mock Preview */}
-            <motion.div {...fadeUp(0.25)} className="w-full">
-              <div className="bg-white dark:bg-[#0B1329] rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 text-left">
-                <div className="flex items-center justify-between border-b pb-3 dark:border-white/5">
-                  <div>
-                    <h3 className="font-bold text-sm text-slate-800 dark:text-white">Kariyer Dashboard</h3>
-                    <p className="text-[10px] text-slate-400">Canlı optimizasyon önizlemesi</p>
-                  </div>
-                  <Badge variant="soft">Aktif</Badge>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/30 border dark:border-white/5 text-center">
-                    <span className="text-lg font-black text-blue-600 dark:text-blue-400">92%</span>
-                    <span className="text-[8px] text-slate-450 block uppercase tracking-wider mt-1">ATS Puanı</span>
-                  </div>
-                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/30 border dark:border-white/5 text-center">
-                    <span className="text-lg font-black text-purple-600 dark:text-purple-400">8/10</span>
-                    <span className="text-[8px] text-slate-450 block uppercase tracking-wider mt-1">CV Gücü</span>
-                  </div>
-                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/30 border dark:border-white/5 text-center">
-                    <span className="text-lg font-black text-cyan-600 dark:text-cyan-400">75%</span>
-                    <span className="text-[8px] text-slate-450 block uppercase tracking-wider mt-1">Yol Uyum</span>
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-2xl border border-blue-500/10 bg-blue-500/[0.02] flex items-center justify-between gap-3 text-xs">
-                  <div className="space-y-0.5">
-                    <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 block uppercase">Önerilen Aksiyon</span>
-                    <p className="text-slate-600 dark:text-slate-350">“TypeScript” yetkinliğini ekleyerek skorunuzu artırın.</p>
-                  </div>
+            </div>
+            <div className="flex overflow-x-auto rounded-[var(--radius-control)] border border-line bg-surface p-0.5" role="tablist" aria-label="Çalışma alanı görünümü">
+              {views.map((item) => {
+                const Icon = item.icon;
+                return (
                   <button
-                    onClick={startDemoMode}
-                    className="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold text-[9px] hover:bg-blue-700 cursor-pointer"
+                    key={item.id}
+                    type="button"
+                    onClick={() => setView(item.id)}
+                    className={cn(
+                      "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-[calc(var(--radius-control)-2px)] px-3 text-[0.6875rem] font-medium transition-colors",
+                      view === item.id ? "bg-ink text-background" : "text-ink-3 hover:text-ink"
+                    )}
+                    role="tab"
+                    aria-selected={view === item.id}
                   >
-                    Simüle Et
+                    <Icon className="h-3.5 w-3.5" /> {item.label}
                   </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid min-h-[34rem] lg:grid-cols-[minmax(0,1.4fr)_minmax(20rem,0.8fr)]">
+            <div className="relative overflow-hidden border-b border-line bg-surface-2 p-4 sm:p-8 lg:border-b-0 lg:border-r">
+              <div className="relative mx-auto min-h-[30rem] max-w-[42rem] rounded-[var(--radius-control)] border border-[var(--paper-line)] bg-[var(--paper-bg)] px-7 py-8 text-[var(--paper-ink)] shadow-[var(--elevation-2)] sm:px-12">
+                {view === "scan" && (
+                  <span className="pointer-events-none absolute inset-x-0 top-6 h-px bg-brand/50 shadow-[0_0_18px_var(--action-primary)] [animation:scan-line_4s_var(--ease-standard)_infinite]" />
+                )}
+                <div className="flex items-start justify-between gap-6 border-b border-[var(--paper-line)] pb-5">
+                  <div>
+                    <h2 className="text-2xl font-semibold leading-none">Yusuf Demir</h2>
+                    <p className="mt-2 text-xs font-semibold text-[var(--paper-accent)]">SENIOR FRONTEND ENGINEER</p>
+                    <p className="mt-2 text-[0.6875rem] text-[var(--paper-muted)]">İstanbul · yusuf@demir.dev</p>
+                  </div>
+                  <span className="font-mono text-xs text-[var(--paper-muted)]">01 / 01</span>
                 </div>
-              </div>
-            </motion.div>
-          </div>
 
-        </div>
-      </section>
+                <section className="mt-6">
+                  <h3 className="text-[0.6875rem] font-bold text-[var(--paper-muted)]">PROFİL</h3>
+                  <p className="mt-2 max-w-[58ch] text-xs leading-5">
+                    Ölçeklenebilir ürün arayüzleri geliştiren, <mark className="bg-[var(--paper-accent-wash)] px-0.5 text-[var(--paper-accent-strong)]">Next.js</mark> ve <mark className="bg-[var(--paper-accent-wash)] px-0.5 text-[var(--paper-accent-strong)]">TypeScript</mark> odaklı frontend mühendisi.
+                  </p>
+                </section>
 
-      {/* 2. Showroom: Live Interactive Product Features */}
-      <section className="px-4 md:px-8 py-16 border-b border-slate-200/60 dark:border-white/5">
-        <div className="max-w-7xl mx-auto space-y-12">
-          
-          <div className="text-center max-w-2xl mx-auto space-y-2">
-            <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              Söz Vermiyoruz, Canlı Gösteriyoruz.
-            </h2>
-            <p className="text-sm text-slate-500">
-              CareerForge modüllerinin çıktılarını hiçbir dosya yüklemeden hemen aşağıda test edin.
-            </p>
-          </div>
+                <section className="mt-6">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <h3 className="text-[0.6875rem] font-bold text-[var(--paper-muted)]">DENEYİM</h3>
+                    <span className="text-[0.625rem] text-[var(--paper-muted)]">2022 – bugün</span>
+                  </div>
+                  <p className="mt-2 text-xs font-semibold">Senior Frontend Developer · SoftBridge</p>
+                  <ul className="mt-3 space-y-2 pl-4 text-xs leading-5 text-[var(--paper-copy)] marker:text-[var(--paper-accent)]">
+                    <li><mark className="bg-[var(--paper-info-wash)] px-0.5 text-[var(--paper-info)]">12k aktif kullanıcıya</mark> hizmet veren analitik çalışma alanını Next.js ile geliştirdi.</li>
+                    <li>Code splitting ve görsel optimizasyonuyla açılış süresini <mark className="bg-[var(--paper-signal-wash)] px-0.5 text-[var(--paper-signal)]">%35 azalttı.</mark></li>
+                    <li>Ürün ekipleri için ortak bileşen kütüphanesini yayına aldı.</li>
+                  </ul>
+                </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="glass-panel p-5 rounded-3xl space-y-4 hover:-translate-y-0.5 transition-transform duration-200">
-              <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
-                <FileSearch className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-sm text-slate-800 dark:text-white">
-                Akıllı Kelime Eşleştirici
-              </h3>
-              <p className="text-xs text-slate-550 leading-relaxed">
-                CV&apos;nizdeki cümleleri analiz ederek eksik anahtar kelimeleri ve saptanmış yetkinlik etiketlerini bulur.
-              </p>
-              <KeywordHighlightDemo />
-            </div>
+                <section className="mt-6">
+                  <h3 className="text-[0.6875rem] font-bold text-[var(--paper-muted)]">YETKİNLİKLER</h3>
+                  <p className="mt-2 text-xs leading-5 text-[var(--paper-copy)]">
+                    {[...resumeKeywords, ...addedKeywords].join(" · ")}
+                  </p>
+                </section>
 
-            <div className="glass-panel p-5 rounded-3xl space-y-4 hover:-translate-y-0.5 transition-transform duration-200">
-              <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center">
-                <Target className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-sm text-slate-800 dark:text-white">
-                Anlık Rol Uyum Kontrolü
-              </h3>
-              <p className="text-xs text-slate-550 leading-relaxed">
-                Hedef rol gereksinimleriyle eşleşme durumunuzu hesaplayıp eksikleri tek tıkla özgeçmişinize enjekte etmenizi sağlar.
-              </p>
-              <JobMatchShowroom />
-            </div>
-
-            <div className="glass-panel p-5 rounded-3xl space-y-4 hover:-translate-y-0.5 transition-transform duration-200">
-              <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-600 flex items-center justify-center">
-                <Mic2 className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-sm text-slate-800 dark:text-white">
-                Mülakat Simülasyon Koçu
-              </h3>
-              <p className="text-xs text-slate-550 leading-relaxed">
-                Geçmiş deneyimlerinize göre en muhtemel mülakat sorularını çıkartarak STAR formatında cevaplar hazırlatır.
-              </p>
-              <CoachSimulation />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. Before vs After ATS Cümle Karşılaştırıcısı */}
-      <section className="px-4 md:px-8 py-16 border-b border-slate-200/60 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/10">
-        <div className="max-w-7xl mx-auto space-y-8">
-          <div className="text-center max-w-2xl mx-auto space-y-2">
-            <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              Cümle Yapısı Eşleştirme Testi
-            </h2>
-            <p className="text-sm text-slate-500">
-              Özgeçmişinizin ATS taramalarından nasıl geçtiğini ve CareerForge&apos;un bunu nasıl düzelttiğini görün.
-            </p>
-          </div>
-
-          <div className="glass-panel rounded-3xl p-6 md:p-8 space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-5 dark:border-white/5">
-              <h3 className="font-bold text-sm text-slate-800 dark:text-white">Öncesi vs Sonrası Analiz Karşılaştırması</h3>
-              <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl shrink-0">
-                <button
-                  onClick={() => setActiveTab("before")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "before"
-                      ? "bg-amber-500 text-white shadow-sm"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  Klasik CV (Öncesi)
-                </button>
-                <button
-                  onClick={() => setActiveTab("after")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "after"
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  CareerForge (Sonrası)
-                </button>
+                {view === "interview" && (
+                  <div className="absolute inset-x-5 bottom-5 rounded-[var(--radius-control)] border border-[var(--paper-line)] bg-[var(--paper-bg)]/95 p-3 shadow-md backdrop-blur-sm">
+                    <p className="text-[0.625rem] font-bold text-[var(--paper-accent)]">KANIT SEÇİLDİ</p>
+                    <p className="mt-1 text-xs font-medium">“Açılış süresini %35 azalttı”</p>
+                    <p className="mt-1 text-[0.6875rem] text-[var(--paper-muted)]">Bu kanıt için STAR yanıtı hazırlanıyor.</p>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-8 items-start text-left">
-              <div className="space-y-4">
-                <div className="rounded-2xl border p-5 bg-white dark:bg-slate-900 relative min-h-[160px]">
-                  <span
-                    className={`absolute top-4 right-4 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${
-                      activeTab === "before"
-                        ? "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300"
-                        : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
-                    }`}
-                  >
-                    {activeTab === "before" ? "ATS Zayıf" : "ATS Uyumlu"}
-                  </span>
-                  
-                  <h4 className="font-semibold text-slate-800 dark:text-white text-sm mb-3">Deneyim Açıklaması</h4>
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-xs font-bold text-slate-700 dark:text-slate-350">Software Developer · SoftBridge Solutions</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">2023 - Devam Ediyor</p>
+            <aside className="flex flex-col bg-surface">
+              <div className="border-b border-line p-6 sm:p-8">
+                <div className="flex items-start justify-between gap-6">
+                  <div>
+                    <p className="section-label">{primaryInsight.label}</p>
+                    <h2 className="mt-3 max-w-sm text-xl font-semibold leading-tight text-ink">{primaryInsight.title}</h2>
+                  </div>
+                  <strong className="metric-number text-3xl font-semibold text-brand-strong">{primaryInsight.value}</strong>
+                </div>
+                <p className="mt-4 text-sm leading-6 text-ink-2">{primaryInsight.detail}</p>
+              </div>
+
+              <div className="flex-1 p-6 sm:p-8">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="section-label">Kanıt kapsaması</p>
+                  <span className="font-mono text-[0.6875rem] text-ink-3">{5 + addedKeywords.length}/8</span>
+                </div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-3">
+                  <div className="h-full rounded-full bg-brand transition-all duration-500" style={{ width: `${62 + addedKeywords.length * 12}%` }} />
+                </div>
+
+                <div className="mt-7 space-y-1">
+                  {["İletişim ve başlık okunuyor", "Son deneyimde ölçülebilir sonuç var", "Hedef rol dili özetle örtüşüyor"].map((item) => (
+                    <div key={item} className="flex items-center gap-2 border-b border-line py-2.5 text-xs text-ink-2">
+                      <Check className="h-3.5 w-3.5 text-positive" /> {item}
                     </div>
+                  ))}
+                </div>
 
-                    {activeTab === "before" ? (
-                      <div className="flex gap-2 items-start text-amber-600 bg-amber-500/[0.02] p-2.5 rounded-xl border border-amber-500/10 text-xs">
-                        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-bold">Eylem fiili ve ölçülebilir başarı yok:</p>
-                          <p className="text-[11px] text-slate-500 mt-0.5">
-                            &quot;React kullanarak web projeleri geliştirdim ve sayfaların hızlı çalışmasını sağladım.&quot;
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex gap-2 items-start text-emerald-600 bg-emerald-500/[0.02] p-2.5 rounded-xl border border-emerald-500/10 text-xs">
-                        <Check className="w-4 h-4 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-bold">STAR eylem odaklı format:</p>
-                          <p className="text-[11px] text-slate-500 mt-0.5">
-                            &quot;React ve Next.js tabanlı analitik panel yapısını optimize ederek sayfa yüklenme sürelerini %35 kısalttım; 12k aktif kullanıcının arayüz performansını artırdım.&quot;
-                          </p>
-                        </div>
-                      </div>
+                <div className="mt-7">
+                  <p className="section-label">Eksik sinyaller</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {availableKeywords.map((keyword) => (
+                      <button
+                        key={keyword}
+                        type="button"
+                        onClick={() => setAddedKeywords((items) => [...items, keyword])}
+                        className="rounded-full border border-caution/30 bg-[var(--caution-wash)] px-2.5 py-1 text-[0.6875rem] font-medium text-caution transition-transform hover:-translate-y-px"
+                      >
+                        + {keyword}
+                      </button>
+                    ))}
+                    {availableKeywords.length === 0 && (
+                      <span className="inline-flex items-center gap-2 text-xs text-positive"><Check className="h-3.5 w-3.5" /> Tüm sinyaller işlendi</span>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* Comparison Gauge meters */}
-              <div className="space-y-4 rounded-2xl border p-5 bg-white dark:bg-slate-900">
-                <h4 className="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider">
-                  Öngörülen ATS Puanı
-                </h4>
-
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between items-end mb-1 text-xs">
-                      <span className="text-slate-550">Skor Derecesi</span>
-                      <span className={activeTab === "before" ? "text-amber-500 font-bold" : "text-emerald-500 font-bold"}>
-                        {activeTab === "before" ? "%38" : "%92"}
-                      </span>
-                    </div>
-                    <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          activeTab === "before" ? "bg-amber-500" : "bg-emerald-500"
-                        }`}
-                        style={{ width: activeTab === "before" ? "38%" : "92%" }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-t pt-3 mt-3 dark:border-white/5">
-                  <p className="text-[11px] text-slate-555 leading-relaxed">
-                    {activeTab === "before"
-                      ? "❌ Pasif cümle yapıları robotların tarama puanını düşürür."
-                      : "✅ Aktif eylemler ve sayılar ATS robotlarının aradığı eşleşmeyi tam sağlar."}
-                  </p>
-                </div>
+              <div className="flex items-center gap-2 border-t border-line bg-surface-2 px-6 py-3 text-[0.6875rem] text-ink-3 sm:px-8">
+                <LockKeyhole className="h-3.5 w-3.5 text-positive" /> Analiz bu tarayıcıda çalışır; belge dışarı gönderilmez.
               </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-16 border-y border-line bg-surface">
+        <div className="product-page py-14 md:py-16">
+          <div className="grid gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:items-start">
+            <div>
+              <p className="section-label">Başvuru hattı</p>
+              <h2 className="page-title-compact mt-4 max-w-md">Bir rapor değil, ilerleyen bir dosya.</h2>
+              <p className="mt-4 max-w-md text-sm leading-6 text-ink-2">
+                Özgeçmişte bulduğunuz her sinyal, iş eşleşmesine, mülakat sorusuna ve gelişim planına taşınır.
+              </p>
+            </div>
+
+            <ol className="border-l border-line-strong">
+              {[
+                { no: "01", title: "Belge", body: "Yapı ve kanıtlar ayrıştırılır", meta: "92 ATS" },
+                { no: "02", title: "Hedef", body: "Rol diliyle gerçek deneyim eşleştirilir", meta: "67 uyum" },
+                { no: "03", title: "Başvuru", body: "Eksikler ve güçlü kanıtlar görünür olur", meta: "3 fırsat" },
+                { no: "04", title: "Mülakat", body: "En zor sorular CV bağlamından üretilir", meta: "5 soru" },
+              ].map((step) => (
+                <li key={step.no} className="relative grid grid-cols-[2.5rem_1fr_auto] items-center gap-4 border-b border-line py-5 pl-6 first:pt-0 last:border-b-0 last:pb-0">
+                  <span className="absolute -left-1 top-6 h-2 w-2 rounded-full bg-brand ring-4 ring-surface" />
+                  <span className="font-mono text-xs text-ink-3">{step.no}</span>
+                  <div>
+                    <h3 className="text-sm font-semibold text-ink">{step.title}</h3>
+                    <p className="mt-1 text-xs text-ink-3">{step.body}</p>
+                  </div>
+                  <span className="hidden font-mono text-xs text-ink-2 sm:block">{step.meta}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section className="product-page py-16 md:py-20">
+        <div className="grid gap-12 lg:grid-cols-[1.15fr_0.85fr]">
+          <div>
+            <div className="flex items-end justify-between border-b border-line pb-4">
+              <div>
+                <p className="section-label">İş eşleşmeleri</p>
+                <h2 className="mt-2 text-xl font-semibold text-ink">Bugün değerlendirilecek roller</h2>
+              </div>
+              <Link href="/jobs" className="text-xs font-semibold text-brand-strong hover:underline">Tümünü aç</Link>
+            </div>
+            <div>
+              {[
+                ["Senior Frontend Engineer", "SoftBridge", "88%", "React · Next.js · TypeScript"],
+                ["Staff Product Engineer", "Harbor", "74%", "Architecture · Leadership · Node"],
+                ["Platform Intern", "SoftBridge", "68%", "TypeScript · Learning · Mentorship"],
+              ].map(([role, company, fit, tags]) => (
+                <Link key={role} href="/jobs" className="interactive-row grid grid-cols-[1fr_auto] gap-4 border-b border-line py-5">
+                  <div>
+                    <p className="text-sm font-semibold text-ink">{role}</p>
+                    <p className="mt-1 text-xs text-ink-3">{company} · {tags}</p>
+                  </div>
+                  <span className="metric-number text-sm font-semibold text-brand-strong">{fit}</span>
+                </Link>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* 4. Career Timeline Workflow */}
-      <section className="px-4 md:px-8 py-16 border-b border-slate-200/60 dark:border-white/5">
-        <div className="max-w-7xl mx-auto space-y-12">
-          <div className="text-center max-w-2xl mx-auto space-y-2">
-            <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              Uçtan Uca Kariyer Gelişim Süreci
-            </h2>
-            <p className="text-sm text-slate-500">
-              Kariyer yolculuğunuzu 4 adımda optimize edin ve mülakata hazır hale gelin.
+          <div className="surface-subtle p-6 sm:p-8">
+            <div className="flex items-center justify-between gap-4">
+              <span className="grid h-9 w-9 place-items-center rounded-[var(--radius-control)] bg-[var(--info-wash)] text-info"><Sparkles className="h-4 w-4" /></span>
+              <span className="text-[0.6875rem] text-ink-3">CV bağlamı açık</span>
+            </div>
+            <p className="section-label mt-8">Mülakat koçu</p>
+            <blockquote className="mt-3 text-lg font-medium leading-7 text-ink">
+              “%35 performans iyileşmesini hangi ölçüm yöntemiyle doğruladınız?”
+            </blockquote>
+            <p className="mt-4 text-sm leading-6 text-ink-2">
+              Yanıtı “önceki durum, teknik karar, ölçüm ve ürün etkisi” sırasıyla kurun. Kullanıcı sayısını sonuç cümlesinde tekrar bağlayın.
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
-            {steps.map((s) => (
-              <div key={s.num} className="glass-panel p-5 rounded-2xl space-y-3 relative group">
-                <span className="text-2xl font-black text-blue-600 dark:text-blue-500 block">
-                  {s.num}
-                </span>
-                <h3 className="font-bold text-sm text-slate-850 dark:text-white">
-                  {s.title}
-                </h3>
-                <p className="text-xs text-slate-500 leading-normal">
-                  {s.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 5. FAQ Sections */}
-      <section className="px-4 md:px-8 py-16 max-w-4xl mx-auto text-left space-y-8">
-        <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white text-center">
-          Sıkça Sorulan Sorular
-        </h2>
-        
-        <div className="space-y-4">
-          {faqs.map((f, i) => (
-            <FaqCard key={i} q={f.q} a={f.a} />
-          ))}
-        </div>
-      </section>
-
-      {/* 6. Final CTA */}
-      <section className="px-4 md:px-8 py-12 max-w-4xl mx-auto">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-8 md:p-12 text-center text-white space-y-6 shadow-xl">
-          <h2 className="font-display text-2xl md:text-3xl font-black">
-            Özgeçmişinizi Güçlendirmeye Hazır mısınız?
-          </h2>
-          <p className="text-sm text-blue-100 max-w-lg mx-auto leading-relaxed">
-            Hemen recruiter demo modunu yükleyerek sistemi deneyin veya kendi özgeçmişinizi yükleyip yerel analizi başlatın.
-          </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <button
-              onClick={startDemoMode}
-              className="bg-white text-blue-600 font-bold px-6 py-2.5 rounded-full text-xs hover:bg-slate-50 transition-all cursor-pointer"
-            >
-              Demo Profil Yükle
-            </button>
-            <Link
-              href="/forge"
-              className="bg-blue-700 text-white border border-blue-500 font-bold px-6 py-2.5 rounded-full text-xs hover:bg-blue-800 transition-all"
-            >
-              Kendin Başla
+            <Link href="/coach" className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-brand-strong hover:underline">
+              Koçla prova yap <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
-      </section>
 
-    </div>
+        <div className="mt-16 flex flex-col gap-5 border-t border-line pt-8 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-[var(--radius-control)] bg-[var(--accent-wash)] text-brand-strong"><BriefcaseBusiness className="h-4 w-4" /></span>
+            <div>
+              <p className="text-sm font-semibold text-ink">Bir özgeçmişten gerçek bir başvuru sistemi kurun.</p>
+              <p className="mt-1 text-xs text-ink-3">Demo verileri cihazınıza yüklenir ve dilediğiniz zaman silinir.</p>
+            </div>
+          </div>
+          <Button variant="primary" onClick={openDemo}>Çalışma alanına gir <ArrowRight className="h-4 w-4" /></Button>
+        </div>
+      </section>
+    </main>
   );
 }

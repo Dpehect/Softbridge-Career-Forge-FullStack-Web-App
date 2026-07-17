@@ -64,6 +64,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html
       lang="tr"
+      data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
     >
       {/*
@@ -92,16 +93,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-background text-primary font-sans mesh-bg selection:bg-cosmic-teal/20">
+      <body className="min-h-full flex flex-col bg-background text-ink font-sans">
         <Header />
-        <main className="flex-1 pt-[6.75rem] sm:pt-[7rem] pb-20 lg:pb-8">{children}</main>
+        <div className="flex-1 pt-16 pb-16 md:pt-[6.5rem] md:pb-0">{children}</div>
         <Footer />
         <Toaster
           theme="system"
           position="bottom-right"
           toastOptions={{
-            className: "border bg-panel text-primary",
-            style: { borderColor: "rgba(192,132,252,0.2)" },
+            className: "border border-line bg-surface text-ink",
           }}
         />
       </body>

@@ -1,335 +1,203 @@
 "use client";
 
-import { use, useState, useEffect, useMemo } from "react";
+import { use, useMemo } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   Bookmark,
   Building2,
-  CheckCircle2,
+  Check,
   MapPin,
-  Users,
-  Zap,
   Plus,
-  AlertTriangle,
-  Award,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getJob } from "@/data/jobs";
 import { getCompany } from "@/data/companies";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatRelativeDate, formatSalary, cn } from "@/lib/utils";
 import { useCareerStore } from "@/store/useCareerStore";
-import { useTranslation } from "@/lib/forge/i18n";
+import { useHydrated } from "@/hooks/useHydrated";
 
 export default function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const job = getJob(id);
   if (!job) notFound();
-
   const company = getCompany(job.companyId);
+  const mounted = useHydrated();
   const {
+    resume,
     savedJobIds,
     appliedJobIds,
     toggleSaveJob,
     applyToJob,
-    resume,
     addSkills,
   } = useCareerStore();
-  const { lang } = useTranslation();
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Compute skill matches locally
-  const matchAnalysis = useMemo(() => {
-    if (!resume.skills.length) {
-      return {
-        score: 0,
-        matched: [] as string[],
-        missing: job.tags,
-      };
-    }
-    const userSkillsLower = resume.skills.map((s) => s.toLowerCase().trim());
+  const match = useMemo(() => {
+    const skills = resume.skills.map((skill) => skill.toLowerCase().trim());
     const matched = job.tags.filter((tag) =>
-      userSkillsLower.some((s) => s.includes(tag.toLowerCase()) || tag.toLowerCase().includes(s))
+      skills.some((skill) => skill.includes(tag.toLowerCase()) || tag.toLowerCase().includes(skill))
     );
     const missing = job.tags.filter((tag) => !matched.includes(tag));
-    const score = Math.round((matched.length / job.tags.length) * 100);
-
     return {
-      score,
       matched,
       missing,
+      score: job.tags.length ? Math.round((matched.length / job.tags.length) * 100) : 0,
     };
-  }, [resume.skills, job.tags]);
+  }, [job.tags, resume.skills]);
 
   if (!mounted) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin border-purple-600" />
-      </div>
-    );
+    return <div className="grid min-h-[60vh] place-items-center"><span className="h-6 w-6 animate-spin rounded-full border-2 border-line-strong border-t-brand" /></div>;
   }
 
   const saved = savedJobIds.includes(job.id);
   const applied = appliedJobIds.includes(job.id);
 
-  const handleAddMissingSkill = (skill: string) => {
-    const added = addSkills([skill]);
-    if (added) {
-      toast.success(`“${skill}” yeteneği özgeçmişinize eklendi!`);
-    } else {
-      toast.info(`“${skill}” zaten özgeçmişinizde var.`);
-    }
-  };
-
   return (
-    <div className="px-4 md:px-8 pb-20 pt-6">
-      <div className="max-w-5xl mx-auto space-y-6 text-left">
-        
-        {/* Back Link */}
-        <Link
-          href="/jobs"
-          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-purple-600 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> {lang === "tr" ? "İş ilanlarına dön" : "Back to jobs"}
-        </Link>
+    <main className="product-page">
+      <Link href="/jobs" className="inline-flex items-center gap-2 text-xs font-semibold text-ink-3 transition-colors hover:text-ink">
+        <ArrowLeft className="h-3.5 w-3.5" /> İşlere dön
+      </Link>
 
-        {/* Dynamic Split View: Job Details vs ATS Fit Panel */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 items-start">
-          
-          {/* Left panel: Core Job Sheet */}
-          <div className="glass-panel rounded-3xl p-6 md:p-8 space-y-6">
-            
-            {/* Header section */}
-            <div className="flex gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center font-bold text-lg text-purple-600 shrink-0">
-                {company?.logo ?? "??"}
+      <header className="mt-7 grid gap-8 border-b border-line pb-10 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-ink-3">
+            <span className="grid h-9 w-9 place-items-center rounded-[var(--radius-control)] border border-line bg-surface-2 font-bold text-ink-2">{company?.logo || "CF"}</span>
+            <span className="font-semibold text-ink">{company?.name}</span>
+            <span>·</span>
+            <span>{job.seniority}</span>
+            <span>·</span>
+            <span>{job.type}</span>
+          </div>
+          <h1 className="page-title-compact mt-5 max-w-3xl">{job.title}</h1>
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-ink-3">
+            <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {job.location} · {job.workMode}</span>
+            <span className="inline-flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {job.applicants} başvuru</span>
+            <span>{formatRelativeDate(job.postedAt)}</span>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              toggleSaveJob(job.id);
+              toast.success(saved ? "Kayıt kaldırıldı." : "İlan kaydedildi.");
+            }}
+          >
+            <Bookmark className={cn("h-4 w-4", saved && "fill-current text-signal")} /> {saved ? "Kaydedildi" : "Kaydet"}
+          </Button>
+          <Button
+            variant="primary"
+            disabled={applied}
+            onClick={() => {
+              applyToJob(job.id);
+              toast.success("Başvuru listenize eklendi.");
+            }}
+          >
+            {applied ? <><Check className="h-4 w-4" /> Başvuruldu</> : "Başvuruya ekle"}
+          </Button>
+        </div>
+      </header>
+
+      <div className="grid gap-12 pt-10 xl:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.75fr)]">
+        <article className="min-w-0">
+          <div className="grid gap-px border border-line bg-line sm:grid-cols-3">
+            {[
+              ["Maaş", formatSalary(job.salaryMin, job.salaryMax, job.currency)],
+              ["Model", job.workMode],
+              ["Sözleşme", job.type],
+            ].map(([label, value]) => (
+              <div key={label} className="bg-surface p-5">
+                <p className="section-label">{label}</p>
+                <p className="mt-3 text-sm font-semibold text-ink">{value}</p>
               </div>
-              <div className="space-y-1">
-                <div className="flex flex-wrap gap-1">
-                  {job.featured && <Badge variant="accent">{lang === "tr" ? "Öne Çıkan" : "Featured"}</Badge>}
-                  <Badge>{job.seniority}</Badge>
-                  <Badge variant="soft">{job.type}</Badge>
-                </div>
-                <h1 className="font-display text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white leading-tight">
-                  {job.title}
-                </h1>
-                <p className="text-slate-500 mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                  <span className="inline-flex items-center gap-1">
-                    <Building2 className="w-3.5 h-3.5" />
-                    {company?.name}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5" />
-                    {job.location} · {job.workMode}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Users className="w-3.5 h-3.5" />
-                    {job.applicants} başvuru
-                  </span>
-                </p>
-              </div>
-            </div>
-
-            {/* Info Row */}
-            <div className="flex flex-wrap justify-between items-center gap-4 border-y dark:border-white/5 py-4">
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">
-                  Tahmini Maaş Aralığı
-                </span>
-                <span className="text-lg font-extrabold text-slate-900 dark:text-white">
-                  {formatSalary(job.salaryMin, job.salaryMax, job.currency)}
-                  <span className="text-xs font-normal text-slate-500 ml-1">
-                    {job.type === "Contract" ? "/saat" : "/yıl"}
-                  </span>
-                </span>
-              </div>
-              <div className="text-right">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">
-                  Yayınlanma Tarihi
-                </span>
-                <span className="text-xs text-slate-500">
-                  {formatRelativeDate(job.postedAt)}
-                </span>
-              </div>
-            </div>
-
-            {/* Job Description Sections */}
-            <div className="space-y-6 pt-2">
-              <section className="space-y-2">
-                <h3 className="font-display font-bold text-slate-900 dark:text-white text-base">
-                  Rol Tanımı
-                </h3>
-                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {job.description}
-                </p>
-              </section>
-
-              <section className="space-y-2">
-                <h3 className="font-display font-bold text-slate-900 dark:text-white text-base">
-                  Temel Sorumluluklar
-                </h3>
-                <ul className="space-y-1.5 pl-1">
-                  {job.responsibilities.map((resp) => (
-                    <li key={resp} className="text-xs md:text-sm text-slate-600 dark:text-slate-300 flex gap-2">
-                      <span className="text-purple-600 dark:text-[#C084FC] shrink-0 mt-1">•</span>
-                      <span className="leading-relaxed">{resp}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-
-              <section className="space-y-2">
-                <h3 className="font-display font-bold text-slate-900 dark:text-white text-base">
-                  Gereksinimler
-                </h3>
-                <ul className="space-y-1.5 pl-1">
-                  {job.requirements.map((req) => (
-                    <li key={req} className="text-xs md:text-sm text-slate-600 dark:text-slate-300 flex gap-2">
-                      <span className="text-purple-600 dark:text-[#C084FC] shrink-0 mt-1">•</span>
-                      <span className="leading-relaxed">{req}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-
-              {company && (
-                <section className="rounded-2xl bg-slate-50 dark:bg-white/[0.01] border dark:border-white/5 p-5 space-y-2.5">
-                  <h3 className="font-display font-bold text-slate-900 dark:text-white text-base">
-                    Şirket Hakkında
-                  </h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    {company.description}
-                  </p>
-                  <p className="text-[11px] text-slate-400">
-                    Sektör: {company.industry} · Boyut: {company.size} · Merkez: {company.location}
-                  </p>
-                </section>
-              )}
-            </div>
+            ))}
           </div>
 
-          {/* Right panel: Live ATS Fit & Actions Panel */}
-          <aside className="space-y-4 lg:sticky lg:top-24">
-            
-            {/* ATS Match Gauge card */}
-            <div className="glass-panel p-6 rounded-3xl space-y-5 border-purple-200/50 dark:border-purple-500/10">
-              <div className="text-center space-y-2">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-                  ATS Rol Eşleşme Analizi
-                </span>
-                
-                <div className="flex items-center justify-center gap-3">
-                  <div className="w-16 h-16 rounded-full border-4 border-purple-600 text-purple-700 dark:border-purple-400 dark:text-purple-300 flex items-center justify-center font-black text-lg">
-                    {matchAnalysis.score}%
-                  </div>
-                  <div className="text-left space-y-0.5">
-                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                      Uyum Skoru
-                    </h4>
-                    <p className="text-[10px] text-slate-500 leading-normal">
-                      Özgeçmişinizin ilan anahtar kelimeleriyle eşleşme oranı.
-                    </p>
-                  </div>
-                </div>
+          <section className="border-b border-line py-9">
+            <p className="section-label">Rol</p>
+            <p className="mt-4 max-w-3xl text-base leading-7 text-ink-2">{job.description}</p>
+          </section>
+
+          <section className="border-b border-line py-9">
+            <p className="section-label">Sorumluluklar</p>
+            <ol className="mt-5 space-y-4">
+              {job.responsibilities.map((item, index) => (
+                <li key={item} className="grid grid-cols-[2rem_1fr] gap-4 text-sm leading-6 text-ink-2">
+                  <span className="font-mono text-xs text-ink-3">0{index + 1}</span>{item}
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <section className="border-b border-line py-9">
+            <p className="section-label">Aranan kanıtlar</p>
+            <ul className="mt-5 space-y-3">
+              {job.requirements.map((item) => (
+                <li key={item} className="flex gap-3 text-sm leading-6 text-ink-2"><Check className="mt-1 h-3.5 w-3.5 shrink-0 text-brand-strong" /> {item}</li>
+              ))}
+            </ul>
+          </section>
+
+          {company && (
+            <section className="py-9">
+              <div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-ink-3" /><p className="section-label">Şirket</p></div>
+              <h2 className="mt-4 text-lg font-semibold text-ink">{company.name}</h2>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-ink-2">{company.description}</p>
+              <p className="mt-4 text-xs text-ink-3">{company.industry} · {company.size} · {company.location}</p>
+            </section>
+          )}
+        </article>
+
+        <aside className="xl:sticky xl:top-32 xl:self-start">
+          <div className="surface-subtle p-6 sm:p-7">
+            <div className="flex items-start justify-between gap-6">
+              <div>
+                <p className="section-label">Özgeçmiş eşleşmesi</p>
+                <h2 className="mt-3 text-base font-semibold text-ink">
+                  {match.score >= 75 ? "Güçlü aday sinyali" : match.score ? "Kanıt açığı görünür" : "Özgeçmiş becerileri eksik"}
+                </h2>
               </div>
+              <strong className="metric-number text-3xl font-semibold text-brand-strong">{match.score}%</strong>
+            </div>
 
-              {/* Matched vs Missing checklist */}
-              <div className="space-y-4 pt-3 border-t dark:border-white/5 text-xs">
-                {/* Matched skills */}
-                <div className="space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    Eşleşen Beceriler ({matchAnalysis.matched.length})
-                  </span>
-                  <div className="flex flex-wrap gap-1">
-                    {matchAnalysis.matched.map((s) => (
-                      <span
-                        key={s}
-                        className="px-2 py-0.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-300 dark:border-emerald-500/20 font-medium"
-                      >
-                        {s}
-                      </span>
-                    ))}
-                    {matchAnalysis.matched.length === 0 && (
-                      <span className="text-slate-400">Eşleşen yetenek bulunamadı.</span>
-                    )}
-                  </div>
-                </div>
+            <div className="mt-6 h-1.5 overflow-hidden rounded-full bg-surface-3">
+              <div className="h-full rounded-full bg-brand transition-all duration-500" style={{ width: `${match.score}%` }} />
+            </div>
 
-                {/* Missing skills with Add action */}
-                <div className="space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    Eksik Beceriler ({matchAnalysis.missing.length})
-                  </span>
-                  <div className="flex flex-col gap-1.5">
-                    {matchAnalysis.missing.map((s) => (
-                      <div
-                        key={s}
-                        className="flex items-center justify-between p-2 rounded-xl bg-amber-500/[0.02] border border-amber-500/10 text-[11px]"
-                      >
-                        <span className="text-slate-600 dark:text-slate-300 font-medium">{s}</span>
-                        <button
-                          onClick={() => handleAddMissingSkill(s)}
-                          className="inline-flex items-center gap-0.5 text-[10px] font-bold text-purple-600 dark:text-purple-300 hover:underline cursor-pointer"
-                        >
-                          <Plus className="w-3 h-3" /> CV'ye Ekle
-                        </button>
-                      </div>
-                    ))}
-                    {matchAnalysis.missing.length === 0 && (
-                      <div className="flex items-center gap-2 p-2 rounded-xl bg-emerald-500/[0.02] border border-emerald-500/10 text-emerald-800 dark:text-emerald-300">
-                        <Award className="w-4 h-4 shrink-0" />
-                        <span>Mükemmel! İlan için tüm yeteneklere sahipsiniz.</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+            <div className="mt-7 border-t border-line pt-5">
+              <p className="text-[0.6875rem] font-semibold text-positive">Örtüşen beceriler · {match.matched.length}</p>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {match.matched.length ? match.matched.map((skill) => <span key={skill} className="rounded-full bg-[var(--positive-wash)] px-2 py-1 text-[0.6875rem] text-positive">{skill}</span>) : <span className="text-xs text-ink-3">Henüz eşleşme yok.</span>}
               </div>
             </div>
 
-            {/* Application button card */}
-            <div className="glass-panel p-6 rounded-3xl space-y-4">
-              <Button
-                variant="primary"
-                className="w-full h-11 shadow-lg"
-                disabled={applied}
-                onClick={() => {
-                  applyToJob(job.id);
-                  toast.success("Başvurunuz başarıyla kaydedildi!");
-                }}
-              >
-                {applied ? (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 mr-1.5" /> Başvuruldu
-                  </>
-                ) : (
-                  "Hemen Başvur"
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full h-11 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-850"
-                onClick={() => {
-                  toggleSaveJob(job.id);
-                  toast.success(saved ? "İlan kaydedilenlerden kaldırıldı." : "İlan kaydedildi.");
-                }}
-              >
-                {saved ? "Kaydetmeyi Bırak" : "İlanı Kaydet"}
-              </Button>
+            <div className="mt-7 border-t border-line pt-5">
+              <p className="text-[0.6875rem] font-semibold text-caution">Eksik sinyaller · {match.missing.length}</p>
+              <div className="mt-3 space-y-2">
+                {match.missing.length ? match.missing.map((skill) => (
+                  <div key={skill} className="flex items-center justify-between gap-3 border-b border-line py-2 last:border-b-0">
+                    <span className="text-xs text-ink-2">{skill}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const added = addSkills([skill]);
+                        toast[added ? "success" : "info"](added ? `${skill} özgeçmişe eklendi.` : `${skill} zaten mevcut.`);
+                      }}
+                      className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold text-brand-strong hover:underline"
+                    >
+                      <Plus className="h-3 w-3" /> Ekle
+                    </button>
+                  </div>
+                )) : <p className="text-xs text-positive">İlan etiketlerinde kritik eksik görünmüyor.</p>}
+              </div>
             </div>
-          </aside>
-          
-        </div>
-
+          </div>
+          <p className="mt-4 text-[0.6875rem] leading-5 text-ink-3">Bir beceriyi yalnızca gerçek deneyiminiz varsa ekleyin. Sonraki adımda bu beceriyi somut bir sonuçla kanıtlayın.</p>
+        </aside>
       </div>
-    </div>
+    </main>
   );
 }

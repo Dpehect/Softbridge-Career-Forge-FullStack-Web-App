@@ -76,6 +76,8 @@ export function FilePickButton({
         type="file"
         accept={accept}
         className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
         onChange={onChange}
       />
       <Button type="button" size={size} variant={variant} onClick={openPicker} disabled={loading} className={cn(loading && "opacity-50")}>

@@ -1,223 +1,166 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Search, SlidersHorizontal, Briefcase, X, ChevronDown } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Bookmark, BriefcaseBusiness, Search, SlidersHorizontal } from "lucide-react";
 import { jobs } from "@/data/jobs";
-import { JobCard } from "@/components/JobCard";
+import { JobCard, computeJobMatch } from "@/components/JobCard";
 import { Input } from "@/components/ui/input";
-import type { Seniority, WorkMode, JobType } from "@/types";
-import { useTranslation } from "@/lib/forge/i18n";
 import { useCareerStore } from "@/store/useCareerStore";
+import type { JobType, Seniority, WorkMode } from "@/types";
 import { cn } from "@/lib/utils";
+import { useHydrated } from "@/hooks/useHydrated";
 
-const workModes: Array<WorkMode | "All"> = ["All", "Remote", "Hybrid", "On-site"];
-const seniorities: Array<Seniority | "All"> = ["All", "Intern", "Junior", "Mid", "Senior", "Lead", "Principal"];
-const jobTypes: Array<JobType | "All"> = ["All", "Full-time", "Part-time", "Contract", "Internship"];
+const modes: Array<WorkMode | "All"> = ["All", "Remote", "Hybrid", "On-site"];
+const levels: Array<Seniority | "All"> = ["All", "Intern", "Junior", "Mid", "Senior", "Lead", "Principal"];
+const types: Array<JobType | "All"> = ["All", "Full-time", "Part-time", "Contract", "Internship"];
 
-// ─── Filter chip ──────────────────────────────────────────────────────────────
-function FilterChip({
-  label, active, onClick, color = "#A855F7",
-}: { label: string; active: boolean; onClick: () => void; color?: string }) {
-  return (
-    <button onClick={onClick} className="text-xs font-semibold px-3 py-1.5 rounded-full border transition-all cursor-pointer"
-      style={{
-        background: active ? `${color}18` : "transparent",
-        borderColor: active ? `${color}40` : "var(--border-color)",
-        color: active ? color : "var(--text-muted)",
-      }}
-      onMouseEnter={(e) => {
-        if (!active) (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
-      }}
-      onMouseLeave={(e) => {
-        if (!active) (e.currentTarget as HTMLElement).style.color = "var(--text-muted)";
-      }}>
-      {label}
-    </button>
-  );
-}
+const labels: Record<string, string> = {
+  All: "Tümü",
+  Remote: "Uzaktan",
+  Hybrid: "Hibrit",
+  "On-site": "Ofiste",
+  Intern: "Stajyer",
+  Junior: "Junior",
+  Mid: "Orta",
+  Senior: "Kıdemli",
+  Lead: "Lider",
+  Principal: "Principal",
+  "Full-time": "Tam zamanlı",
+  "Part-time": "Yarı zamanlı",
+  Contract: "Sözleşmeli",
+  Internship: "Staj",
+};
 
 export default function JobsPage() {
+  const mounted = useHydrated();
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<WorkMode | "All">("All");
   const [level, setLevel] = useState<Seniority | "All">("All");
   const [type, setType] = useState<JobType | "All">("All");
-  const [showFilters, setShowFilters] = useState(false);
-  const { lang } = useTranslation();
-  const { savedJobIds } = useCareerStore();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
-
-  const getModeLabel = (m: string) => {
-    if (lang !== "tr") return m;
-    const map: Record<string, string> = { All: "Hepsi", Remote: "Uzaktan", Hybrid: "Hibrit", "On-site": "Ofiste" };
-    return map[m] ?? m;
-  };
-
-  const getLevelLabel = (s: string) => {
-    if (lang !== "tr") return s;
-    const map: Record<string, string> = { All: "Hepsi", Intern: "Stajyer", Junior: "Junior", Mid: "Orta", Senior: "Kıdemli", Lead: "Lider", Principal: "Baş Müh." };
-    return map[s] ?? s;
-  };
-
-  const activeFiltersCount = [mode !== "All", level !== "All", type !== "All"].filter(Boolean).length;
+  const [savedOnly, setSavedOnly] = useState(false);
+  const { resume, savedJobIds } = useCareerStore();
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const normalizedQuery = query.trim().toLowerCase();
     return jobs
       .filter((job) => {
         if (mode !== "All" && job.workMode !== mode) return false;
         if (level !== "All" && job.seniority !== level) return false;
         if (type !== "All" && job.type !== type) return false;
-        if (!q) return true;
-        return [job.title, job.location, job.tags.join(" "), job.description].join(" ").toLowerCase().includes(q);
+        if (savedOnly && !savedJobIds.includes(job.id)) return false;
+        if (!normalizedQuery) return true;
+        return [job.title, job.location, job.description, ...job.tags]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedQuery);
       })
-      .sort((a, b) => +new Date(b.postedAt) - +new Date(a.postedAt));
-  }, [query, mode, level, type]);
+      .sort((a, b) => computeJobMatch(resume.skills, b.tags) - computeJobMatch(resume.skills, a.tags));
+  }, [query, mode, level, type, savedOnly, savedJobIds, resume.skills]);
 
-  const clearAll = () => { setMode("All"); setLevel("All"); setType("All"); setQuery(""); };
+  const topMatch = filtered[0];
+  const topFit = topMatch ? computeJobMatch(resume.skills, topMatch.tags) : 0;
+  const skillCoverage = topMatch
+    ? topMatch.tags.filter((tag) => resume.skills.some((skill) => skill.toLowerCase().includes(tag.toLowerCase()) || tag.toLowerCase().includes(skill.toLowerCase())))
+    : [];
+  const missing = topMatch?.tags.filter((tag) => !skillCoverage.includes(tag)) ?? [];
 
   if (!mounted) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
-          style={{ borderColor: "#A855F7", borderTopColor: "transparent" }} />
-      </div>
-    );
+    return <div className="grid min-h-[60vh] place-items-center"><span className="h-6 w-6 animate-spin rounded-full border-2 border-line-strong border-t-brand" /></div>;
   }
 
-  const isTR = lang === "tr";
-
   return (
-    <div className="px-4 md:px-8 pb-20 pt-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-
-        {/* Header */}
+    <main className="product-page">
+      <header className="grid gap-6 border-b border-line pb-8 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
-          <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full text-xs font-bold bg-purple-100/80 text-purple-800 dark:bg-purple-500/10 dark:text-purple-300">
-            <Briefcase className="w-3.5 h-3.5" />
-            {isTR ? "İş İlanları" : "Job Board"}
-          </div>
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-star-white">
-            {isTR ? "Sana Uygun Pozisyonları Keşfet 🎯" : "Find high-fit roles 🎯"}
-          </h1>
-          <p className="text-muted-steel mt-2 text-sm leading-relaxed max-w-xl">
-            {isTR
-              ? "CV'ni yüklediysen her ilan için uyum puanı görürsün. İlanları kaydet, başvurularını takip et."
-              : "Upload your CV to see match scores per role. Save listings and track your applications."}
-          </p>
+          <p className="page-kicker"><BriefcaseBusiness className="h-3.5 w-3.5" /> Fırsat radarı</p>
+          <h1 className="page-title-compact mt-4">İlanları değil, uyumu tarayın.</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-2">Roller özgeçmişinizdeki gerçek becerilere göre sıralanır. Puan, eksik kanıtları saklamaz.</p>
         </div>
-
-        {/* Search + filter bar */}
-        <div className="glass-panel rounded-2xl p-4 space-y-3">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-steel" />
-              <Input value={query} onChange={(e) => setQuery(e.target.value)}
-                placeholder={isTR ? "Rol, şehir veya teknoloji ara…" : "Search role, city or technology…"}
-                className="pl-10 text-star-white" />
-            </div>
-            <button
-              onClick={() => setShowFilters((v) => !v)}
-              className="h-10 px-4 rounded-xl border flex items-center gap-2 text-xs font-semibold transition-all cursor-pointer"
-              style={{
-                borderColor: showFilters || activeFiltersCount > 0 ? "rgba(168,85,247,0.4)" : "var(--border-color)",
-                background: showFilters || activeFiltersCount > 0 ? "rgba(168,85,247,0.1)" : "transparent",
-                color: showFilters || activeFiltersCount > 0 ? "#A855F7" : "var(--text-muted)",
-              }}>
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              {isTR ? "Filtreler" : "Filters"}
-              {activeFiltersCount > 0 && (
-                <span className="w-4 h-4 rounded-full text-[9px] font-black flex items-center justify-center text-white"
-                  style={{ background: "#A855F7" }}>{activeFiltersCount}</span>
-              )}
-              <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showFilters && "rotate-180")} />
-            </button>
-            {activeFiltersCount > 0 && (
-              <button onClick={clearAll}
-                className="h-10 px-3 rounded-xl border border-border-color flex items-center gap-1.5 text-xs text-muted-steel hover:text-star-white transition-all cursor-pointer">
-                <X className="w-3.5 h-3.5" /> {isTR ? "Temizle" : "Clear"}
-              </button>
-            )}
-          </div>
-
-          {/* Expandable filters */}
-          {showFilters && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
-              className="space-y-3 pt-3 border-t border-border-color overflow-hidden">
-              {/* Work mode */}
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-steel w-16 shrink-0">
-                  {isTR ? "Lokasyon" : "Location"}
-                </span>
-                {workModes.map((m) => (
-                  <FilterChip key={m} label={getModeLabel(m)} active={mode === m}
-                    onClick={() => setMode(m)} color="#A855F7" />
-                ))}
-              </div>
-              {/* Level */}
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-steel w-16 shrink-0">
-                  {isTR ? "Kıdem" : "Level"}
-                </span>
-                {seniorities.map((s) => (
-                  <FilterChip key={s} label={getLevelLabel(s)} active={level === s}
-                    onClick={() => setLevel(s)} color="#F97316" />
-                ))}
-              </div>
-              {/* Type */}
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-steel w-16 shrink-0">
-                  {isTR ? "Tür" : "Type"}
-                </span>
-                {jobTypes.map((t) => (
-                  <FilterChip key={t} label={t === "All" ? (isTR ? "Hepsi" : "All") : t} active={type === t}
-                    onClick={() => setType(t)} color="#4ADE80" />
-                ))}
-              </div>
-            </motion.div>
+        <button
+          type="button"
+          onClick={() => setSavedOnly((value) => !value)}
+          className={cn(
+            "inline-flex h-9 items-center gap-2 rounded-[var(--radius-control)] border px-3 text-xs font-semibold transition-colors",
+            savedOnly ? "border-signal/30 bg-[var(--signal-wash)] text-signal" : "border-line bg-surface text-ink-2 hover:bg-surface-2"
           )}
-        </div>
+        >
+          <Bookmark className={cn("h-3.5 w-3.5", savedOnly && "fill-current")} /> Kaydedilenler {savedJobIds.length ? `(${savedJobIds.length})` : ""}
+        </button>
+      </header>
 
-        {/* Results count + saved indicator */}
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-steel">
-            {isTR ? (
-              <><span className="font-bold text-star-white">{filtered.length}</span> ilan listeleniyor</>
+      <section className="mt-6 surface-panel p-3">
+        <div className="grid gap-2 lg:grid-cols-[minmax(15rem,1fr)_repeat(3,minmax(9rem,auto))]">
+          <label className="relative">
+            <span className="sr-only">İşlerde ara</span>
+            <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-ink-3" />
+            <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Rol, beceri veya şehir" className="pl-9" />
+          </label>
+          <label>
+            <span className="sr-only">Çalışma modeli</span>
+            <select value={mode} onChange={(event) => setMode(event.target.value as WorkMode | "All")} className="h-10 w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]">
+              {modes.map((item) => <option key={item} value={item}>Çalışma · {labels[item]}</option>)}
+            </select>
+          </label>
+          <label>
+            <span className="sr-only">Kıdem</span>
+            <select value={level} onChange={(event) => setLevel(event.target.value as Seniority | "All")} className="h-10 w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]">
+              {levels.map((item) => <option key={item} value={item}>Kıdem · {labels[item]}</option>)}
+            </select>
+          </label>
+          <label>
+            <span className="sr-only">Sözleşme tipi</span>
+            <select value={type} onChange={(event) => setType(event.target.value as JobType | "All")} className="h-10 w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]">
+              {types.map((item) => <option key={item} value={item}>Tür · {labels[item]}</option>)}
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <div className="mt-8 grid gap-10 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
+        <section>
+          <div className="flex items-center justify-between border-b border-line pb-3">
+            <p className="text-xs text-ink-3"><strong className="font-semibold text-ink">{filtered.length}</strong> rol · özgeçmiş uyumuna göre</p>
+            <SlidersHorizontal className="h-4 w-4 text-ink-3" />
+          </div>
+          {filtered.length ? (
+            <div>{filtered.map((job) => <JobCard key={job.id} job={job} />)}</div>
+          ) : (
+            <div className="py-16 text-center">
+              <Search className="mx-auto h-5 w-5 text-ink-3" />
+              <p className="mt-3 text-sm font-semibold text-ink">Bu filtrelerde rol yok.</p>
+              <button type="button" onClick={() => { setQuery(""); setMode("All"); setLevel("All"); setType("All"); setSavedOnly(false); }} className="mt-2 text-xs font-semibold text-brand-strong hover:underline">Filtreleri temizle</button>
+            </div>
+          )}
+        </section>
+
+        <aside className="xl:sticky xl:top-32 xl:self-start">
+          <div className="surface-subtle p-6">
+            <p className="section-label">En güçlü eşleşme</p>
+            {topMatch ? (
+              <>
+                <div className="mt-4 flex items-end justify-between gap-4">
+                  <div>
+                    <h2 className="text-base font-semibold text-ink">{topMatch.title}</h2>
+                    <p className="mt-1 text-xs text-ink-3">{topMatch.location} · {topMatch.workMode}</p>
+                  </div>
+                  <strong className="metric-number text-3xl font-semibold text-brand-strong">{topFit}%</strong>
+                </div>
+                <div className="mt-6 border-t border-line pt-5">
+                  <p className="text-[0.6875rem] font-semibold text-positive">Eşleşen kanıtlar</p>
+                  <p className="mt-2 text-xs leading-5 text-ink-2">{skillCoverage.join(" · ") || "Özgeçmiş becerisi eklenmedi"}</p>
+                </div>
+                <div className="mt-5 border-t border-line pt-5">
+                  <p className="text-[0.6875rem] font-semibold text-caution">Eksik sinyaller</p>
+                  <p className="mt-2 text-xs leading-5 text-ink-2">{missing.join(" · ") || "Kritik eksik görünmüyor"}</p>
+                </div>
+              </>
             ) : (
-              <>Showing <span className="font-bold text-star-white">{filtered.length}</span> roles</>
+              <p className="mt-4 text-sm text-ink-3">Filtreleri değiştirerek eşleşme özeti oluşturun.</p>
             )}
-          </p>
-          {savedJobIds.length > 0 && (
-            <p className="text-xs text-muted-steel">
-              <span className="font-bold" style={{ color: "#F97316" }}>{savedJobIds.length}</span>{" "}
-              {isTR ? "ilanı kaydettin" : "saved"}
-            </p>
-          )}
-        </div>
-
-        {/* Job list */}
-        <div className="grid gap-3">
-          {filtered.map((job, i) => (
-            <JobCard key={job.id} job={job} index={i} />
-          ))}
-          {filtered.length === 0 && (
-            <div className="glass-panel rounded-2xl p-12 text-center space-y-3">
-              <Briefcase className="w-10 h-10 mx-auto" style={{ color: "rgba(168,85,247,0.3)" }} />
-              <p className="text-muted-steel">
-                {isTR
-                  ? "Bu filtrelere uygun ilan bulunamadı. Aramayı genişletmeyi dene."
-                  : "No roles match those filters. Try broadening your search."}
-              </p>
-              <button onClick={clearAll} className="text-xs font-semibold underline cursor-pointer" style={{ color: "#A855F7" }}>
-                {isTR ? "Tüm filtreleri temizle" : "Clear all filters"}
-              </button>
-            </div>
-          )}
-        </div>
-
+          </div>
+          <p className="mt-4 text-[0.6875rem] leading-5 text-ink-3">Uyum puanı yalnızca özgeçmişinizde listelenen ve ilanda geçen becerileri karşılaştırır. Deneyim kanıtı ayrıca değerlendirilmelidir.</p>
+        </aside>
       </div>
-    </div>
+    </main>
   );
 }

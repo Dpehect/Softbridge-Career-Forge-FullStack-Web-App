@@ -5,80 +5,41 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
-  { id: 1, label: "CV Yükle", href: "/forge", match: ["/forge"] },
-  { id: 2, label: "Analiz Al", href: "/forge", match: ["/forge"], hash: "feedback" },
-  { id: 3, label: "İyileştir", href: "/resume", match: ["/resume", "/jobs", "/dashboard"] },
+  { label: "Profil", meta: "CV", href: "/resume", paths: ["/", "/resume"] },
+  { label: "Kanıt", meta: "Analiz", href: "/forge", paths: ["/forge", "/coach"] },
+  { label: "Fırsat", meta: "İşler", href: "/jobs", paths: ["/jobs", "/paths", "/dashboard"] },
 ] as const;
 
-function resolveActive(pathname: string): number {
-  if (pathname.startsWith("/resume") || pathname.startsWith("/jobs")) return 3;
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/coach") || pathname.startsWith("/paths"))
-    return 3;
-  if (pathname.startsWith("/forge")) return 2;
-  if (pathname === "/") return 1;
-  return 1;
-}
-
-/**
- * Global product journey — under header so users never ask "şimdi ne yapmalıyım?"
- */
 export function JourneyStepper({ className }: { className?: string }) {
   const pathname = usePathname();
-  const active = resolveActive(pathname);
+  const currentIndex = Math.max(
+    0,
+    STEPS.findIndex((step) => step.paths.some((path) => pathname === path || pathname.startsWith(`${path}/`)))
+  );
 
   return (
-    <nav
-      aria-label="Kariyer yol haritası"
-      className={cn("w-full", className)}
-    >
-      <ol className="max-w-6xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-center gap-2 sm:gap-3">
-        {STEPS.map((step, i) => {
-          const isActive = active === step.id;
-          const isDone = active > step.id;
+    <nav className={cn("h-10", className)} aria-label="Kariyer akışı">
+      <ol className="mx-auto flex h-full w-[min(100%-2rem,80rem)] items-center justify-center gap-0">
+        {STEPS.map((step, index) => {
+          const active = index === currentIndex;
+          const completed = index < currentIndex;
           return (
-            <li key={step.id} className="flex items-center gap-2 sm:gap-3">
-              {i > 0 && (
-                <span
-                  className={cn(
-                    "w-4 sm:w-8 h-px rounded-full",
-                    isDone || isActive
-                      ? "bg-purple-400/80"
-                      : "bg-slate-200 dark:bg-white/10"
-                  )}
-                  aria-hidden
-                />
-              )}
+            <li key={step.label} className="flex items-center">
+              {index > 0 && <span className={cn("mx-3 h-px w-8", index <= currentIndex ? "bg-brand" : "bg-line")} />}
               <Link
                 href={step.href}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] sm:text-xs font-semibold tracking-tight transition-colors",
-                  isActive && "bg-purple-50 text-purple-800 dark:bg-purple-500/15 dark:text-purple-300",
-                  isDone &&
-                    !isActive &&
-                    "text-purple-800 dark:text-purple-400/90",
-                  !isActive &&
-                    !isDone &&
-                    "text-slate-800 hover:text-purple-700 dark:text-slate-400"
+                  "flex items-center gap-2 text-[0.6875rem] font-medium transition-colors",
+                  active ? "text-ink" : completed ? "text-brand-strong" : "text-ink-3 hover:text-ink"
                 )}
+                aria-current={active ? "step" : undefined}
               >
-                <span
-                  className={cn(
-                    "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
-                    isActive
-                      ? "text-white"
-                      : isDone
-                        ? "bg-purple-200 text-purple-900 dark:bg-purple-500/30 dark:text-purple-200"
-                        : "bg-slate-200 text-slate-800 dark:bg-white/10 dark:text-slate-400"
-                  )}
-                  style={isActive ? { background: "linear-gradient(135deg, #6B21A8, #A855F7)" } : {}}
-                >
-                  {step.id}
-                </span>
-                <span className="hidden sm:inline">{step.label}</span>
+                <span className={cn("h-1.5 w-1.5 rounded-full", active || completed ? "bg-brand" : "bg-line-strong")} />
+                <span>{step.label}</span>
+                <span className="font-mono text-[0.625rem] text-ink-3">{step.meta}</span>
               </Link>
             </li>
           );
-
         })}
       </ol>
     </nav>

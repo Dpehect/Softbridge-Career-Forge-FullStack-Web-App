@@ -1,77 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { Anvil } from "lucide-react";
-import { useTranslation } from "@/lib/forge/i18n";
+import { usePathname } from "next/navigation";
 
-/** Single source for footer copy — language follows app toggle (no mixed TR/EN). */
 export function Footer() {
-  const { t } = useTranslation();
-
-  const productLinks = [
-    { href: "/forge", label: "Analiz (Forge)" },
-    { href: "/resume", label: "Özgeçmiş Düzenleyici" },
-    { href: "/dashboard", label: "Kariyer Kokpiti" },
-    { href: "/coach", label: "AI Koç" },
-    { href: "/jobs", label: "İş İlanları" },
-    { href: "/paths", label: "Kariyer Yolları" },
-  ] as const;
+  const pathname = usePathname();
+  if (pathname !== "/") return null;
 
   return (
-    <footer className="mt-auto border-t border-black/5 bg-panel-elevated/40">
-      <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-14">
-        <div className="grid gap-10 md:grid-cols-[1.3fr_1fr_1fr]">
-          <div>
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-8 h-8 rounded-xl bg-cosmic-teal text-midnight-void flex items-center justify-center">
-                <Anvil className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="font-display font-bold text-sm tracking-tight">
-                  SoftBridge CareerForge
-                </p>
-                <p className="text-[11px] text-slate-600 dark:text-muted-steel">{t("logoSub")}</p>
-              </div>
-            </div>
-            <p className="text-sm text-slate-600 dark:text-muted-steel max-w-sm leading-relaxed">
-              {t("footerTagline")}
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-muted-steel mb-3">
-              {t("footerProduct")}
-            </p>
-            <ul className="space-y-2.5 text-sm">
-              {productLinks.map(({ href, label }) => (
-                <li key={href}>
-                  <Link href={href} className="hover:text-cosmic-teal transition-colors">
-                    {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-muted-steel mb-3">
-              {t("footerCompany")}
-            </p>
-            <ul className="space-y-2.5 text-sm">
-              <li>
-                <a
-                  href="https://www.softbridgesolutions.com"
-                  className="hover:text-cosmic-teal transition-colors"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  SoftBridge Solutions
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div className="mt-10 pt-5 border-t border-black/5 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-600 dark:text-muted-steel">
-          <span>© {new Date().getFullYear()} SoftBridge Solutions · CareerForge</span>
-        </div>
+    <footer className="border-t border-line bg-surface py-6">
+      <div className="mx-auto flex w-[min(100%-2rem,80rem)] flex-col gap-3 text-xs text-ink-3 sm:flex-row sm:items-center sm:justify-between">
+        <p>CareerForge by SoftBridge. Yerel, açık ve aday odaklı.</p>
+        <nav className="flex gap-4" aria-label="Alt menü">
+          <Link href="/forge" className="hover:text-ink">Analiz</Link>
+          <Link href="/jobs" className="hover:text-ink">İşler</Link>
+          <Link href="/coach" className="hover:text-ink">Koç</Link>
+        </nav>
       </div>
     </footer>
   );
