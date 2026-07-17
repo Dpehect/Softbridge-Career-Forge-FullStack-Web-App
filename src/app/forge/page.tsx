@@ -176,7 +176,7 @@ export default function ForgePage() {
   const [interview, setInterview] = useState<InterviewResult | null>(null);
   const [ats, setAts] = useState<AtsResult | null>(null);
   const [chatInput, setChatInput] = useState("");
-  const [chatResult, setChatResult] = useState<ChatbotResult | null>(null);
+  const [chatHistory, setChatHistory] = useState<Array<{ sender: "user" | "ai"; text: string; category?: string; actionableTips?: string[] }>>([]);
   const [busy, setBusy] = useState(false);
   const [parseBanner, setParseBanner] = useState<string | null>(null);
   const [lastCvFileName, setLastCvFileName] = useState<string | null>(null);
@@ -551,15 +551,27 @@ export default function ForgePage() {
       }
     });
 
-  const onChat = () =>
+  const onChat = () => {
+    if (!chatInput.trim() || !forgeParsedCv) return;
+    const userMsg = chatInput;
+    setChatInput("");
+    setChatHistory((prev) => [...prev, { sender: "user", text: userMsg }]);
+
     run(async () => {
       try {
-        if (!forgeParsedCv) return;
         const result = await simulateAIResponse("chat", forgeParsedCv, {
-          message: chatInput,
+          message: userMsg,
           jd: jdText,
         });
-        setChatResult(result);
+        setChatHistory((prev) => [
+          ...prev,
+          {
+            sender: "ai",
+            text: result.response,
+            category: result.category,
+            actionableTips: result.actionableTips,
+          },
+        ]);
         pushForgeHistory({
           action: "chatbot",
           summary: `${result.category}: ${result.response.slice(0, 45)}…`,
@@ -570,6 +582,7 @@ export default function ForgePage() {
         toast.error("Sohbet yanıtı üretilemedi.");
       }
     });
+  };
 
   // Form Editor Actions
   const updateParsedField = (patch: Partial<ParsedCV>) => {
@@ -1166,25 +1179,32 @@ export default function ForgePage() {
             <div className="flex flex-wrap gap-1 p-1 rounded-2xl" style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.12)" }}>
               {(
                 [
-                  ["preview", "👁️", "Preview"],
-                  ["feedback", "🎯", "ATS Check"],
-                  ["match", "🤝", "Match JD"],
-                  ["cover", "✉️", "Cover Letter"],
-                  ["interview", "🗣️", "Interview"],
-                  ["chat", "💬", "Coach Chat"],
+                  ["preview", "👁️", t("tabPreview")],
+                  ["feedback", "🎯", t("tabAtsCheck")],
+                  ["match", "🤝", t("tabMatchJd")],
+                  ["cover", "✉️", t("tabCoverLetter")],
+                  ["interview", "🗣️", t("tabInterviewPrep")],
+                  ["chat", "💬", t("tabCoachChat")],
                 ] as const
-              ).map(([id, emoji, label]) => (
-                <button
-                  key={id}
-                  onClick={() => setPreviewTab(id)}
-                  className="flex-1 px-2 py-1.5 rounded-xl text-[11px] font-semibold cursor-pointer transition-all whitespace-nowrap"
-                  style={previewTab === id
-                    ? { background: "linear-gradient(135deg,#6B21A8,#A855F7)", color: "white", boxShadow: "0 4px 12px rgba(107,33,168,0.3)" }
-                    : { color: "var(--text-muted)" }}
-                >
-                  {emoji} {label}
-                </button>
-              ))}
+              ).map(([id, emoji, label]) => {
+                const disabled = !forgeParsedCv && id !== "preview";
+                return (
+                  <button
+                    key={id}
+                    disabled={disabled}
+                    onClick={() => setPreviewTab(id)}
+                    className={cn(
+                      "flex-1 px-2 py-1.5 rounded-xl text-[11px] font-semibold cursor-pointer transition-all whitespace-nowrap",
+                      disabled && "opacity-40 cursor-not-allowed pointer-events-none"
+                    )}
+                    style={previewTab === id
+                      ? { background: "linear-gradient(135deg,#6B21A8,#A855F7)", color: "white", boxShadow: "0 4px 12px rgba(107,33,168,0.3)" }
+                      : { color: "var(--text-muted)" }}
+                  >
+                    {emoji} {label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Tool Output Window */}
@@ -1507,32 +1527,37 @@ export default function ForgePage() {
               {previewTab === "chat" && (
                 <div className="space-y-3 flex flex-col min-h-[380px] justify-between">
                   <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-                    <div className="p-3 rounded-xl bg-cosmic-teal/5 border border-cosmic-teal/10 text-xs leading-relaxed">
-                      <p className="font-bold text-cosmic-teal">Career Coach:</p>
-                      <p className="mt-1">Hi there! Ask me any career strategy advice, mülakat prep questions, or CV phrasing modifications.</p>
+                    <div className="p-3 rounded-xl bg-purple-500/5 border border-purple-500/10 text-xs leading-relaxed">
+                      <p className="font-bold text-purple-700 dark:text-purple-300">Kariyer Koçu:</p>
+                      <p className="mt-1">Merhaba! Kariyer stratejileri, mülakat hazırlığı veya özgeçmişinizdeki ifadeleri geliştirme konusunda bana dilediğinizi sorabilirsiniz.</p>
                     </div>
-                    {chatResult && (
-                      <div className="space-y-3">
-                        <div className="p-3 rounded-xl bg-panel-elevated border text-xs leading-relaxed self-end">
-                          <p className="font-semibold">You:</p>
-                          <p className="mt-0.5 text-muted-steel">{chatInput}</p>
-                        </div>
-                        <div className="p-3 rounded-xl bg-cosmic-teal/5 border border-cosmic-teal/10 text-xs leading-relaxed">
-                          <p className="font-bold text-cosmic-teal">Career Coach ({chatResult.category}):</p>
-                          <p className="mt-1">{chatResult.response}</p>
-                          {chatResult.actionableTips && (
-                            <ul className="mt-2 space-y-1 text-[11px] text-muted-steel list-disc pl-3">
-                              {chatResult.actionableTips.map((tip, i) => <li key={i}>{tip}</li>)}
-                            </ul>
-                          )}
-                        </div>
+                    {chatHistory.map((msg, idx) => (
+                      <div key={idx} className="space-y-3">
+                        {msg.sender === "user" ? (
+                          <div className="p-3 rounded-xl bg-panel border border-slate-200/60 dark:border-slate-800 text-xs leading-relaxed max-w-[85%] ml-auto text-right">
+                            <p className="font-semibold text-slate-800 dark:text-slate-200">Siz:</p>
+                            <p className="mt-0.5 text-slate-700 dark:text-slate-300">{msg.text}</p>
+                          </div>
+                        ) : (
+                          <div className="p-3 rounded-xl bg-purple-500/5 border border-purple-500/10 text-xs leading-relaxed max-w-[90%] mr-auto">
+                            <p className="font-bold text-purple-700 dark:text-purple-300">
+                              Kariyer Koçu {msg.category ? `(${msg.category})` : ""}:
+                            </p>
+                            <p className="mt-1 text-slate-700 dark:text-slate-300">{msg.text}</p>
+                            {msg.actionableTips && msg.actionableTips.length > 0 && (
+                              <ul className="mt-2 space-y-1 text-[11px] text-purple-900/80 dark:text-purple-300/80 list-disc pl-3">
+                                {msg.actionableTips.map((tip, i) => <li key={i}>{tip}</li>)}
+                              </ul>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    )}
+                    ))}
                   </div>
 
                   <div className="flex gap-2 border-t border-black/5 pt-3">
                     <Input
-                      placeholder="Ask the coach (e.g., 'mülakat prep', 'ATS tips')..."
+                      placeholder="Kariyer koçuna sorun (örn. 'mülakat hazırlığı', 'ATS önerileri')..."
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       onKeyDown={(e) => {
@@ -1542,7 +1567,7 @@ export default function ForgePage() {
                       }}
                     />
                     <Button size="sm" disabled={busy || !chatInput.trim()} onClick={onChat}>
-                      {busy ? "Replying..." : "Ask"}
+                      {busy ? "Cevaplanıyor..." : "Sor"}
                     </Button>
                   </div>
                 </div>
