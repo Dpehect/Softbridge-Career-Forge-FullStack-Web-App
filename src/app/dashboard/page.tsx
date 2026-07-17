@@ -191,8 +191,7 @@ export default function DashboardPage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <div
-              className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full text-xs font-bold"
-              style={{ background: "rgba(124,58,237,0.12)", color: "#7C3AED" }}
+              className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full text-xs font-bold bg-purple-100/80 text-purple-800 dark:bg-purple-500/10 dark:text-purple-300"
             >
               <Brain className="w-3.5 h-3.5" />
               {t("navDashboard")}

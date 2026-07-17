@@ -263,8 +263,7 @@ export default function PathsPage() {
 
         {/* Header */}
         <div>
-          <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full text-xs font-bold"
-            style={{ background: "rgba(168,85,247,0.12)", color: "#A855F7" }}>
+          <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full text-xs font-bold bg-purple-100/80 text-purple-800 dark:bg-purple-500/10 dark:text-purple-300">
             <TrendingUp className="w-3.5 h-3.5" />
             {isTR ? "Kariyer Yolları" : "Career Paths"}
           </div>

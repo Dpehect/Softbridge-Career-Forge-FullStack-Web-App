@@ -132,7 +132,7 @@ function ProTipsPanel({ editorTab, previewTab, activeSection }: ProTipsPanelProp
           </li>
         ))}
       </ul>
-      <div className="mt-4 p-3 rounded-2xl bg-purple-500/5 border border-purple-500/10 text-[10px] text-purple-700 dark:text-purple-300 leading-normal">
+      <div className="mt-4 p-3 rounded-2xl bg-purple-500/5 border border-purple-500/10 text-[10px] text-purple-950 dark:text-purple-200 leading-normal">
         <strong>💡 Profesyonel İpucu:</strong> CV&apos;nizin ATS taramalarından geçmesi için standart yazı tipleri (Arial, Calibri) tercih edin.
       </div>
     </aside>
@@ -622,16 +622,14 @@ export default function ForgePage() {
         {/* Workspace Title & Intro */}
         <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full text-xs font-bold"
-              style={{ background: "rgba(168,85,247,0.12)", color: "#A855F7" }}>
+            <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full text-xs font-bold bg-purple-100/80 text-purple-800 dark:bg-purple-500/10 dark:text-purple-300">
               <Anvil className="w-3.5 h-3.5" />
               SoftBridge · Workspace
             </div>
             <h1 className="font-display text-3xl font-bold tracking-tight text-star-white">{t("forgeTitle")}</h1>
             <p className="text-sm text-muted-steel mt-1 max-w-xl leading-relaxed">{t("forgeDesc")}</p>
             {/* Yerel işleme rozeti */}
-            <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold"
-              style={{ color: "#4ADE80" }}>
+            <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60" style={{ background: "#4ADE80" }} />
                 <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#4ADE80" }} />
@@ -642,7 +640,7 @@ export default function ForgePage() {
             {(analyzing || modelBanner) && (
               <div className="mt-3 space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold" style={{ color: "#A855F7" }}>
+                  <span className="font-semibold text-purple-700 dark:text-purple-300">
                     ✨ {modelBanner || "Özgeçmiş analiz ediliyor..."}
                   </span>
                   <span className="text-muted-steel">Lütfen bekleyin</span>
