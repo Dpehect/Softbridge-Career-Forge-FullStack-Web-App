@@ -685,9 +685,9 @@ export default function ForgePage() {
         <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-8 items-start">
           
           {/* Sol Sidebar Nav */}
-          <aside className="lg:sticky lg:top-24 flex flex-col gap-6 rounded-3xl p-5 border border-slate-200/60 bg-white/50 dark:border-white/10 dark:bg-[#0f172a]/20 shadow-sm ring-1 ring-slate-100 dark:ring-white/5">
-            <div className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-[#C084FC] flex items-center gap-2">
-              <Anvil className="w-4 h-4 text-purple-600" strokeWidth={1.5} />
+          <aside className="lg:sticky lg:top-24 flex flex-col gap-6 rounded-3xl p-5 border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+            <div className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+              <Anvil className="w-4 h-4 text-purple-600 dark:text-[#C084FC]" strokeWidth={1.5} />
               CareerForge
             </div>
             <nav className="flex flex-col gap-1.5">
@@ -695,7 +695,7 @@ export default function ForgePage() {
                 onClick={() => setActiveSection("analiz")}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer text-left",
-                  activeSection === "analiz" ? "bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300 font-bold" : "text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-[#C084FC]"
+                  activeSection === "analiz" ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-purple-600 dark:hover:text-[#C084FC]"
                 )}
               >
                 <Anvil className="w-4 h-4" strokeWidth={1.5} />
@@ -705,7 +705,7 @@ export default function ForgePage() {
                 onClick={() => setActiveSection("gecmis")}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer text-left",
-                  activeSection === "gecmis" ? "bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300 font-bold" : "text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-[#C084FC]"
+                  activeSection === "gecmis" ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-purple-600 dark:hover:text-[#C084FC]"
                 )}
               >
                 <History className="w-4 h-4" strokeWidth={1.5} />
@@ -715,7 +715,7 @@ export default function ForgePage() {
                 onClick={() => setActiveSection("ayarlar")}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer text-left",
-                  activeSection === "ayarlar" ? "bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300 font-bold" : "text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-[#C084FC]"
+                  activeSection === "ayarlar" ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-purple-600 dark:hover:text-[#C084FC]"
                 )}
               >
                 <Settings className="w-4 h-4" strokeWidth={1.5} />
@@ -872,29 +872,31 @@ export default function ForgePage() {
                   <div className="flex flex-col gap-4">
                     
                     {/* Editor Tabs Navigation */}
-                    <div className="flex gap-1 p-1 rounded-2xl" style={{ background: "rgba(168,85,247,0.07)", border: "1px solid rgba(168,85,247,0.12)" }}>
+                    <div className="flex gap-1 p-1 rounded-2xl bg-purple-500/5 border border-purple-500/10">
                       {(
                         [
                           ["raw", "Yükle"],
                           ["form", "Düzenle"],
                         ] as const
-                      ).map(([id, label]) => (
-                        <button
-                          key={id}
-                          type="button"
-                          onClick={() => setEditorTab(id as EditorTabId)}
-                          disabled={id === "form" && !forgeParsedCv}
-                          className={cn(
-                            "flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all cursor-pointer disabled:opacity-40",
-                            editorTab === id ? "text-white shadow-lg" : ""
-                          )}
-                          style={editorTab === id
-                            ? { background: "linear-gradient(135deg, #6B21A8, #A855F7)", boxShadow: "0 4px 12px rgba(107,33,168,0.3)" }
-                            : { color: "var(--text-muted)" }}
-                        >
-                          {label}
-                        </button>
-                      ))}
+                      ).map(([id, label]) => {
+                        const active = editorTab === id;
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => setEditorTab(id as EditorTabId)}
+                            disabled={id === "form" && !forgeParsedCv}
+                            className={cn(
+                              "flex-1 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer",
+                              active
+                                ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10"
+                                : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-100 disabled:opacity-40 disabled:hover:text-slate-600/40"
+                            )}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
                     </div>
 
                     {/* Editor Content Area */}
@@ -919,10 +921,10 @@ export default function ForgePage() {
                         <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
                           Dosyanı aşağıya bırak ya da metni yapıştır — asistan saniyeler içinde analiz eder.
                         </p>
-                        <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#4ADE80" }}>
+                        <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-400">
                           <span className="relative flex h-1.5 w-1.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60" style={{ background: "#4ADE80" }} />
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#4ADE80" }} />
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 bg-emerald-500" />
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
                           </span>
                           Veriler cihazınızda kalır — hiçbir şey dışarıya gönderilmez
                         </div>
@@ -945,7 +947,7 @@ export default function ForgePage() {
                         border: "1px solid rgba(74,222,128,0.25)",
                       }}
                     >
-                      <p className="font-semibold" style={{ color: "#34D399" }}>
+                      <p className="font-semibold text-emerald-800 dark:text-emerald-400">
                         ✅ Özgeçmiş yüklendi{lastCvFileName ? `: ${lastCvFileName}` : ""}
                       </p>
                       <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
@@ -1000,7 +1002,7 @@ export default function ForgePage() {
                         border: "1px solid rgba(168,85,247,0.2)",
                       }}
                     >
-                      <p className="font-semibold" style={{ color: "#A855F7" }}>🌟 {parseBanner}</p>
+                      <p className="font-semibold text-purple-700 dark:text-[#C084FC]">🌟 {parseBanner}</p>
                       <p className="mt-0.5" style={{ color: "var(--text-muted)" }}>
                         Düzenlemek için <strong>Düzenle</strong> sekmesine geç.
                       </p>
@@ -1015,7 +1017,7 @@ export default function ForgePage() {
                   
                   {/* Personal Info */}
                   <div className="space-y-3">
-                    <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: "#A855F7" }}>{t("personalInfo")}</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-[#C084FC]">{t("personalInfo")}</h4>
                     <div className="flex gap-3 items-center">
                       <div className="w-12 h-12 rounded-full bg-abyss-panel overflow-hidden border flex items-center justify-center shrink-0 relative group">
                         {forgeParsedCv.photoDataUrl ? (
@@ -1176,7 +1178,7 @@ export default function ForgePage() {
           <div className="flex flex-col gap-4">
             
             {/* Tool tab links */}
-            <div className="flex flex-wrap gap-1 p-1 rounded-2xl" style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.12)" }}>
+            <div className="flex flex-wrap gap-1 p-1 rounded-2xl bg-purple-500/5 border border-purple-500/10">
               {(
                 [
                   ["preview", "👁️", t("tabPreview")],
@@ -1188,6 +1190,7 @@ export default function ForgePage() {
                 ] as const
               ).map(([id, emoji, label]) => {
                 const disabled = !forgeParsedCv && id !== "preview";
+                const active = previewTab === id;
                 return (
                   <button
                     key={id}
@@ -1195,11 +1198,10 @@ export default function ForgePage() {
                     onClick={() => setPreviewTab(id)}
                     className={cn(
                       "flex-1 px-2 py-1.5 rounded-xl text-[11px] font-semibold cursor-pointer transition-all whitespace-nowrap",
-                      disabled && "opacity-40 cursor-not-allowed pointer-events-none"
+                      active
+                        ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/10"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-100 disabled:opacity-40 disabled:hover:text-slate-600/40"
                     )}
-                    style={previewTab === id
-                      ? { background: "linear-gradient(135deg,#6B21A8,#A855F7)", color: "white", boxShadow: "0 4px 12px rgba(107,33,168,0.3)" }
-                      : { color: "var(--text-muted)" }}
                   >
                     {emoji} {label}
                   </button>
@@ -1231,7 +1233,7 @@ export default function ForgePage() {
                       <div className="flex justify-between items-center border-b border-slate-200 pb-4 mb-4">
                         <div>
                           <p className="text-sm font-semibold text-slate-900 leading-tight">{forgeParsedCv.name}</p>
-                          <p className="text-sm font-semibold mt-0.5" style={{ color: "#6B21A8" }}>{forgeParsedCv.title || "Software Professional"}</p>
+                          <p className="text-sm font-semibold mt-0.5 text-purple-700 dark:text-[#C084FC]">{forgeParsedCv.title || "Software Professional"}</p>
                           <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 mt-2">
                             {forgeParsedCv.email && <span>✉ {forgeParsedCv.email}</span>}
                             {forgeParsedCv.phone && <span>📞 {forgeParsedCv.phone}</span>}
@@ -1250,14 +1252,14 @@ export default function ForgePage() {
 
                       {forgeParsedCv.summary && (
                         <div className="mb-4">
-                           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 pl-2 mb-2" style={{ borderColor: "#6B21A8" }}>Summary</h3>
+                           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 border-purple-600 pl-2 mb-2">Summary</h3>
                           <p className="text-xs text-slate-600 text-justify">{forgeParsedCv.summary}</p>
                         </div>
                       )}
 
                       {forgeParsedCv.experience && forgeParsedCv.experience.length > 0 && (
                         <div className="mb-4">
-                           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 pl-2 mb-2.5" style={{ borderColor: "#6B21A8" }}>Experience</h3>
+                           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 border-purple-600 pl-2 mb-2.5">Experience</h3>
                           <div className="space-y-3">
                             {forgeParsedCv.experience.map((exp, idx) => (
                               <div key={idx} className="text-xs">
@@ -1265,7 +1267,7 @@ export default function ForgePage() {
                                   <span>{exp.position}</span>
                                   <span className="text-slate-400 font-normal">{exp.duration}</span>
                                 </div>
-                                 <p className="font-medium my-0.5" style={{ color: "#6B21A8" }}>{exp.company}</p>
+                                 <p className="font-medium my-0.5 text-purple-700 dark:text-[#C084FC]">{exp.company}</p>
                                 {exp.description && exp.description.length > 0 && (
                                   <ul className="list-disc list-inside pl-2 space-y-0.5 text-slate-500">
                                     {exp.description.map((b, bIdx) => (
@@ -1281,7 +1283,7 @@ export default function ForgePage() {
 
                       {forgeParsedCv.skills && forgeParsedCv.skills.length > 0 && (
                         <div className="mb-4">
-                           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 pl-2 mb-2" style={{ borderColor: "#6B21A8" }}>Skills</h3>
+                           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 border-purple-600 pl-2 mb-2">Skills</h3>
                           <div className="flex flex-wrap gap-1">
                             {forgeParsedCv.skills.map((s, idx) => (
                               <span key={idx} className="bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] font-medium">{s}</span>
@@ -1292,7 +1294,7 @@ export default function ForgePage() {
 
                       {forgeParsedCv.education && forgeParsedCv.education.length > 0 && (
                         <div>
-                           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 pl-2 mb-2" style={{ borderColor: "#6B21A8" }}>Education</h3>
+                           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-l-4 border-purple-600 pl-2 mb-2">Education</h3>
                           <div className="space-y-2">
                             {forgeParsedCv.education.map((edu, idx) => (
                               <div key={idx} className="text-xs">
@@ -1417,7 +1419,7 @@ export default function ForgePage() {
                   {forgeAnalysis && (
                     <div className="space-y-3 pt-2">
                       <div className="flex items-center gap-4 bg-panel-elevated/50 p-4 rounded-xl border border-black/5">
-                        <div className="w-16 h-16 rounded-full border-4 flex items-center justify-center font-bold text-base" style={{ borderColor: "#A855F7", color: "#A855F7" }}>
+                        <div className="w-16 h-16 rounded-full border-4 border-purple-600 text-purple-700 dark:border-purple-400 dark:text-purple-300 flex items-center justify-center font-bold text-base">
                           {forgeAnalysis.matchScore}%
                         </div>
                         <div>
