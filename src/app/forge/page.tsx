@@ -1380,11 +1380,11 @@ export default function ForgePage() {
               {previewTab === "match" && (
                 <div className="space-y-4">
                   <div>
-                    <h2 className="font-semibold text-sm">Match Job Description (JD)</h2>
-                    <p className="text-xs text-muted-steel mt-0.5">Compare your CV skills against a target job ad.</p>
+                    <h2 className="font-semibold text-sm">İş Tanımı Eşleşmesi (JD Match)</h2>
+                    <p className="text-xs text-muted-steel mt-0.5">CV yeteneklerinizi hedef iş ilanı gereksinimleriyle karşılaştırın.</p>
                   </div>
                   <Textarea
-                    placeholder="Paste job description details here..."
+                    placeholder="Hedef iş tanımını (Job Description) buraya yapıştırın..."
                     value={jdText}
                     onChange={(e) => setForgeJdText(e.target.value)}
                     className="text-xs min-h-[90px]"
@@ -1393,7 +1393,7 @@ export default function ForgePage() {
                     <Button
                       size="sm"
                       variant="primary"
-                      disabled={isLoading || !forgeParsedCv}
+                      disabled={isLoading || !forgeParsedCv || !jdText.trim()}
                       onClick={onAnalyze}
                       className={cn(isLoading && "opacity-60")}
                     >
@@ -1402,11 +1402,11 @@ export default function ForgePage() {
                           <LoadingSpinner /> Analiz ediliyor…
                         </>
                       ) : (
-                        "Check Match Score"
+                        "Eşleşmeyi Kontrol Et"
                       )}
                     </Button>
-                    <Button size="sm" variant="ghostBorder" disabled={isLoading || !forgeParsedCv} onClick={onOptimize}>
-                      Optimize for JD
+                    <Button size="sm" variant="ghostBorder" disabled={isLoading || !forgeParsedCv || !jdText.trim()} onClick={onOptimize}>
+                      İş Tanımına Göre Optimize Et
                     </Button>
                   </div>
                   {clientAiError && (
@@ -1431,12 +1431,12 @@ export default function ForgePage() {
                       {/* Matching vs Missing */}
                       <div className="grid grid-cols-2 gap-3 text-xs">
                         <div className="space-y-1">
-                          <p className="font-semibold text-cosmic-teal">Matched Skills ({forgeAnalysis.matchedSkills.length})</p>
-                          <p className="text-muted-steel">{forgeAnalysis.matchedSkills.join(", ") || "None yet."}</p>
+                          <p className="font-semibold text-cosmic-teal">Eşleşen Yetenekler ({forgeAnalysis.matchedSkills.length})</p>
+                          <p className="text-slate-300">{forgeAnalysis.matchedSkills.join(", ") || "Henüz yok."}</p>
                         </div>
                         <div className="space-y-1">
-                          <p className="font-semibold text-sunset-coral">Missing Skills ({forgeAnalysis.missingSkills.length})</p>
-                          <p className="text-muted-steel">{forgeAnalysis.missingSkills.join(", ") || "None detected."}</p>
+                          <p className="font-semibold text-sunset-coral">Eksik Yetenekler ({forgeAnalysis.missingSkills.length})</p>
+                          <p className="text-slate-300">{forgeAnalysis.missingSkills.join(", ") || "Eksik tespit edilmedi."}</p>
                         </div>
                       </div>
                     </div>
@@ -1449,8 +1449,8 @@ export default function ForgePage() {
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/5 pb-2">
                     <div>
-                      <h2 className="font-semibold text-sm">Cover Letter Generator</h2>
-                      <p className="text-xs text-muted-steel">Generates customized application letter.</p>
+                      <h2 className="font-semibold text-sm">Ön Yazı Oluşturucu</h2>
+                      <p className="text-xs text-muted-steel">Özgeçmişinize özel başvuru ön yazısı hazırlar.</p>
                     </div>
                     <div className="flex gap-1.5">
                       {(["Profesyonel", "Girişimci", "Teknik"] as CoverLetterTone[]).map((t) => (
@@ -1469,7 +1469,7 @@ export default function ForgePage() {
                   </div>
 
                   <Button size="sm" variant="accent" className="w-full" disabled={busy || !forgeParsedCv} onClick={onCover}>
-                    {busy ? "Drafting Cover Letter..." : "Generate Cover Letter"}
+                    {busy ? "Ön Yazı Hazırlanıyor..." : "Ön Yazı Oluştur"}
                   </Button>
 
                   {cover && (
@@ -1484,10 +1484,10 @@ export default function ForgePage() {
                         variant="outline"
                         onClick={() => {
                           navigator.clipboard.writeText(cover.coverLetter);
-                          toast.success("Copied to clipboard!");
+                          toast.success("Panoya kopyalandı!");
                         }}
                       >
-                        <Copy className="w-3.5 h-3.5 mr-1" /> Copy Letter
+                        <Copy className="w-3.5 h-3.5 mr-1" /> Ön Yazıyı Kopyala
                       </Button>
                     </div>
                   )}
@@ -1499,11 +1499,11 @@ export default function ForgePage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between border-b border-black/5 pb-2">
                     <div>
-                      <h2 className="font-semibold text-sm">Interview Simulator</h2>
-                      <p className="text-xs text-muted-steel">Role-aware questions and response advice.</p>
+                      <h2 className="font-semibold text-sm">Mülakat Simülatörü</h2>
+                      <p className="text-xs text-muted-steel">Pozisyona özel mülakat soruları ve yanıt tavsiyeleri.</p>
                     </div>
                     <Button size="sm" variant="accent" disabled={busy} onClick={onInterview}>
-                      {busy ? "Generating..." : "Generate Questions"}
+                      {busy ? "Hazırlanıyor..." : "Soruları Üret"}
                     </Button>
                   </div>
 
@@ -1511,16 +1511,16 @@ export default function ForgePage() {
                     <div className="space-y-4 max-h-[360px] overflow-y-auto pr-1">
                       {interview.questions.map((q, idx) => (
                         <div key={idx} className="p-3 rounded-xl border border-black/5 bg-panel-elevated/50 space-y-1.5 text-xs">
-                          <p className="font-bold text-cosmic-teal">Q: {q.question}</p>
-                          <p className="text-[10px] uppercase text-muted-steel font-semibold">Category: {q.type}</p>
+                          <p className="font-bold text-cosmic-teal">S: {q.question}</p>
+                          <p className="text-[10px] uppercase text-muted-steel font-semibold">Kategori: {q.type}</p>
                           <p className="text-muted-steel leading-relaxed bg-black/5 p-2 rounded">
-                            <strong className="text-star-white">Coach Tip:</strong> {q.exampleAnswer}
+                            <strong className="text-star-white">Koç Tavsiyesi:</strong> {q.exampleAnswer}
                           </p>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-muted-steel">Click **Generate Questions** to simulate practice runs.</p>
+                    <p className="text-xs text-muted-steel">Pratik yapmak için **Soruları Üret** butonuna tıklayın.</p>
                   )}
                 </div>
               )}
