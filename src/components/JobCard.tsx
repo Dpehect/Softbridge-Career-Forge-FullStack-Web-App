@@ -26,19 +26,29 @@ export function JobCard({ job }: { job: Job; index?: number }) {
   const match = computeJobMatch(resume.skills, job.tags);
   const stage = jobStages?.[job.id] || "applied";
   const stageLabels: Record<string, string> = locale === "tr" ? {
+    saved: "Kaydedildi",
+    preparing: "Hazırlanıyor",
     applied: "Başvuruldu",
-    interviewing: "Mülakat",
+    screening: "İK Görüşmesi",
+    interview: "Mülakat",
     technical: "Teknik Değerlendirme",
-    offer: "Teklif Alındı",
+    final: "Final Mülakatı",
+    offer: "Teklif",
     rejected: "Reddedildi",
+    withdrawn: "Geri Çekildi",
   } : {
+    saved: "Saved",
+    preparing: "Preparing",
     applied: "Applied",
-    interviewing: "Interviewing",
-    technical: "Technical",
+    screening: "Recruiter screening",
+    interview: "Interview",
+    technical: "Technical assessment",
+    final: "Final interview",
     offer: "Offer",
     rejected: "Rejected",
+    withdrawn: "Withdrawn",
   };
-  const stageLabel = stageLabels[stage] || "Applied";
+  const stageLabel = stageLabels[stage] || stageLabels.applied;
   
   const copy = locale === "tr" ? {
     featured: "Öne çıkan",

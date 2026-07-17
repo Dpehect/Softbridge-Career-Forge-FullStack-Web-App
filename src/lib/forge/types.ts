@@ -64,6 +64,13 @@ export interface MatchAnalysis {
   atsScore: number;
   matchedSkills: string[];
   missingSkills: string[];
+  requiredSkillsCoverage?: number;
+  preferredSkillsCoverage?: number;
+  experienceAlignment?: number;
+  locationCompatibility?: number;
+  languageCompatibility?: number;
+  evidenceStrength?: number;
+  scoreExplanations?: string[];
 }
 
 export interface OptimizedCV {

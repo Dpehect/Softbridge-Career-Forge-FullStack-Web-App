@@ -71,7 +71,7 @@ function buildResponse(text: string): CoachResponse {
   if (!hasResume) return withoutResume(locale);
 
   const category = categoryFor(text);
-  const ats = calculateAtsScore(cv);
+  const ats = calculateAtsScore(cv, locale);
   const recommendations = buildActionableRecommendations(cv, locale);
   const hasMetrics = cv.experience.some((item) => item.description.some((bullet) => /\d+%|\b\d{2,}\+?\b/.test(bullet)));
   const roleEvidence = `${lastRole} · ${lastCompany}`;

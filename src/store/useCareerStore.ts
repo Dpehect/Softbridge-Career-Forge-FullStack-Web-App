@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist, subscribeWithSelector } from "zustand/middleware";
-import type { CoachMessage, ResumeProfile } from "@/types";
+import type { CoachMessage, ResumeProfile, JobApplicationDetails } from "@/types";
 import type { Locale } from "@/i18n/messages";
 import { createEmptyHydrationData, createEmptyResume, type StoreHydrationData } from "@/lib/supabase/workspace-mapper";
 import type {
@@ -138,13 +138,15 @@ export interface CareerState {
   savedJobIds: string[];
   appliedJobIds: string[];
   jobStages: Record<string, string>;
+  jobApplicationDetails: Record<string, JobApplicationDetails>;
+  updateJobApplicationDetails: (jobId: string, details: Partial<JobApplicationDetails>) => void;
   enrolledPathIds: string[];
   completedModuleIds: string[];
   isDemoMode: boolean;
   resume: ResumeProfile;
   resumePast: ResumeProfile[];
   resumeFuture: ResumeProfile[];
-  resumeSectionOrder: ResumeSectionId[];
+  resumeSectionOrder: string[];
   coachMessages: CoachMessage[];
   forgeCvText: string;
   forgeJdText: string;
@@ -153,10 +155,8 @@ export interface CareerState {
   forgeTone: CoverLetterTone;
   forgeHistory: ForgeHistoryItem[];
   forgeBackups: CvBackup[];
-  /** Solution-center: target role for progress cockpit */
   careerGoalId: string | null;
   setCareerGoalId: (id: string | null) => void;
-  /** Last successful CV analysis meta for dashboard summary */
   lastAnalysisMeta: {
     at: string;
     fileName?: string;
@@ -171,6 +171,11 @@ export interface CareerState {
   cloudLastSyncedAt: string | null;
   cloudChangeVersion: number;
   cloudReloadVersion: number;
+  cloudConflictIncoming: StoreHydrationData | null;
+  cloudConflictUserId: string | null;
+  cloudConflictUpdatedAt: string | null;
+  showMigrationDialog: boolean;
+  resolveConflict: (choice: "keep" | "replace" | "merge" | "cancel") => void;
   hydrateFromCloud: (data: StoreHydrationData, userId: string, updatedAt: string | null) => void;
   setCloudLoading: () => void;
   setCloudSaving: () => void;
@@ -201,7 +206,7 @@ export interface CareerState {
   updateResume: (patch: Partial<ResumeProfile>) => void;
   undoResume: () => void;
   redoResume: () => void;
-  moveResumeSection: (id: ResumeSectionId, direction: -1 | 1) => void;
+  moveResumeSection: (id: string, direction: -1 | 1) => void;
   /** Merge skills into resume + parsed CV (one-click from journey) */
   addSkills: (skills: string[]) => number;
   setResume: (resume: ResumeProfile) => void;
@@ -236,6 +241,116 @@ function cloudMutation(state: CareerState) {
   };
 }
 
+function mergeWorkspaceSnapshots(local: any, cloud: any): any {
+  const merged = { ...local };
+  const rLocal = local.resume || {};
+  const rCloud = cloud.resume || {};
+  
+  merged.resume = {
+    ...rLocal,
+    fullName: rLocal.fullName || rCloud.fullName || "",
+    headline: rLocal.headline || rCloud.headline || "",
+    email: rLocal.email || rCloud.email || "",
+    phone: rLocal.phone || rCloud.phone || "",
+    location: rLocal.location || rCloud.location || "",
+    summary: rLocal.summary || rCloud.summary || "",
+    photoDataUrl: rLocal.photoDataUrl || rCloud.photoDataUrl || null,
+    website: rLocal.website || rCloud.website || "",
+    skills: Array.from(new Set([...(rLocal.skills || []), ...(rCloud.skills || [])])),
+    experience: [
+      ...(rLocal.experience || []),
+      ...(rCloud.experience || []).filter((ce: any) => 
+        !(rLocal.experience || []).some((le: any) => le.company === ce.company && le.role === ce.role)
+      )
+    ],
+    education: [
+      ...(rLocal.education || []),
+      ...(rCloud.education || []).filter((ce: any) => 
+        !(rLocal.education || []).some((le: any) => le.school === ce.school && le.degree === ce.degree)
+      )
+    ],
+    projects: [
+      ...(rLocal.projects || []),
+      ...(rCloud.projects || []).filter((ce: any) => 
+        !(rLocal.projects || []).some((le: any) => le.title === ce.title)
+      )
+    ],
+    certifications: [
+      ...(rLocal.certifications || []),
+      ...(rCloud.certifications || []).filter((ce: any) => 
+        !(rLocal.certifications || []).some((le: any) => le.name === ce.name)
+      )
+    ],
+    languages: [
+      ...(rLocal.languages || []),
+      ...(rCloud.languages || []).filter((ce: any) => 
+        !(rLocal.languages || []).some((le: any) => le.name === ce.name)
+      )
+    ],
+    awards: [
+      ...(rLocal.awards || []),
+      ...(rCloud.awards || []).filter((ce: any) => 
+        !(rLocal.awards || []).some((le: any) => le.title === ce.title)
+      )
+    ],
+    publications: [
+      ...(rLocal.publications || []),
+      ...(rCloud.publications || []).filter((ce: any) => 
+        !(rLocal.publications || []).some((le: any) => le.title === ce.title)
+      )
+    ],
+    socialLinks: [
+      ...(rLocal.socialLinks || []),
+      ...(rCloud.socialLinks || []).filter((ce: any) => 
+        !(rLocal.socialLinks || []).some((le: any) => le.label === ce.label)
+      )
+    ],
+    sectionVisibility: {
+      ...(rCloud.sectionVisibility || {}),
+      ...(rLocal.sectionVisibility || {})
+    },
+    customization: {
+      ...(rCloud.customization || {}),
+      ...(rLocal.customization || {})
+    }
+  };
+
+  merged.savedJobIds = Array.from(new Set([...(local.savedJobIds || []), ...(cloud.savedJobIds || [])]));
+  merged.appliedJobIds = Array.from(new Set([...(local.appliedJobIds || []), ...(cloud.appliedJobIds || [])]));
+  merged.jobStages = {
+    ...(cloud.jobStages || {}),
+    ...(local.jobStages || {})
+  };
+  merged.jobApplicationDetails = {
+    ...(cloud.jobApplicationDetails || {}),
+    ...(local.jobApplicationDetails || {})
+  };
+  merged.enrolledPathIds = Array.from(new Set([...(local.enrolledPathIds || []), ...(cloud.enrolledPathIds || [])]));
+  merged.completedModuleIds = Array.from(new Set([...(local.completedModuleIds || []), ...(cloud.completedModuleIds || [])]));
+
+  merged.coachMessages = [
+    ...(local.coachMessages || []),
+    ...(cloud.coachMessages || []).filter((cm: any) => 
+      !(local.coachMessages || []).some((lm: any) => lm.id === cm.id || lm.content === cm.content)
+    )
+  ];
+
+  merged.forgeHistory = [
+    ...(local.forgeHistory || []),
+    ...(cloud.forgeHistory || []).filter((ch: any) => 
+      !(local.forgeHistory || []).some((lh: any) => lh.id === ch.id)
+    )
+  ];
+  merged.forgeBackups = [
+    ...(local.forgeBackups || []),
+    ...(cloud.forgeBackups || []).filter((cb: any) => 
+      !(local.forgeBackups || []).some((lb: any) => lb.id === cb.id)
+    )
+  ];
+  
+  return merged;
+}
+
 export const useCareerStore = create<CareerState>()(
   subscribeWithSelector(persist(
     (set, get) => ({
@@ -248,6 +363,17 @@ export const useCareerStore = create<CareerState>()(
       savedJobIds: [],
       appliedJobIds: [],
       jobStages: {},
+      jobApplicationDetails: {},
+      updateJobApplicationDetails: (jobId, details) => set((state) => {
+        const current = state.jobApplicationDetails?.[jobId] || {};
+        return {
+          jobApplicationDetails: {
+            ...state.jobApplicationDetails,
+            [jobId]: { ...current, ...details }
+          },
+          ...cloudMutation(state)
+        };
+      }),
       enrolledPathIds: [],
       completedModuleIds: [],
       isDemoMode: false,
@@ -271,6 +397,85 @@ export const useCareerStore = create<CareerState>()(
       cloudLastSyncedAt: null,
       cloudChangeVersion: 0,
       cloudReloadVersion: 0,
+      cloudConflictIncoming: null,
+      cloudConflictUserId: null,
+      cloudConflictUpdatedAt: null,
+      showMigrationDialog: false,
+      resolveConflict: (choice) => {
+        const { cloudConflictIncoming, cloudConflictUserId, cloudConflictUpdatedAt } = get();
+        if (!cloudConflictIncoming || !cloudConflictUserId) {
+          set({ showMigrationDialog: false });
+          return;
+        }
+        if (choice === "keep") {
+          set((state) => ({
+            showMigrationDialog: false,
+            cloudConflictIncoming: null,
+            cloudConflictUserId: null,
+            cloudConflictUpdatedAt: null,
+            cloudUserId: cloudConflictUserId,
+            cloudHydrated: true,
+            cloudDirty: true,
+            cloudStatus: "saving",
+          }));
+        } else if (choice === "replace") {
+          get().hydrateFromCloud(cloudConflictIncoming, cloudConflictUserId, cloudConflictUpdatedAt);
+          set({
+            showMigrationDialog: false,
+            cloudConflictIncoming: null,
+            cloudConflictUserId: null,
+            cloudConflictUpdatedAt: null,
+          });
+        } else if (choice === "merge") {
+          const localStateSnapshot = {
+            profileFullName: get().profileFullName,
+            profileAvatarPath: get().profileAvatarPath,
+            lang: get().lang,
+            theme: get().theme,
+            careerGoalId: get().careerGoalId,
+            resume: get().resume,
+            resumeSectionOrder: get().resumeSectionOrder,
+            coachMessages: get().coachMessages,
+            forgeCvText: get().forgeCvText,
+            forgeJdText: get().forgeJdText,
+            forgeParsedCv: get().forgeParsedCv,
+            forgeAnalysis: get().forgeAnalysis,
+            forgeTone: get().forgeTone,
+            forgeHistory: get().forgeHistory,
+            forgeBackups: get().forgeBackups,
+            savedJobIds: get().savedJobIds,
+            appliedJobIds: get().appliedJobIds,
+            jobStages: get().jobStages,
+            jobApplicationDetails: get().jobApplicationDetails,
+            enrolledPathIds: get().enrolledPathIds,
+            completedModuleIds: get().completedModuleIds,
+            lastAnalysisMeta: get().lastAnalysisMeta,
+          };
+          const mergedData = mergeWorkspaceSnapshots(localStateSnapshot, cloudConflictIncoming);
+          get().hydrateFromCloud(mergedData, cloudConflictUserId, cloudConflictUpdatedAt);
+          set({
+            showMigrationDialog: false,
+            cloudConflictIncoming: null,
+            cloudConflictUserId: null,
+            cloudConflictUpdatedAt: null,
+            cloudDirty: true,
+            cloudStatus: "saving",
+          });
+        } else if (choice === "cancel") {
+          set({
+            showMigrationDialog: false,
+            cloudConflictIncoming: null,
+            cloudConflictUserId: null,
+            cloudConflictUpdatedAt: null,
+            cloudStatus: "local",
+            cloudUserId: null,
+            cloudHydrated: false,
+          });
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("careerforge:signout"));
+          }
+        }
+      },
       hydrateFromCloud: (data, userId, updatedAt) => set({
         ...data,
         coachMessages: data.coachMessages.length ? data.coachMessages : [coachWelcome(data.lang)],
@@ -691,7 +896,27 @@ export const useCareerStore = create<CareerState>()(
     }),
     {
       name: "softbridge-careerforge-ui-v2",
-      partialize: (state) => ({ lang: state.lang, theme: state.theme }),
+      partialize: (state) => ({
+        lang: state.lang,
+        theme: state.theme,
+        savedJobIds: state.savedJobIds,
+        appliedJobIds: state.appliedJobIds,
+        jobStages: state.jobStages,
+        jobApplicationDetails: state.jobApplicationDetails,
+        enrolledPathIds: state.enrolledPathIds,
+        completedModuleIds: state.completedModuleIds,
+        resume: state.resume,
+        resumeSectionOrder: state.resumeSectionOrder,
+        coachMessages: state.coachMessages,
+        forgeCvText: state.forgeCvText,
+        forgeJdText: state.forgeJdText,
+        forgeParsedCv: state.forgeParsedCv,
+        forgeAnalysis: state.forgeAnalysis,
+        forgeHistory: state.forgeHistory,
+        forgeBackups: state.forgeBackups,
+        careerGoalId: state.careerGoalId,
+        lastAnalysisMeta: state.lastAnalysisMeta,
+      }),
     }
   ))
 );

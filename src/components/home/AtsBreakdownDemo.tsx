@@ -41,7 +41,7 @@ export function AtsBreakdownDemo() {
     rawLength: 1250
   } as DemoCV), []);
 
-  const scoreResult = useMemo(() => calculateAtsScore(demoCv), [demoCv]);
+  const scoreResult = useMemo(() => calculateAtsScore(demoCv, locale), [demoCv, locale]);
 
   return (
     <section className="py-24 bg-[var(--bg-surface)]">

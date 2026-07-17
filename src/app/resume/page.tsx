@@ -25,13 +25,22 @@ import {
   Save,
   AlertTriangle,
   ExternalLink,
+  ArrowUp,
+  ArrowDown,
+  Eye as EyeIcon,
+  Copy,
+  Edit2,
+  Layout,
+  Layers,
+  HelpCircle,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FilePickButton } from "@/components/FilePickButton";
-import { useCareerStore, parsedToResume, resumeToParsed, type ResumeSectionId } from "@/store/useCareerStore";
+import { useCareerStore, parsedToResume, resumeToParsed } from "@/store/useCareerStore";
 import {
   buildJourneyInsight,
   cleanExtractedText,
@@ -48,8 +57,9 @@ import { buildActionableRecommendations, type ActionableRecommendation, type Rec
 import { AtsScoreBreakdown } from "@/components/AtsScoreBreakdown";
 import { ActionableRecommendations } from "@/components/ActionableRecommendations";
 import { CloudSyncStatus } from "@/components/sync/CloudSyncStatus";
+import type { CvBackup } from "@/lib/forge/types";
 
-type EditorTab = "profile" | "experience" | "skills" | "credentials" | "styling";
+type EditorTab = "profile" | "experience" | "skills" | "credentials" | "sections" | "styling";
 
 export default function ResumePage() {
   const mounted = useHydrated();
@@ -65,6 +75,9 @@ export default function ResumePage() {
   const [showImport, setShowImport] = useState(false);
   const [versionLabel, setVersionLabel] = useState("");
   const [suggestionOverrides, setSuggestionOverrides] = useState<Record<string, string>>({});
+  
+  const [newCustomSecTitle, setNewCustomSecTitle] = useState("");
+  const [compareBackup, setCompareBackup] = useState<CvBackup | null>(null);
 
   const paperRef = useRef<HTMLDivElement>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
@@ -83,18 +96,21 @@ export default function ResumePage() {
     resumePast,
     resumeFuture,
     resumeSectionOrder,
+    moveResumeSection,
     loadDemoProfile,
     forgeBackups,
     saveForgeBackup,
     restoreForgeBackup,
     deleteForgeBackup,
+    resetResume,
+    clearForgeCv,
   } = useCareerStore();
 
   const hasContent = Boolean(resume.fullName || resume.headline || resume.summary || resume.skills.length || resume.experience.length);
   const parsed = useMemo(() => resumeToParsed(resume), [resume]);
   const analysisCv = forgeParsedCv ?? parsed;
   const feedback = useMemo(() => hasContent ? generateCvFeedback(analysisCv, "", locale) : null, [analysisCv, hasContent, locale]);
-  const atsResult = useMemo(() => hasContent ? calculateAtsScore(analysisCv) : null, [analysisCv, hasContent]);
+  const atsResult = useMemo(() => hasContent ? calculateAtsScore(analysisCv, locale) : null, [analysisCv, hasContent, locale]);
   const recommendations = useMemo(() => hasContent ? buildActionableRecommendations(analysisCv, locale) : [], [analysisCv, hasContent, locale]);
   const displayedRecommendations = useMemo(
     () => recommendations.map((item) => suggestionOverrides[item.id] ? { ...item, after: suggestionOverrides[item.id] } : item),
@@ -105,7 +121,7 @@ export default function ResumePage() {
   useEffect(() => {
     const el = paperRef.current;
     if (!el) return;
-    setIsOverflowing(el.scrollHeight > 1080);
+    setIsOverflowing(el.scrollHeight > 1150);
   }, [resume, resumeSectionOrder]);
 
   const applyParsed = (cv: ParsedCV, source: string) => {
@@ -158,7 +174,6 @@ export default function ResumePage() {
     }
   };
 
-  // Safe visibility toggle
   const toggleVisibility = (section: string) => {
     const visibility = resume.sectionVisibility || {};
     updateResume({
@@ -169,7 +184,6 @@ export default function ResumePage() {
     });
   };
 
-  // Safe style customization update
   const updateStyle = (patch: Partial<NonNullable<typeof resume.customization>>) => {
     updateResume({
       customization: {
@@ -195,6 +209,84 @@ export default function ResumePage() {
       toast.error(isTr ? "Kaydedilecek CV verisi bulunamadı." : "No resume data found to save.");
     }
   };
+
+  const handleAddCustomSection = () => {
+    const title = newCustomSecTitle.trim();
+    if (!title) {
+      toast.error(isTr ? "Lütfen bir bölüm başlığı girin." : "Please enter a section title.");
+      return;
+    }
+    const id = `custom-${Date.now()}`;
+    const customSections = [...(resume.customSections || [])];
+    customSections.push({
+      id,
+      title,
+      content: "",
+      visible: true,
+    });
+    const order = [...resumeSectionOrder];
+    order.push(id);
+    updateResume({
+      customSections,
+      sectionVisibility: {
+        ...(resume.sectionVisibility || {}),
+        [id]: true
+      }
+    });
+    useCareerStore.setState({ resumeSectionOrder: order });
+    setNewCustomSecTitle("");
+    toast.success(isTr ? `"${title}" özel bölümü oluşturuldu.` : `"${title}" custom section created.`);
+  };
+
+  const handleDeleteCustomSection = (id: string) => {
+    const customSections = (resume.customSections || []).filter(c => c.id !== id);
+    const order = resumeSectionOrder.filter(secId => secId !== id);
+    const visibility = { ...(resume.sectionVisibility || {}) };
+    delete visibility[id];
+
+    updateResume({
+      customSections,
+      sectionVisibility: visibility
+    });
+    useCareerStore.setState({ resumeSectionOrder: order });
+    toast.success(isTr ? "Özel bölüm silindi." : "Custom section deleted.");
+  };
+
+  const handleRenameBackup = (id: string) => {
+    const backup = forgeBackups.find(b => b.id === id);
+    if (!backup) return;
+    const label = window.prompt(isTr ? "Yeni sürüm adını girin:" : "Enter new version name:", backup.label);
+    if (label && label.trim()) {
+      const updatedBackups = forgeBackups.map(b => b.id === id ? { ...b, label: label.trim() } : b);
+      useCareerStore.setState({ forgeBackups: updatedBackups });
+      toast.success(isTr ? "Sürüm adı güncellendi." : "Version name updated.");
+    }
+  };
+
+  const handleDuplicateBackup = (id: string) => {
+    const backup = forgeBackups.find(b => b.id === id);
+    if (!backup) return;
+    const duplicated = {
+      ...backup,
+      id: `backup-${Date.now()}`,
+      label: isTr ? `${backup.label} (Kopya)` : `${backup.label} (Copy)`,
+      createdAt: new Date().toISOString()
+    };
+    useCareerStore.setState({ forgeBackups: [duplicated, ...forgeBackups] });
+    toast.success(isTr ? "Sürüm çoğaltıldı." : "Version duplicated.");
+  };
+
+  const completenessScore = useMemo(() => {
+    let score = 0;
+    if (resume.fullName) score += 15;
+    if (resume.headline) score += 10;
+    if (resume.summary) score += 15;
+    if (resume.skills.length >= 3) score += 15;
+    if (resume.experience.length >= 1) score += 20;
+    if (resume.education.length >= 1) score += 15;
+    if (resume.projects && resume.projects.length >= 1) score += 10;
+    return score;
+  }, [resume]);
 
   const renderContent = () => {
     if (!mounted) {
@@ -436,6 +528,17 @@ export default function ResumePage() {
                       );
                     }
 
+                    if (sectionId.startsWith("custom-")) {
+                      const customSec = resume.customSections?.find((c) => c.id === sectionId);
+                      if (customSec && customSec.visible !== false && customSec.content) {
+                        return (
+                          <ResumeBlock key={customSec.id} title={customSec.title}>
+                            <p className="text-xs leading-5 text-[var(--paper-ink-light)] whitespace-pre-wrap">{customSec.content}</p>
+                          </ResumeBlock>
+                        );
+                      }
+                    }
+
                     return null;
                   })}
                 </div>
@@ -452,6 +555,7 @@ export default function ResumePage() {
                 { id: "experience", label: isTr ? "Deneyimler" : "Experience" },
                 { id: "skills", label: isTr ? "Yetenekler" : "Skills" },
                 { id: "credentials", label: isTr ? "Belgeler" : "Credentials" },
+                { id: "sections", label: isTr ? "Bölümler" : "Sections" },
                 { id: "styling", label: isTr ? "Tasarım & Sürümler" : "Styles & Versions" },
               ].map((tab) => (
                 <button
@@ -510,7 +614,7 @@ export default function ResumePage() {
                         <Input value={socialDraft.url} onChange={(e) => setSocialDraft({ ...socialDraft, url: e.target.value })} placeholder="https://github.com/..." className="flex-1" />
                         <Button type="button" onClick={() => {
                           if (!socialDraft.label || !socialDraft.url) return;
-                          updateResume({ socialLinks: [...(resume.socialLinks || []), { id: crypto.randomUUID(), ...socialDraft }] });
+                          updateResume({ socialLinks: [...(resume.socialLinks || []), { id: Math.random().toString(), ...socialDraft }] });
                           setSocialDraft({ label: "", url: "" });
                         }}>{isTr ? "Ekle" : "Add"}</Button>
                       </div>
@@ -580,43 +684,19 @@ export default function ResumePage() {
 
               {activeTab === "skills" && (
                 <div className="space-y-4">
-                  <EditorHeading title={copy.skills} note={copy.skillNote} />
-                  <form onSubmit={(event) => { event.preventDefault(); if (!skillDraft.trim()) return; addSkills([skillDraft]); setSkillDraft(""); }} className="flex gap-2">
-                    <Input value={skillDraft} onChange={(event) => setSkillDraft(event.target.value)} placeholder="React, Next.js, Go..." className="flex-1" />
-                    <Button type="submit" variant="primary">{isTr ? "Ekle" : "Add"}</Button>
-                  </form>
-                  <div className="flex flex-wrap gap-1.5">
+                  <EditorHeading title={copy.skillEvidence} note={copy.skillNote} />
+                  <div className="flex gap-2">
+                    <Input value={skillDraft} onChange={(event) => setSkillDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { addSkills([skillDraft]); setSkillDraft(""); } }} placeholder={copy.newSkill} className="flex-1" />
+                    <Button onClick={() => { addSkills([skillDraft]); setSkillDraft(""); }} variant="primary">{messages.common.add}</Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
                     {resume.skills.map((skill) => (
-                      <span key={skill} className="inline-flex items-center gap-1 rounded-full border border-line bg-surface-2 py-1 pl-3 pr-1.5 text-xs font-medium text-ink">
+                      <span key={skill} className="inline-flex items-center gap-1 border border-line bg-surface-2 px-3 py-1 rounded-full text-xs">
                         {skill}
-                        <button type="button" onClick={() => updateResume({ skills: resume.skills.filter((item) => item !== skill) })} className="grid h-6 w-6 place-items-center rounded-full text-ink-3 hover:bg-surface-3 hover:text-ink"><Trash2 className="h-3 w-3" /></button>
+                        <button type="button" onClick={() => updateResume({ skills: resume.skills.filter((entry) => entry !== skill) })} className="text-ink-3 hover:text-negative"><Trash2 className="h-3 w-3" /></button>
                       </span>
                     ))}
                     {!resume.skills.length && <EmptyEditor text={isTr ? "Henüz yetenek eklenmedi." : "No skills added yet."} />}
-                  </div>
-
-                  {/* LANGUAGES SUB-EDITOR */}
-                  <div className="border-t border-line pt-6 space-y-3">
-                    <h3 className="text-xs font-bold text-ink">{isTr ? "Yabancı Diller" : "Languages"}</h3>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <Input value={langDraft.name} onChange={(e) => setLangDraft({ ...langDraft, name: e.target.value })} placeholder={isTr ? "örn: İngilizce" : "e.g. English"} />
-                      <div className="flex gap-2">
-                        <Input value={langDraft.level} onChange={(e) => setLangDraft({ ...langDraft, level: e.target.value })} placeholder={isTr ? "örn: C1, İleri" : "e.g. Professional"} className="flex-1" />
-                        <Button type="button" onClick={() => {
-                          if (!langDraft.name || !langDraft.level) return;
-                          updateResume({ languages: [...(resume.languages || []), { id: crypto.randomUUID(), ...langDraft }] });
-                          setLangDraft({ name: "", level: "" });
-                        }}>{isTr ? "Ekle" : "Add"}</Button>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {resume.languages?.map((lang) => (
-                        <span key={lang.id} className="inline-flex items-center gap-1.5 border border-line bg-surface-2 px-3 py-1 rounded-full text-xs">
-                          {lang.name} ({lang.level})
-                          <button type="button" onClick={() => updateResume({ languages: resume.languages?.filter((item) => item.id !== lang.id) })} className="text-ink-3 hover:text-negative"><Trash2 className="h-3 w-3" /></button>
-                        </span>
-                      ))}
-                    </div>
                   </div>
                 </div>
               )}
@@ -624,21 +704,47 @@ export default function ResumePage() {
               {activeTab === "credentials" && (
                 <div className="space-y-6">
                   {/* EDUCATION */}
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-bold text-ink">{copy.education}</h3>
-                      <Button variant="outline" size="sm" onClick={() => updateResume({ education: [...resume.education, { id: `edu-${Date.now()}`, school: "", degree: "", year: "" }] })}><Plus className="h-3.5 w-3.5" /> {messages.common.add}</Button>
+                      <EditorHeading title={copy.education} note={copy.educationNote} />
+                      <Button variant="outline" size="sm" onClick={() => updateResume({ education: [{ id: `edu-${Date.now()}`, school: "", degree: "", year: "" }, ...resume.education] })}><Plus className="h-3.5 w-3.5" /> {messages.common.add}</Button>
                     </div>
-                    {resume.education.map((item, index) => (
-                      <div key={item.id} className="flex gap-2 border-b border-line pb-4 last:border-0 last:pb-0">
-                        <div className="grid flex-1 gap-2 sm:grid-cols-3">
-                          <Input value={item.school} onChange={(event) => { const education = [...resume.education]; education[index] = { ...item, school: event.target.value }; updateResume({ education }); }} placeholder={copy.school} />
-                          <Input value={item.degree} onChange={(event) => { const education = [...resume.education]; education[index] = { ...item, degree: event.target.value }; updateResume({ education }); }} placeholder={copy.degree} />
-                          <Input value={item.year} onChange={(event) => { const education = [...resume.education]; education[index] = { ...item, year: event.target.value }; updateResume({ education }); }} placeholder={copy.year} />
+                    <div className="space-y-4">
+                      {resume.education.map((item, index) => (
+                        <div key={item.id} className="flex gap-2 border-b border-line pb-4 last:border-0 last:pb-0">
+                          <div className="grid flex-1 gap-2 sm:grid-cols-3">
+                            <Input value={item.school} onChange={(event) => { const education = [...resume.education]; education[index] = { ...item, school: event.target.value }; updateResume({ education }); }} placeholder={copy.school} />
+                            <Input value={item.degree} onChange={(event) => { const education = [...resume.education]; education[index] = { ...item, degree: event.target.value }; updateResume({ education }); }} placeholder={copy.degree} />
+                            <Input value={item.year} onChange={(event) => { const education = [...resume.education]; education[index] = { ...item, year: event.target.value }; updateResume({ education }); }} placeholder="2024" />
+                          </div>
+                          <button type="button" onClick={() => updateResume({ education: resume.education.filter((entry) => entry.id !== item.id) })} className="grid h-11 w-11 shrink-0 place-items-center rounded-[var(--radius-control)] text-ink-3 hover:bg-[var(--negative-wash)] hover:text-negative"><Trash2 className="h-3.5 w-3.5" /></button>
                         </div>
-                        <button type="button" onClick={() => updateResume({ education: resume.education.filter((entry) => entry.id !== item.id) })} className="grid h-11 w-11 place-items-center rounded-lg text-ink-3 hover:bg-[var(--negative-wash)] hover:text-negative"><Trash2 className="h-3.5 w-3.5" /></button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* LANGUAGES SUB-EDITOR */}
+                  <div className="border-t border-line pt-6 space-y-3">
+                    <h3 className="text-xs font-bold text-ink">{isTr ? "Diller" : "Languages"}</h3>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <Input value={langDraft.name} onChange={(e) => setLangDraft({ ...langDraft, name: e.target.value })} placeholder={isTr ? "Dil (örn: İngilizce)" : "Language (e.g. English)"} />
+                      <div className="flex gap-2 sm:col-span-2">
+                        <Input value={langDraft.level} onChange={(e) => setLangDraft({ ...langDraft, level: e.target.value })} placeholder={isTr ? "Seviye (örn: İleri Seviye)" : "Level (e.g. Fluent)"} className="flex-1" />
+                        <Button type="button" onClick={() => {
+                          if (!langDraft.name || !langDraft.level) return;
+                          updateResume({ languages: [...(resume.languages || []), { id: `lang-${Date.now()}`, ...langDraft }] });
+                          setLangDraft({ name: "", level: "" });
+                        }}>{isTr ? "Ekle" : "Add"}</Button>
                       </div>
-                    ))}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {resume.languages?.map((lang) => (
+                        <span key={lang.id} className="inline-flex items-center gap-1 border border-line bg-surface-2 px-3 py-1 rounded-full text-xs">
+                          {lang.name} ({lang.level})
+                          <button type="button" onClick={() => updateResume({ languages: resume.languages?.filter((item) => item.id !== lang.id) })} className="text-ink-3 hover:text-negative"><Trash2 className="h-3 w-3" /></button>
+                        </span>
+                      ))}
+                    </div>
                   </div>
 
                   {/* CERTIFICATIONS */}
@@ -679,6 +785,158 @@ export default function ResumePage() {
                 </div>
               )}
 
+              {activeTab === "sections" && (
+                <div className="space-y-6">
+                  {/* Completeness score section */}
+                  <div className="bg-surface-2 rounded-lg p-4 border border-line space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-ink">{isTr ? "Özgeçmiş Tamamlanma Oranı" : "Resume Completeness"}</span>
+                      <span className="text-sm font-extrabold text-brand-strong">{completenessScore}%</span>
+                    </div>
+                    <div className="h-2 w-full bg-surface-3 rounded-full overflow-hidden">
+                      <div className="h-full bg-brand rounded-full transition-all duration-300" style={{ width: `${completenessScore}%` }} />
+                    </div>
+                    {/* Completeness Checklist */}
+                    <div className="space-y-1.5 pt-2 border-t border-line text-[11px] text-ink-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className={resume.fullName ? "text-positive" : "text-ink-3"}>{resume.fullName ? "✓" : "○"}</span>
+                        <span>{isTr ? "Ad ve Başlık Alanı" : "Full name & Title"}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className={resume.summary ? "text-positive" : "text-ink-3"}>{resume.summary ? "✓" : "○"}</span>
+                        <span>{isTr ? "Profil Özeti" : "Summary description"}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className={resume.skills.length >= 3 ? "text-positive" : "text-ink-3"}>{resume.skills.length >= 3 ? "✓" : "○"}</span>
+                        <span>{isTr ? "En az 3 Yetenek" : "At least 3 skills"}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className={resume.experience.length >= 1 ? "text-positive" : "text-ink-3"}>{resume.experience.length >= 1 ? "✓" : "○"}</span>
+                        <span>{isTr ? "En az 1 İş Deneyimi" : "At least 1 work role"}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className={resume.education.length >= 1 ? "text-positive" : "text-ink-3"}>{resume.education.length >= 1 ? "✓" : "○"}</span>
+                        <span>{isTr ? "Eğitim Bilgisi" : "Education details"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section Management: Ordering and Visibility */}
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-bold text-ink">{isTr ? "Bölüm Düzeni & Görünürlük" : "Section Ordering & Visibility"}</h3>
+                    <div className="space-y-2">
+                      {resumeSectionOrder.map((secId, index) => {
+                        const isCustom = secId.startsWith("custom-");
+                        const customSec = isCustom ? resume.customSections?.find(c => c.id === secId) : null;
+                        const label = isCustom ? (customSec?.title || "Custom Section") : (
+                          secId === "profile" ? (isTr ? "Kişisel Özet" : "Summary") :
+                          secId === "experience" ? (isTr ? "Deneyimler" : "Experience") :
+                          secId === "skills" ? (isTr ? "Yetenekler" : "Skills") :
+                          secId === "education" ? (isTr ? "Eğitim" : "Education") :
+                          secId === "projects" ? (isTr ? "Projeler" : "Projects") :
+                          secId === "certifications" ? (isTr ? "Sertifikalar" : "Certifications") :
+                          secId === "languages" ? (isTr ? "Diller" : "Languages") :
+                          secId === "awards" ? (isTr ? "Ödüller" : "Awards") :
+                          secId === "publications" ? (isTr ? "Yayınlar" : "Publications") :
+                          (isTr ? "Sosyal Bağlantılar" : "Social Links")
+                        );
+                        
+                        const isVisible = resume.sectionVisibility?.[secId] !== false;
+
+                        return (
+                          <div key={secId} className="flex items-center justify-between border border-line bg-surface p-2.5 rounded text-xs gap-3">
+                            <span className="font-semibold text-ink truncate flex-1">{label}</span>
+                            <div className="flex items-center gap-1">
+                              {/* Move Up */}
+                              <button
+                                type="button"
+                                disabled={index === 0}
+                                onClick={() => moveResumeSection(secId, -1)}
+                                className="p-1 rounded text-ink-3 hover:bg-surface-2 disabled:opacity-30"
+                                aria-label="Move Up"
+                              >
+                                <ArrowUp className="h-3.5 w-3.5" />
+                              </button>
+                              {/* Move Down */}
+                              <button
+                                type="button"
+                                disabled={index === resumeSectionOrder.length - 1}
+                                onClick={() => moveResumeSection(secId, 1)}
+                                className="p-1 rounded text-ink-3 hover:bg-surface-2 disabled:opacity-30"
+                                aria-label="Move Down"
+                              >
+                                <ArrowDown className="h-3.5 w-3.5" />
+                              </button>
+                              {/* Visibility toggle */}
+                              <button
+                                type="button"
+                                onClick={() => toggleVisibility(secId)}
+                                className="p-1 rounded text-ink-3 hover:bg-surface-2"
+                                aria-label="Toggle Visibility"
+                              >
+                                {isVisible ? <EyeIcon className="h-3.5 w-3.5 text-brand" /> : <EyeOff className="h-3.5 w-3.5" />}
+                              </button>
+                              {/* Delete Custom Section */}
+                              {isCustom && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteCustomSection(secId)}
+                                  className="p-1 rounded text-ink-3 hover:text-negative hover:bg-[var(--negative-wash)]"
+                                  aria-label="Delete custom section"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Add Custom Section Form */}
+                  <div className="border-t border-line pt-4 space-y-3">
+                    <h3 className="text-xs font-bold text-ink">{isTr ? "Yeni Özel Bölüm Ekle" : "Add New Custom Section"}</h3>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newCustomSecTitle}
+                        onChange={(e) => setNewCustomSecTitle(e.target.value)}
+                        placeholder={isTr ? "örn: Gönüllülük, Referanslar" : "e.g. Volunteer Work, References"}
+                        className="flex-1 text-xs"
+                      />
+                      <Button onClick={handleAddCustomSection} variant="outline" size="sm">
+                        <Plus className="h-3.5 w-3.5" /> {isTr ? "Ekle" : "Add"}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Edit Custom Sections Content */}
+                  {resume.customSections && resume.customSections.length > 0 && (
+                    <div className="border-t border-line pt-4 space-y-4">
+                      <h3 className="text-xs font-bold text-ink">{isTr ? "Özel Bölüm İçerikleri" : "Edit Custom Section Contents"}</h3>
+                      <div className="space-y-4">
+                        {resume.customSections.map((sec, index) => (
+                          <div key={sec.id} className="space-y-2 border border-line bg-surface-2 p-3 rounded-lg">
+                            <label className="block text-[11px] font-bold text-ink-2">{sec.title}</label>
+                            <Textarea
+                              value={sec.content}
+                              onChange={(e) => {
+                                const customSections = [...(resume.customSections || [])];
+                                customSections[index] = { ...sec, content: e.target.value };
+                                updateResume({ customSections });
+                              }}
+                              placeholder={isTr ? "Bölüm içeriğini girin..." : "Enter section content..."}
+                              rows={4}
+                              className="w-full bg-surface text-xs"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {activeTab === "styling" && (
                 <div className="space-y-6">
                   {/* STYLE SETTINGS */}
@@ -711,66 +969,46 @@ export default function ResumePage() {
                         </select>
                       </label>
                     </div>
-
-                    {/* Visibilities checkboxes */}
-                    <div className="space-y-2 pt-2">
-                      <span className="text-[10px] font-semibold text-ink-3 uppercase block mb-1.5">{isTr ? "Bölüm Görünürlüğü" : "Section Visibilities"}</span>
-                      <div className="grid grid-cols-2 gap-2">
-                        {[
-                          { id: "profile", label: isTr ? "Kişisel Özet" : "Summary" },
-                          { id: "experience", label: isTr ? "Deneyimler" : "Experiences" },
-                          { id: "skills", label: isTr ? "Yetenekler" : "Skills" },
-                          { id: "education", label: isTr ? "Eğitim" : "Education" },
-                          { id: "projects", label: isTr ? "Projeler" : "Projects" },
-                          { id: "certifications", label: isTr ? "Sertifikalar" : "Certifications" },
-                          { id: "languages", label: isTr ? "Diller" : "Languages" },
-                          { id: "awards", label: isTr ? "Ödüller" : "Awards" },
-                          { id: "publications", label: isTr ? "Yayınlar" : "Publications" },
-                        ].map((sec) => {
-                          const isVisible = resume.sectionVisibility?.[sec.id] !== false;
-                          return (
-                            <button
-                              key={sec.id}
-                              type="button"
-                              onClick={() => toggleVisibility(sec.id)}
-                              className={cn(
-                                "flex items-center gap-2 rounded px-3 py-1.5 border text-xs text-left transition-colors",
-                                isVisible ? "border-brand-strong bg-[var(--accent-wash)] text-brand-strong font-medium" : "border-line bg-surface text-ink-3"
-                              )}
-                            >
-                              {isVisible ? <Eye className="h-3.5 w-3.5 shrink-0" /> : <EyeOff className="h-3.5 w-3.5 shrink-0" />}
-                              <span>{sec.label}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
                   </div>
 
                   {/* VERSIONS / CV SÜRÜMLERİ */}
                   <div className="border-t border-line pt-6 space-y-4">
                     <h3 className="text-xs font-bold text-ink flex items-center gap-1.5"><Clock className="h-4 w-4 text-brand-strong" /> {isTr ? "CV Sürümleri" : "CV Versions & Backups"}</h3>
                     <div className="flex gap-2">
-                      <Input value={versionLabel} onChange={(e) => setVersionLabel(e.target.value)} placeholder={isTr ? "örn: Senior Web Dev, İngilizce" : "e.g. Senior Web Dev"} className="flex-1" />
+                      <Input value={versionLabel} onChange={(e) => setVersionLabel(e.target.value)} placeholder={isTr ? "örn: Senior Web Dev, İngilizce" : "e.g. Senior Web Dev"} className="flex-1 text-xs" />
                       <Button onClick={handleCreateVersion} variant="primary" className="flex items-center gap-1">
                         <Save className="h-3.5 w-3.5" />
-                        {isTr ? "Kaydet" : "Save Sürüm"}
+                        {isTr ? "Kaydet" : "Save Version"}
                       </Button>
                     </div>
 
-                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                       {forgeBackups.map((backup) => (
-                        <div key={backup.id} className="flex items-center justify-between border border-line bg-surface p-2.5 rounded text-xs gap-3">
-                          <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-ink truncate">{backup.label}</p>
-                            <p className="text-[10px] text-ink-3 mt-0.5">{new Intl.DateTimeFormat(isTr ? "tr-TR" : "en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(backup.createdAt))}</p>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button size="sm" variant="ghost" onClick={() => { restoreForgeBackup(backup.id); toast.success(isTr ? "Sürüm geri yüklendi." : "Version restored."); }}>
-                              {isTr ? "Yükle" : "Restore"}
-                            </Button>
+                        <div key={backup.id} className="flex flex-col border border-line bg-surface p-3 rounded-lg text-xs space-y-3">
+                          <div className="min-w-0 flex items-start justify-between">
+                            <div>
+                              <p className="font-semibold text-ink truncate">{backup.label}</p>
+                              <p className="text-[10px] text-ink-3 mt-0.5">{new Intl.DateTimeFormat(isTr ? "tr-TR" : "en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(backup.createdAt))}</p>
+                            </div>
                             <Button size="icon" variant="ghost" className="hover:text-negative" onClick={() => deleteForgeBackup(backup.id)} aria-label="Delete backup">
                               <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-1.5 pt-1">
+                            <Button size="sm" variant="ghost" onClick={() => { restoreForgeBackup(backup.id); toast.success(isTr ? "Sürüm geri yüklendi." : "Version restored."); }} className="text-[10px] h-7 px-2 border border-line">
+                              {isTr ? "Yükle" : "Restore"}
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => handleRenameBackup(backup.id)} className="text-[10px] h-7 px-2 border border-line">
+                              <Edit2 className="h-3 w-3 mr-1" />
+                              {isTr ? "Ad Değiştir" : "Rename"}
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => handleDuplicateBackup(backup.id)} className="text-[10px] h-7 px-2 border border-line">
+                              <Copy className="h-3 w-3 mr-1" />
+                              {isTr ? "Çoğalt" : "Duplicate"}
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => setCompareBackup(backup)} className="text-[10px] h-7 px-2 border border-line text-brand-strong">
+                              {isTr ? "Karşılaştır" : "Compare"}
                             </Button>
                           </div>
                         </div>
@@ -781,8 +1019,6 @@ export default function ResumePage() {
                 </div>
               )}
             </div>
-
-            {lastAnalysisMeta && <div className="flex items-center gap-2 border-t border-line bg-surface-2 px-5 py-3 text-[0.6875rem] text-ink-3"><Check className="h-3.5 w-3.5 text-positive" /> {copy.lastAnalysis}: {lastAnalysisMeta.fileName || lastAnalysisMeta.targetTitle || copy.preview}</div>}
           </aside>
         </div>
 
@@ -795,29 +1031,99 @@ export default function ResumePage() {
 
         {atsResult && <div className="mt-10"><AtsScoreBreakdown result={atsResult} /></div>}
         <div className="mt-10"><ActionableRecommendations items={displayedRecommendations} onAction={handleRecommendation} /></div>
+
+        {/* Comparative Version Viewer Modal */}
+        {compareBackup && (
+          <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 backdrop-blur-sm px-4 overflow-y-auto py-8" role="dialog">
+            <div className="w-full max-w-4xl rounded-xl border border-line bg-surface p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto text-xs">
+              <div className="flex justify-between items-center border-b border-line pb-3">
+                <h3 className="text-sm font-bold text-ink">
+                  {isTr ? `Mevcut Sürüm vs "${compareBackup.label}" Karşılaştırması` : `Current Version vs "${compareBackup.label}"`}
+                </h3>
+                <Button variant="outline" size="sm" onClick={() => setCompareBackup(null)}>
+                  {isTr ? "Kapat" : "Close"}
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                {/* Left Side: Current */}
+                <div className="space-y-4">
+                  <h4 className="font-bold text-brand-strong uppercase border-b pb-1.5">{isTr ? "Mevcut Sürüm" : "Current Workspace"}</h4>
+                  <div>
+                    <strong className="block text-ink-3">{isTr ? "Başlık" : "Headline"}</strong>
+                    <p className="text-ink text-sm font-semibold">{resume.fullName || "—"}</p>
+                    <p className="text-ink-2 mt-0.5">{resume.headline || "—"}</p>
+                  </div>
+                  <div>
+                    <strong className="block text-ink-3">{isTr ? "Kişisel Özet" : "Summary"}</strong>
+                    <p className="text-ink-2 whitespace-pre-wrap leading-relaxed bg-surface-2 p-2 rounded border border-line">{resume.summary || "—"}</p>
+                  </div>
+                  <div>
+                    <strong className="block text-ink-3">{isTr ? "Yetenekler" : "Skills"}</strong>
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {resume.skills.map(s => <span key={s} className="px-2 py-0.5 bg-surface-3 rounded text-ink text-[10px]">{s}</span>)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Side: Selected Backup */}
+                <div className="space-y-4 border-l border-line pl-6">
+                  <h4 className="font-bold text-indigo-600 uppercase border-b pb-1.5">{compareBackup.label}</h4>
+                  <div>
+                    <strong className="block text-ink-3">{isTr ? "Başlık" : "Headline"}</strong>
+                    <p className="text-ink text-sm font-semibold">{compareBackup.parsed?.name || "—"}</p>
+                    <p className="text-ink-2 mt-0.5">{compareBackup.parsed?.title || "—"}</p>
+                  </div>
+                  <div>
+                    <strong className="block text-ink-3">{isTr ? "Kişisel Özet" : "Summary"}</strong>
+                    <p className="text-ink-2 whitespace-pre-wrap leading-relaxed bg-surface-2 p-2 rounded border border-line">{compareBackup.parsed?.summary || "—"}</p>
+                  </div>
+                  <div>
+                    <strong className="block text-ink-3">{isTr ? "Yetenekler" : "Skills"}</strong>
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {compareBackup.parsed?.skills.map(s => <span key={s} className="px-2 py-0.5 bg-surface-3 rounded text-ink text-[10px]">{s}</span>)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-line">
+                <Button variant="outline" onClick={() => setCompareBackup(null)}>
+                  {isTr ? "Geri" : "Back"}
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    restoreForgeBackup(compareBackup.id);
+                    toast.success(isTr ? "Sürüm geri yüklendi." : "Version restored.");
+                    setCompareBackup(null);
+                  }}
+                >
+                  {isTr ? "Bu Sürümü Yükle" : "Restore this Version"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </>
     );
   };
 
   return (
     <main className="product-page">
-      <header className="grid gap-6 border-b border-line pb-8 lg:grid-cols-[1fr_auto] lg:items-end">
+      <header className="grid gap-5 sm:grid-cols-[1fr_auto] sm:items-center border-b border-line pb-6">
         <div>
-          <p className="page-kicker"><FileText className="h-3.5 w-3.5" /> {copy?.kicker || "CV"}</p>
-          <h1 className="page-title-compact mt-4">{copy?.title || "CV Düzenleyici"}</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-2">{copy?.lede}</p>
+          <h1 className="page-title">{copy.title}</h1>
+          <p className="page-subtitle mt-2">{copy.lede}</p>
         </div>
-        {mounted && (
+        {hasContent && (
           <div className="flex flex-wrap gap-2">
-            <CloudSyncStatus className="mr-2" />
-            <Button variant="ghost" size="icon" onClick={undoResume} disabled={!resumePast.length} aria-label={messages.common.undo} title={messages.common.undo}><Undo2 className="h-4 w-4" /></Button>
-            <Button variant="ghost" size="icon" onClick={redoResume} disabled={!resumeFuture.length} aria-label={messages.common.redo} title={messages.common.redo}><Redo2 className="h-4 w-4" /></Button>
             <Button variant="outline" onClick={() => setShowImport((value) => !value)}><Plus className="h-4 w-4" /> {copy.import}</Button>
             <Button
               variant="primary"
               disabled={!hasContent}
               onClick={async () => {
-                await exportCvAsPdf(parsed);
+                await exportCvAsPdf(resume);
                 toast.success(messages.header.pdfReady);
               }}
             >
@@ -840,10 +1146,10 @@ function EditorHeading({ title, note }: { title: string; note: string }) {
   return <div><h2 className="text-sm font-semibold text-ink">{title}</h2><p className="mt-1 text-[0.6875rem] leading-5 text-ink-3">{note}</p></div>;
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="block"><span className="mb-1.5 block text-[0.6875rem] font-medium text-ink-2">{label}</span>{children}</label>;
+function EmptyEditor({ text }: { text: string }) {
+  return <p className="text-xs text-ink-3 text-center py-4">{text}</p>;
 }
 
-function EmptyEditor({ text }: { text: string }) {
-  return <div className="rounded-[var(--radius-control)] border border-dashed border-line-strong p-5 text-center text-xs text-ink-3">{text}</div>;
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div className="space-y-1.5"><label className="text-[10px] font-semibold text-ink-3 uppercase">{label}</label>{children}</div>;
 }

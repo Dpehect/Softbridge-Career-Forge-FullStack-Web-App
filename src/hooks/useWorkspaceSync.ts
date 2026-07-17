@@ -116,19 +116,46 @@ export function useWorkspaceSync(enabled: boolean) {
         );
         return;
       }
-      if (migration.status === "migrated") {
-        useCareerStore.getState().hydrateFromCloud(migration.data, user.id, migration.updatedAt);
+      const cloudData = migration.status === "migrated" ? migration.data : result.data.data;
+      const targetUpdatedAt = migration.status === "migrated" ? migration.updatedAt : workspace.updated_at;
+      const localState = useCareerStore.getState();
+      
+      const rLocal = localState.resume;
+      const localHasData = Boolean(
+        rLocal.fullName || rLocal.summary || rLocal.skills.length || rLocal.experience.length || rLocal.education.length ||
+        localState.savedJobIds.length || localState.appliedJobIds.length || localState.completedModuleIds.length
+      );
+
+      const rCloud = cloudData.resume;
+      const cloudHasData = Boolean(
+        rCloud.fullName || rCloud.summary || rCloud.skills.length || rCloud.experience.length || rCloud.education.length ||
+        cloudData.savedJobIds.length || cloudData.appliedJobIds.length || cloudData.completedModuleIds.length
+      );
+
+      if (localHasData && cloudHasData) {
+        const localFingerprint = createWorkspaceFingerprint(localState);
+        const cloudFingerprint = createWorkspaceFingerprint({ ...localState, ...cloudData });
+        if (localFingerprint !== cloudFingerprint) {
+          useCareerStore.setState({
+            cloudConflictIncoming: cloudData,
+            cloudConflictUserId: user.id,
+            cloudConflictUpdatedAt: targetUpdatedAt,
+            showMigrationDialog: true,
+            cloudStatus: "conflict",
+          });
+          return;
+        }
+      } else if (localHasData && !cloudHasData) {
+        useCareerStore.setState({
+          cloudUserId: user.id,
+          cloudHydrated: true,
+          cloudDirty: true,
+          cloudStatus: "saving",
+        });
         return;
       }
 
-      useCareerStore.getState().hydrateFromCloud(result.data.data, user.id, workspace.updated_at);
-      if (migration.status === "conflict") {
-        useCareerStore.getState().markCloudConflict(
-          preferences.lang === "tr"
-            ? "Bu cihazdaki eski veri bulut çalışma alanıyla çakışıyor. Bulut sürümü korunuyor; eski veri geçici yedekte tutuldu."
-            : "Legacy data on this device conflicts with the cloud workspace. The cloud version is preserved and the legacy data is held in a temporary backup."
-        );
-      }
+      useCareerStore.getState().hydrateFromCloud(cloudData, user.id, targetUpdatedAt);
     }
 
     void hydrate();

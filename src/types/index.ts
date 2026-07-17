@@ -79,6 +79,7 @@ export interface ResumeProfile {
   socialLinks?: ResumeSocialLink[];
   customization?: ResumeCustomization;
   sectionVisibility?: Record<string, boolean>;
+  customSections?: Array<{ id: string; title: string; content: string; visible?: boolean }>;
 }
 
 export interface ResumeProject {
@@ -156,4 +157,17 @@ export interface DashboardStats {
   interviews: number;
   offers: number;
   profileStrength: number;
+}
+
+export interface JobApplicationDetails {
+  notes?: string;
+  contactPerson?: string;
+  interviewDate?: string;
+  salaryExpectation?: string;
+  followUpDate?: string;
+  reminder?: boolean;
+  resumeVersionId?: string;
+  coverLetterUsed?: string;
+  applicationUrl?: string;
+  timeline?: Array<{ stage: string; updatedAt: string }>;
 }

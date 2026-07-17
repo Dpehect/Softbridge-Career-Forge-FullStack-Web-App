@@ -136,16 +136,36 @@ export function AtsScoreBreakdown({ result, compact = false }: AtsScoreBreakdown
           </button>
 
           {expanded && (
-            <div className="mt-4 space-y-3 rounded-[var(--radius-control)] bg-surface-2 p-4 border border-line">
+            <div className="mt-4 space-y-4 rounded-[var(--radius-control)] bg-surface-2 p-5 border border-line">
               {result.categories.map((cat) => (
-                <div key={cat.id} className="text-xs">
+                <div key={cat.id} className="text-xs border-b border-line pb-4 last:border-0 last:pb-0">
                   <div className="flex items-center justify-between font-semibold text-ink">
-                    <span>{categoryLabels[cat.id]}</span>
+                    <span>{categoryLabels[cat.id]} <span className="text-[10px] text-ink-3 font-normal">({isTr ? "Ağırlık" : "Weight"}: {cat.weight})</span></span>
                     <span className="font-mono text-ink-3">{cat.score}/{cat.maxScore}</span>
                   </div>
-                  <p className="mt-1 text-[0.6875rem] text-ink-3 leading-relaxed">
-                    {getCategoryDetails(cat.id, cat.score, cat.maxScore)}
-                  </p>
+                  
+                  {cat.evidence.length > 0 && (
+                    <div className="mt-2 text-[11px]">
+                      <span className="font-semibold text-positive">{isTr ? "✓ Tespit Edilen Kanıtlar:" : "✓ Detected Evidence:"}</span>
+                      <ul className="list-disc list-inside mt-0.5 space-y-0.5 text-ink-2 pl-1">
+                        {cat.evidence.map((ev, i) => <li key={i}>{ev}</li>)}
+                      </ul>
+                    </div>
+                  )}
+
+                  {cat.missing.length > 0 && (
+                    <div className="mt-2 text-[11px]">
+                      <span className="font-semibold text-caution">{isTr ? "✗ Eksik Sinyaller:" : "✗ Missing Signals:"}</span>
+                      <ul className="list-disc list-inside mt-0.5 space-y-0.5 text-ink-2 pl-1">
+                        {cat.missing.map((mis, i) => <li key={i}>{mis}</li>)}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="mt-2 text-[11px] bg-surface p-2 rounded border border-line">
+                    <span className="font-semibold text-ink">{isTr ? "💡 Önerilen Düzeltme:" : "💡 Recommended Correction:"}</span>
+                    <p className="mt-0.5 text-ink-2 leading-relaxed">{cat.correction}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -156,8 +176,8 @@ export function AtsScoreBreakdown({ result, compact = false }: AtsScoreBreakdown
           <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-caution mt-0.5" />
           <p>
             {isTr
-              ? "Açıklama: Bu puanlar, ATS sistemlerinin genel kriterlerine göre hesaplanmış kural tabanlı tahminlerdir. Gerçek bir ATS yazılımını veya işe alım kararını garanti etmez."
-              : "Disclaimer: These scores are rule-based estimates calibrated against common ATS guidelines. They do not guarantee performance in any specific ATS vendor or hiring selection outcome."}
+              ? "Açıklama: Kural tabanlı tahmin. Bu, gerçek bir ATS sağlayıcısını veya işe alım kararını temsil etmez."
+              : "Disclaimer: Rule-based estimate. This does not represent an actual ATS vendor or hiring decision."}
           </p>
         </div>
       </div>

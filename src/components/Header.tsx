@@ -104,14 +104,17 @@ export function Header() {
   const firstName =
     forgeParsedCv?.name?.split(" ")[0] || resume.fullName.trim().split(" ")[0] || messages.header.profile;
   const exportResume = async () => {
-    const cv = forgeParsedCv ?? (hasResume ? resumeToParsed(resume) : null);
-    if (!cv) {
+    if (hasResume) {
+      await exportCvAsPdf(resume);
+      toast.success(messages.header.pdfReady);
+      setProfileOpen(false);
+    } else if (forgeParsedCv) {
+      await exportCvAsPdf(forgeParsedCv);
+      toast.success(messages.header.pdfReady);
+      setProfileOpen(false);
+    } else {
       toast.error(messages.header.createFirst);
-      return;
     }
-    await exportCvAsPdf(cv);
-    toast.success(messages.header.pdfReady);
-    setProfileOpen(false);
   };
 
   const clearProfile = () => {

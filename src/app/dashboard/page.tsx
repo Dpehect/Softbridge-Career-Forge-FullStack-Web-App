@@ -68,7 +68,7 @@ export default function DashboardPage() {
   );
   const parsed = forgeParsedCv ?? (hasResume ? resumeToParsed(resume) : null);
   const feedback = useMemo(() => (parsed ? generateCvFeedback(parsed, "", locale) : null), [parsed, locale]);
-  const atsResult = useMemo(() => (parsed ? calculateAtsScore(parsed) : null), [parsed]);
+  const atsResult = useMemo(() => (parsed ? calculateAtsScore(parsed, locale) : null), [parsed, locale]);
 
   const journey = useMemo(
     () =>

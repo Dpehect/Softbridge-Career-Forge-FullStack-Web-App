@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { Locale } from "@/i18n/messages";
 import type { CoverLetterTone, CvBackup, ForgeHistoryItem, MatchAnalysis, ParsedCV } from "@/lib/forge/types";
 import type { CareerState, ResumeSectionId } from "@/store/useCareerStore";
-import type { CoachMessage, ResumeProfile } from "@/types";
+import type { CoachMessage, ResumeProfile, JobApplicationDetails } from "@/types";
 import type {
   CareerWorkspaceInsert,
   CareerWorkspaceRow,
@@ -88,14 +88,20 @@ const resumeSchema = z.object({
   education: z.array(resumeEducationSchema),
   photoDataUrl: z.string().nullable().optional(),
   website: z.string().optional(),
-  projects: z.array(resumeProjectSchema).optional().default([]),
-  certifications: z.array(resumeCertificationSchema).optional().default([]),
-  languages: z.array(resumeLanguageSchema).optional().default([]),
-  awards: z.array(resumeAwardSchema).optional().default([]),
-  publications: z.array(resumePublicationSchema).optional().default([]),
-  socialLinks: z.array(resumeSocialLinkSchema).optional().default([]),
+  projects: z.array(resumeProjectSchema).optional(),
+  certifications: z.array(resumeCertificationSchema).optional(),
+  languages: z.array(resumeLanguageSchema).optional(),
+  awards: z.array(resumeAwardSchema).optional(),
+  publications: z.array(resumePublicationSchema).optional(),
+  socialLinks: z.array(resumeSocialLinkSchema).optional(),
   customization: resumeCustomizationSchema.optional(),
   sectionVisibility: z.record(z.string(), z.boolean()).optional(),
+  customSections: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    content: z.string(),
+    visible: z.boolean().optional(),
+  })).optional(),
 });
 
 const parsedExperienceSchema = z.object({
@@ -176,7 +182,7 @@ export interface WorkspaceStateSnapshot {
   theme: "light" | "dark";
   careerGoalId: string | null;
   resume: ResumeProfile;
-  resumeSectionOrder: ResumeSectionId[];
+  resumeSectionOrder: string[];
   coachMessages: CoachMessage[];
   forgeCvText: string;
   forgeJdText: string;
@@ -188,6 +194,7 @@ export interface WorkspaceStateSnapshot {
   savedJobIds: string[];
   appliedJobIds: string[];
   jobStages: Record<string, string>;
+  jobApplicationDetails: Record<string, JobApplicationDetails>;
   enrolledPathIds: string[];
   completedModuleIds: string[];
   lastAnalysisMeta: CareerState["lastAnalysisMeta"];
@@ -256,6 +263,7 @@ export function createEmptyHydrationData(
     savedJobIds: [],
     appliedJobIds: [],
     jobStages: {},
+    jobApplicationDetails: {},
     enrolledPathIds: [],
     completedModuleIds: [],
     lastAnalysisMeta: null,
@@ -378,6 +386,10 @@ export function createWorkspaceUpsertFromState(
     applied_job_ids: toJson(
       uniqueStrings(state.appliedJobIds).map((id) => {
         const stage = state.jobStages?.[id] || "applied";
+        const details = state.jobApplicationDetails?.[id];
+        if (details) {
+          return `${id}:${stage}:${encodeURIComponent(JSON.stringify(details))}`;
+        }
         return `${id}:${stage}`;
       })
     ),
@@ -387,17 +399,29 @@ export function createWorkspaceUpsertFromState(
   };
 }
 
-function parseAppliedJobs(rawIds: string[]): { appliedJobIds: string[]; jobStages: Record<string, string> } {
+function parseAppliedJobs(rawIds: string[]): {
+  appliedJobIds: string[];
+  jobStages: Record<string, string>;
+  jobApplicationDetails: Record<string, JobApplicationDetails>;
+} {
   const appliedJobIds: string[] = [];
   const jobStages: Record<string, string> = {};
+  const jobApplicationDetails: Record<string, JobApplicationDetails> = {};
   rawIds.forEach((item) => {
     const parts = item.split(":");
     const id = parts[0];
     const stage = parts[1] || "applied";
     appliedJobIds.push(id);
     jobStages[id] = stage;
+    if (parts[2]) {
+      try {
+        jobApplicationDetails[id] = JSON.parse(decodeURIComponent(parts[2]));
+      } catch (e) {
+        // fallback
+      }
+    }
   });
-  return { appliedJobIds, jobStages };
+  return { appliedJobIds, jobStages, jobApplicationDetails };
 }
 
 export function createStoreHydrationData(

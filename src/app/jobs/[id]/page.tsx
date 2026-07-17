@@ -11,43 +11,65 @@ import {
   MapPin,
   Plus,
   Users,
+  Briefcase,
+  Calendar,
+  DollarSign,
+  Bell,
+  FileEdit,
+  ClipboardList,
+  Info,
+  HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { formatRelativeDate, formatSalary, cn } from "@/lib/utils";
-import { useCareerStore } from "@/store/useCareerStore";
+import { useCareerStore, resumeToParsed } from "@/store/useCareerStore";
 import { useHydrated } from "@/hooks/useHydrated";
 import { getLocalizedCompany, getLocalizedJob } from "@/i18n/content";
 import { useMessages } from "@/i18n/useMessages";
+import { analyzeMatch } from "@/lib/forge/analyze";
 
 export default function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { locale } = useMessages();
+  const { locale, messages } = useMessages();
+  const isTr = locale === "tr";
+  
   const [showWhy, setShowWhy] = useState(false);
+  const [verifyingSkill, setVerifyingSkill] = useState<string | null>(null);
+  const [evidenceType, setEvidenceType] = useState<"work" | "project" | "certification" | "course" | "portfolio">("work");
+  const [evidenceDetail, setEvidenceDetail] = useState("");
+  
+  const [isEditingTracker, setIsEditingTracker] = useState(false);
+
   const job = getLocalizedJob(id, locale);
   if (!job) notFound();
   const company = getLocalizedCompany(job.companyId, locale);
   const mounted = useHydrated();
+
   const {
     resume,
     savedJobIds,
     appliedJobIds,
     jobStages,
+    jobApplicationDetails,
     toggleSaveJob,
     applyToJob,
     updateJobStage,
+    updateJobApplicationDetails,
     addSkills,
+    updateResume,
   } = useCareerStore();
-  const copy = locale === "tr" ? {
-    back: "İş eşleştirmeye dön", applicants: "başvuru", save: "Kaydet", saved: "Kaydedildi", applied: "Başvuruldu", apply: "Başvuruya ekle",
-    removedToast: "Kayıt kaldırıldı.", savedToast: "İlan kaydedildi.", appliedToast: "Başvuru listenize eklendi.",
+
+  const copy = isTr ? {
+    back: "İş eşleştirmeye dön", applicants: "başvuru", save: "Kaydet", saved: "Kaydedildi", applied: "Başvuruldu", apply: "Başvuru takipçisine ekle",
+    removedToast: "Kayıt kaldırıldı.", savedToast: "İlan kaydedildi.", appliedToast: "Başvuru takipçisine eklendi.",
     salary: "Maaş", model: "Çalışma modeli", contract: "Sözleşme", role: "Rol", responsibilities: "Sorumluluklar", evidence: "Aranan kanıtlar", company: "Şirket",
     match: "CV eşleşmesi", strong: "Güçlü aday sinyali", gap: "Kanıt açığı görünür", missingResume: "CV becerileri eksik", matched: "Örtüşen beceriler", noMatch: "Henüz eşleşme yok.", missing: "Eksik sinyaller", add: "Ekle", already: "zaten mevcut.", added: "CV'ye eklendi.", noGap: "İlan etiketlerinde kritik eksik görünmüyor.",
     trust: "Bir beceriyi yalnızca gerçek deneyiminiz varsa ekleyin. Sonraki adımda bu beceriyi somut bir sonuçla kanıtlayın.", sample: "Bu, ürün deneyimini göstermek için hazırlanmış örnek bir ilandır.",
     mode: { Remote: "Uzaktan", Hybrid: "Hibrit", "On-site": "Ofiste" }, type: { "Full-time": "Tam zamanlı", "Part-time": "Yarı zamanlı", Contract: "Sözleşmeli", Internship: "Staj" }, seniority: { Intern: "Stajyer", Junior: "Başlangıç", Mid: "Orta", Senior: "Kıdemli", Lead: "Lider", Principal: "Uzman" },
   } : {
-    back: "Back to job matching", applicants: "applicants", save: "Save", saved: "Saved", applied: "Applied", apply: "Add to applications",
-    removedToast: "Bookmark removed.", savedToast: "Listing saved.", appliedToast: "Added to your applications.",
+    back: "Back to job matching", applicants: "applicants", save: "Save", saved: "Saved", applied: "Applied", apply: "Add to application tracker",
+    removedToast: "Bookmark removed.", savedToast: "Listing saved.", appliedToast: "Added to application tracker.",
     salary: "Salary", model: "Work model", contract: "Contract", role: "Role", responsibilities: "Responsibilities", evidence: "Required evidence", company: "Company",
     match: "Resume match", strong: "Strong candidate signal", gap: "Evidence gap visible", missingResume: "Resume skills are missing", matched: "Matched skills", noMatch: "No matches yet.", missing: "Missing signals", add: "Add", already: "is already present.", added: "added to resume.", noGap: "No critical gap appears in the listing tags.",
     trust: "Add a skill only when you have real experience with it. Then support it with a concrete outcome.", sample: "This is a sample listing created to demonstrate the product experience.",
@@ -55,20 +77,80 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
   };
 
   const match = useMemo(() => {
-    const skills = resume.skills.map((skill) => skill.toLowerCase().trim());
-    const matched = job.tags.filter((tag) =>
-      skills.some((skill) => skill.includes(tag.toLowerCase()) || tag.toLowerCase().includes(skill))
-    );
-    const missing = job.tags.filter((tag) => !matched.includes(tag));
-    return {
-      matched,
-      missing,
-      score: job.tags.length ? Math.round((matched.length / job.tags.length) * 100) : 0,
-    };
-  }, [job.tags, resume.skills]);
+    const cvParsed = resumeToParsed(resume);
+    const jdText = `${job.title} ${job.description} ${job.requirements.join(" ")} ${job.tags.join(" ")}`;
+    return analyzeMatch(cvParsed, jdText, locale);
+  }, [job, resume, locale]);
 
   const saved = savedJobIds.includes(job.id);
   const applied = appliedJobIds.includes(job.id);
+  const stage = jobStages?.[job.id] || "applied";
+
+  const stageLabels: Record<string, string> = isTr ? {
+    saved: "Kaydedildi",
+    preparing: "Hazırlanıyor",
+    applied: "Başvuruldu",
+    screening: "İK Görüşmesi",
+    interview: "Mülakat",
+    technical: "Teknik Değerlendirme",
+    final: "Final Mülakatı",
+    offer: "Teklif",
+    rejected: "Reddedildi",
+    withdrawn: "Geri Çekildi",
+  } : {
+    saved: "Saved",
+    preparing: "Preparing",
+    applied: "Applied",
+    screening: "Recruiter screening",
+    interview: "Interview",
+    technical: "Technical assessment",
+    final: "Final interview",
+    offer: "Offer",
+    rejected: "Rejected",
+    withdrawn: "Withdrawn",
+  };
+
+  const appDetails = jobApplicationDetails?.[job.id] || {};
+
+  const handleSaveEvidence = () => {
+    if (!verifyingSkill) return;
+    
+    // Add skill to general list
+    addSkills([verifyingSkill]);
+
+    // Optionally add supporting details to resume sections
+    if (evidenceDetail.trim()) {
+      if (evidenceType === "work" && resume.experience.length > 0) {
+        const updated = [...resume.experience];
+        updated[0] = {
+          ...updated[0],
+          highlights: [...updated[0].highlights, `${verifyingSkill}: ${evidenceDetail.trim()}`],
+        };
+        updateResume({ experience: updated });
+      } else if (evidenceType === "project") {
+        const updated = [...(resume.projects || [])];
+        updated.push({
+          id: Math.random().toString(),
+          title: `${verifyingSkill} Project`,
+          description: evidenceDetail.trim(),
+        });
+        updateResume({ projects: updated });
+      } else if (evidenceType === "certification") {
+        const updated = [...(resume.certifications || [])];
+        updated.push({
+          id: Math.random().toString(),
+          name: verifyingSkill,
+          issuer: evidenceDetail.trim(),
+          date: new Date().getFullYear().toString(),
+        });
+        updateResume({ certifications: updated });
+      }
+    }
+
+    toast.success(isTr ? `"${verifyingSkill}" becerisi ve kanıtı özgeçmişinize eklendi.` : `"${verifyingSkill}" and its evidence added to your resume.`);
+    setVerifyingSkill(null);
+    setEvidenceDetail("");
+  };
 
   const renderContent = () => {
     if (!mounted) {
@@ -135,44 +217,98 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
           )}
         </article>
 
-        <aside className="xl:sticky xl:top-32 xl:self-start">
-          <div className="surface-subtle p-6 sm:p-7">
+        <aside className="xl:sticky xl:top-32 xl:self-start space-y-6">
+          {/* Match Score Panel */}
+          <div className="surface-subtle p-6 sm:p-7 space-y-6">
             <div className="flex items-start justify-between gap-6">
               <div>
                 <p className="section-label">{copy.match}</p>
                 <h2 className="mt-3 text-base font-semibold text-ink">
-                  {match.score >= 75 ? copy.strong : match.score ? copy.gap : copy.missingResume}
+                  {match.matchScore >= 75 ? copy.strong : match.matchScore ? copy.gap : copy.missingResume}
                 </h2>
               </div>
-              <strong className="metric-number text-3xl font-semibold text-brand-strong">{match.score}%</strong>
+              <strong className="metric-number text-3xl font-semibold text-brand-strong">{match.matchScore}%</strong>
             </div>
 
-            <div className="mt-6 h-1.5 overflow-hidden rounded-full bg-surface-3">
-              <div className="h-full rounded-full bg-brand transition-all duration-500" style={{ width: `${match.score}%` }} />
+            <div className="h-1.5 overflow-hidden rounded-full bg-surface-3">
+              <div className="h-full rounded-full bg-brand transition-all duration-500" style={{ width: `${match.matchScore}%` }} />
             </div>
 
-            <div className="mt-7 border-t border-line pt-5">
-              <p className="text-[0.6875rem] font-semibold text-positive">{copy.matched} · {match.matched.length}</p>
+            {/* What does this score mean toggle & details */}
+            <div className="border-t border-line pt-4">
+              <button
+                type="button"
+                onClick={() => setShowWhy(!showWhy)}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-strong hover:underline"
+              >
+                <HelpCircle className="h-4 w-4" />
+                <span>{isTr ? "Skor Detayları ve Analiz" : "Score Breakdown & Details"}</span>
+              </button>
+              
+              {showWhy && (
+                <div className="mt-4 space-y-4 rounded-lg bg-surface-2 p-4 border border-line text-xs">
+                  {/* Detailed sub-scores */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-ink-3">{isTr ? "Zorunlu Beceri Uyumu" : "Required Skills"}</span>
+                      <span className="font-semibold text-ink">{match.requiredSkillsCoverage}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-ink-3">{isTr ? "Tercih Edilen Beceri Uyumu" : "Preferred Skills"}</span>
+                      <span className="font-semibold text-ink">{match.preferredSkillsCoverage}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-ink-3">{isTr ? "Deneyim Süresi Uyumu" : "Experience Length"}</span>
+                      <span className="font-semibold text-ink">{match.experienceAlignment}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-ink-3">{isTr ? "Konum/Çalışma Modu" : "Location/Mode"}</span>
+                      <span className="font-semibold text-ink">{match.locationCompatibility}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-ink-3">{isTr ? "Dil Gereksinimi" : "Languages"}</span>
+                      <span className="font-semibold text-ink">{match.languageCompatibility}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-ink-3">{isTr ? "Deneyim Kanıtı Gücü" : "Evidence Strength"}</span>
+                      <span className="font-semibold text-ink">{match.evidenceStrength}%</span>
+                    </div>
+                  </div>
+
+                  {/* Impact Explanations */}
+                  <div className="border-t border-line pt-3 space-y-1.5">
+                    <p className="font-semibold text-[10px] text-ink uppercase tracking-wider">{isTr ? "Puan Etkileri" : "Score Adjustments"}</p>
+                    {match.scoreExplanations?.map((exp, i) => (
+                      <p key={i} className={cn("leading-relaxed text-[11px]", exp.startsWith("+") ? "text-positive" : "text-caution")}>
+                        {exp}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Matched Skills */}
+            <div className="border-t border-line pt-4">
+              <p className="text-[0.6875rem] font-semibold text-positive">{copy.matched} · {match.matchedSkills.length}</p>
               <div className="mt-3 flex flex-wrap gap-1.5">
-                {match.matched.length ? match.matched.map((skill) => <span key={skill} className="rounded-full bg-[var(--positive-wash)] px-2 py-1 text-[0.6875rem] text-positive">{skill}</span>) : <span className="text-xs text-ink-3">{copy.noMatch}</span>}
+                {match.matchedSkills.length ? match.matchedSkills.map((skill) => (
+                  <span key={skill} className="rounded-full bg-[var(--positive-wash)] px-2 py-1 text-[0.6875rem] text-positive">{skill}</span>
+                )) : <span className="text-xs text-ink-3">{copy.noMatch}</span>}
               </div>
             </div>
 
-            <div className="mt-7 border-t border-line pt-5">
-              <p className="text-[0.6875rem] font-semibold text-caution">{copy.missing} · {match.missing.length}</p>
+            {/* Missing Skills */}
+            <div className="border-t border-line pt-4">
+              <p className="text-[0.6875rem] font-semibold text-caution">{copy.missing} · {match.missingSkills.length}</p>
               <div className="mt-3 space-y-2">
-                {match.missing.length ? match.missing.map((skill) => (
+                {match.missingSkills.length ? match.missingSkills.map((skill) => (
                   <div key={skill} className="flex items-center justify-between gap-3 border-b border-line py-2 last:border-b-0">
                     <span className="text-xs text-ink-2">{skill}</span>
                     <button
                       type="button"
-                      onClick={() => {
-                        const confirmed = window.confirm(locale === "tr" ? `${skill} becerisini gerçek deneyiminizle doğrulayabiliyor musunuz?` : `Can you verify ${skill} with real experience?`);
-                        if (!confirmed) return;
-                        const added = addSkills([skill]);
-                        toast[added ? "success" : "info"](`${skill} ${added ? copy.added : copy.already}`);
-                      }}
-                      className="inline-flex min-h-11 items-center gap-1 text-[0.6875rem] font-semibold text-brand-strong hover:underline"
+                      onClick={() => setVerifyingSkill(skill)}
+                      className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold text-brand-strong hover:underline"
                     >
                       <Plus className="h-3 w-3" /> {copy.add}
                     </button>
@@ -180,33 +316,167 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                 )) : <p className="text-xs text-positive">{copy.noGap}</p>}
               </div>
             </div>
-            <div className="mt-6 border-t border-line pt-4">
-              <button
-                type="button"
-                onClick={() => setShowWhy(!showWhy)}
-                className="inline-flex min-h-11 items-center gap-1 text-[0.6875rem] font-semibold text-brand-strong hover:underline"
-              >
-                <span>{locale === "tr" ? "Bu skor ne anlama geliyor?" : "What does this score mean?"}</span>
-              </button>
-              {showWhy && (
-                <div className="mt-2 text-[0.6875rem] text-ink-3 leading-relaxed rounded bg-surface-2 p-3 border border-line">
-                  {locale === "tr"
-                    ? `Bu ilan için toplam ${job.tags.length} kritik beceri tanımlanmıştır. Mevcut CV'nizde bunlardan ${match.matched.length} tanesi tespit edilmiştir. Eksik olan ${match.missing.length} beceri, eşleşme skorunu düşürmektedir.`
-                    : `A total of ${job.tags.length} critical skills are defined for this job. Your resume has ${match.matched.length} of them. The missing ${match.missing.length} skills reduce the match score.`}
-                </div>
-              )}
-            </div>
           </div>
-          <p className="mt-4 text-[0.6875rem] leading-5 text-ink-3">{copy.trust}</p>
-          <div className="mt-3 flex gap-2 border-t border-line pt-3 text-[0.625rem] text-ink-3 leading-normal items-start">
+
+          <p className="text-[0.6875rem] leading-5 text-ink-3">{copy.trust}</p>
+          
+          <div className="flex gap-2 border-t border-line pt-3 text-[0.625rem] text-ink-3 leading-normal items-start">
             <span className="shrink-0 text-caution mt-0.5">⚠️</span>
             <p>
-              {locale === "tr"
+              {isTr
                 ? "Eşleşme oranları kural tabanlı bir tahmindir; gerçek bir adayın pozisyona uygunluğunu veya işe alım kararını temsil etmez."
                 : "Match percentages are rule-based estimates; they do not represent actual candidate fit or hiring decisions."}
             </p>
           </div>
-          <p className="mt-3 text-[0.625rem] leading-5 text-ink-3">{copy.sample}</p>
+
+          {/* Application Tracker Panel */}
+          {applied && (
+            <div className="surface-subtle p-6 sm:p-7 space-y-4 border border-line">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold text-ink uppercase tracking-wider">{isTr ? "Başvuru Durumu" : "Application Tracking"}</h3>
+                  <span className="inline-block mt-1.5 rounded-full bg-brand/10 border border-brand/20 px-2.5 py-0.5 text-xs font-semibold text-brand-strong">
+                    {stageLabels[stage] || stageLabels.applied}
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditingTracker(!isEditingTracker)}
+                  className="text-xs flex items-center gap-1"
+                >
+                  <FileEdit className="h-3.5 w-3.5" />
+                  {isEditingTracker ? (isTr ? "Kapat" : "Close") : (isTr ? "Düzenle" : "Edit")}
+                </Button>
+              </div>
+
+              {isEditingTracker ? (
+                <div className="space-y-4 pt-2 border-t border-line text-xs">
+                  {/* Stage Dropdown */}
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-ink-2">{isTr ? "Başvuru Aşaması" : "Application Stage"}</label>
+                    <select
+                      value={stage}
+                      onChange={(e) => {
+                        updateJobStage(job.id, e.target.value);
+                      }}
+                      className="w-full bg-surface border border-line rounded-[var(--radius-control)] px-3 py-1.5 h-10 text-xs font-semibold text-ink"
+                    >
+                      {Object.entries(stageLabels).map(([val, label]) => (
+                        <option key={val} value={val}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Contact Person */}
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-ink-2">{isTr ? "İletişim Kişisi" : "Contact Person"}</label>
+                    <input
+                      type="text"
+                      value={appDetails.contactPerson || ""}
+                      onChange={(e) => updateJobApplicationDetails(job.id, { contactPerson: e.target.value })}
+                      placeholder="e.g. John Doe"
+                      className="w-full bg-surface border border-line rounded-[var(--radius-control)] px-3 py-1.5 h-10 text-xs text-ink placeholder:text-ink-3 focus:outline-none focus:border-brand"
+                    />
+                  </div>
+
+                  {/* Interview Date */}
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-ink-2 flex items-center gap-1">
+                      <Calendar className="h-3.5 w-3.5 text-ink-3" />
+                      {isTr ? "Mülakat Tarihi" : "Interview Date"}
+                    </label>
+                    <input
+                      type="date"
+                      value={appDetails.interviewDate || ""}
+                      onChange={(e) => updateJobApplicationDetails(job.id, { interviewDate: e.target.value })}
+                      className="w-full bg-surface border border-line rounded-[var(--radius-control)] px-3 py-1.5 h-10 text-xs text-ink"
+                    />
+                  </div>
+
+                  {/* Follow-up Date */}
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-ink-2 flex items-center gap-1">
+                      <Calendar className="h-3.5 w-3.5 text-ink-3" />
+                      {isTr ? "Takip Tarihi" : "Follow-up Date"}
+                    </label>
+                    <input
+                      type="date"
+                      value={appDetails.followUpDate || ""}
+                      onChange={(e) => updateJobApplicationDetails(job.id, { followUpDate: e.target.value })}
+                      className="w-full bg-surface border border-line rounded-[var(--radius-control)] px-3 py-1.5 h-10 text-xs text-ink"
+                    />
+                  </div>
+
+                  {/* Salary Expectation */}
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-ink-2 flex items-center gap-1">
+                      <DollarSign className="h-3.5 w-3.5 text-ink-3" />
+                      {isTr ? "Maaş Beklentisi" : "Salary Expectation"}
+                    </label>
+                    <input
+                      type="text"
+                      value={appDetails.salaryExpectation || ""}
+                      placeholder="e.g. 120,000 / Year"
+                      onChange={(e) => updateJobApplicationDetails(job.id, { salaryExpectation: e.target.value })}
+                      className="w-full bg-surface border border-line rounded-[var(--radius-control)] px-3 py-1.5 h-10 text-xs text-ink placeholder:text-ink-3 focus:outline-none"
+                    />
+                  </div>
+
+                  {/* Reminder Toggle */}
+                  <div className="flex items-center gap-2 py-1">
+                    <input
+                      type="checkbox"
+                      id="reminder-cb"
+                      checked={appDetails.reminder || false}
+                      onChange={(e) => updateJobApplicationDetails(job.id, { reminder: e.target.checked })}
+                      className="rounded border-line text-brand focus:ring-brand h-4 w-4"
+                    />
+                    <label htmlFor="reminder-cb" className="font-semibold text-ink-2 flex items-center gap-1">
+                      <Bell className="h-3.5 w-3.5 text-ink-3" />
+                      {isTr ? "Takip Hatırlatıcısı Gönder" : "Send follow-up reminder"}
+                    </label>
+                  </div>
+
+                  {/* Notes */}
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-ink-2 flex items-center gap-1">
+                      <ClipboardList className="h-3.5 w-3.5 text-ink-3" />
+                      {isTr ? "Notlar" : "Notes"}
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={appDetails.notes || ""}
+                      onChange={(e) => updateJobApplicationDetails(job.id, { notes: e.target.value })}
+                      placeholder={isTr ? "Görüşme notları, hazırlık notları..." : "Interview notes, research notes..."}
+                      className="w-full bg-surface border border-line rounded-[var(--radius-control)] p-3 text-xs text-ink placeholder:text-ink-3 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3 pt-2 border-t border-line text-xs text-ink-2 leading-relaxed">
+                  {appDetails.contactPerson && (
+                    <p><strong>{isTr ? "İletişim Kişisi" : "Contact"}:</strong> {appDetails.contactPerson}</p>
+                  )}
+                  {appDetails.interviewDate && (
+                    <p><strong>{isTr ? "Mülakat Tarihi" : "Interview"}:</strong> {appDetails.interviewDate}</p>
+                  )}
+                  {appDetails.followUpDate && (
+                    <p><strong>{isTr ? "Takip Tarihi" : "Follow-up"}:</strong> {appDetails.followUpDate}</p>
+                  )}
+                  {appDetails.salaryExpectation && (
+                    <p><strong>{isTr ? "Beklenti" : "Expectation"}:</strong> {appDetails.salaryExpectation}</p>
+                  )}
+                  {appDetails.notes && (
+                    <div className="rounded bg-surface-2 p-2.5 border border-line mt-2">
+                      <strong className="block text-[10px] uppercase text-ink-3">{isTr ? "Notlar" : "Notes"}</strong>
+                      <p className="mt-1 text-xs text-ink-2 whitespace-pre-wrap">{appDetails.notes}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </aside>
       </div>
     );
@@ -229,7 +499,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
             <span>{copy.type[job.type]}</span>
             {job.isDemo && (
               <span className="ml-2 rounded bg-surface-3 px-1.5 py-0.5 text-[0.625rem] font-mono text-ink-3 uppercase border border-line">
-                {locale === "tr" ? "Demo Veri" : "Demo Data"}
+                {isTr ? "Demo Veri" : "Demo Data"}
               </span>
             )}
           </div>
@@ -238,9 +508,9 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
             <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {job.location} · {copy.mode[job.workMode]}</span>
             <span className="inline-flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {job.applicants} {copy.applicants}</span>
             <span>{formatRelativeDate(job.postedAt, locale)}</span>
-            {job.source && <span>· {locale === "tr" ? "Kaynak" : "Source"}: {job.source}</span>}
+            {job.source && <span>· {isTr ? "Kaynak" : "Source"}: {job.source}</span>}
             {job.expirationDate && (
-              <span>· {locale === "tr" ? "Son Başvuru" : "Deadline"}: {formatRelativeDate(job.expirationDate, locale)}</span>
+              <span>· {isTr ? "Son Başvuru" : "Deadline"}: {formatRelativeDate(job.expirationDate, locale)}</span>
             )}
           </div>
         </div>
@@ -262,30 +532,14 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
               toast.success(copy.appliedToast);
             }}
           >
-            {applied ? <><Check className="h-4 w-4" /> {copy.applied}</> : copy.apply}
+            {applied 
+              ? <><Check className="h-4 w-4 text-positive" /> {isTr ? "Takip Ediliyor" : "Tracked"}</> 
+              : (isTr ? "Başvuru takipçisine ekle" : "Add to application tracker")}
           </Button>
-          {applied && (
-            <div className="flex items-center">
-              <select
-                value={jobStages?.[job.id] || "applied"}
-                onChange={(e) => {
-                  updateJobStage(job.id, e.target.value);
-                  toast.success(locale === "tr" ? "Başvuru aşaması güncellendi." : "Application stage updated.");
-                }}
-                className="bg-surface border border-line rounded-[var(--radius-control)] px-3 py-1.5 h-11 text-xs font-semibold text-ink transition-colors hover:bg-surface-2 focus:outline-none"
-              >
-                <option value="applied">{locale === "tr" ? "Başvuruldu" : "Applied"}</option>
-                <option value="interviewing">{locale === "tr" ? "Mülakat Aşamasında" : "Interviewing"}</option>
-                <option value="technical">{locale === "tr" ? "Teknik Değerlendirme" : "Technical assessment"}</option>
-                <option value="offer">{locale === "tr" ? "Teklif Alındı" : "Offer received"}</option>
-                <option value="rejected">{locale === "tr" ? "Reddedildi" : "Rejected"}</option>
-              </select>
-            </div>
-          )}
           {job.applicationUrl && (
             <a href={job.applicationUrl} target="_blank" rel="noopener noreferrer">
               <Button variant="outline">
-                {locale === "tr" ? "Resmi İlana Git" : "Apply Externally"}
+                {isTr ? "Resmi İlana Git" : "Apply Externally"}
               </Button>
             </a>
           )}
@@ -293,6 +547,66 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
       </header>
 
       {renderContent()}
+
+      {/* Verify Skill & Add Evidence Dialog */}
+      {verifyingSkill && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 backdrop-blur-sm px-4" role="dialog">
+          <div className="w-full max-w-md rounded-xl border border-line bg-surface p-6 shadow-2xl space-y-4 text-xs">
+            <div className="flex gap-2.5 items-start">
+              <Info className="h-5 w-5 text-brand-strong shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-semibold text-ink">
+                  {isTr ? `"${verifyingSkill}" Becerisini Doğrula` : `Verify Possession of "${verifyingSkill}"`}
+                </h3>
+                <p className="text-ink-3 mt-1 leading-relaxed">
+                  {isTr 
+                    ? "Bir beceriyi CV'nize eklemeden önce gerçek deneyiminizle doğrulamanız önerilir. Lütfen opsiyonel bir kanıt sağlayın."
+                    : "We recommend adding skills only when you possess genuine experience. Provide optional supporting evidence."}
+                </p>
+              </div>
+            </div>
+
+            {/* Evidence Type */}
+            <div className="space-y-1.5">
+              <label className="font-semibold text-ink-2">{isTr ? "Kanıt Türü" : "Evidence Type"}</label>
+              <select
+                value={evidenceType}
+                onChange={(e) => setEvidenceType(e.target.value as any)}
+                className="w-full bg-surface border border-line rounded-[var(--radius-control)] px-3 py-1.5 h-10 text-xs font-semibold text-ink"
+              >
+                <option value="work">{isTr ? "İş Deneyimi" : "Work Experience"}</option>
+                <option value="project">{isTr ? "Kişisel Proje" : "Personal Project"}</option>
+                <option value="certification">{isTr ? "Sertifika veya Eğitim" : "Certification or Course"}</option>
+              </select>
+            </div>
+
+            {/* Evidence Detail Input */}
+            <div className="space-y-1.5">
+              <label className="font-semibold text-ink-2">
+                {isTr ? "Açıklama / Kanıt Detayı (Opsiyonel)" : "Description / Evidence Detail (Optional)"}
+              </label>
+              <textarea
+                rows={3}
+                value={evidenceDetail}
+                onChange={(e) => setEvidenceDetail(e.target.value)}
+                placeholder={isTr 
+                  ? "e.g. Bu beceriyi hangi rolde veya projede kullandınız?" 
+                  : "e.g. In which role or project did you utilize this skill?"}
+                className="w-full bg-surface border border-line rounded-[var(--radius-control)] p-3 text-xs text-ink placeholder:text-ink-3 focus:outline-none"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-3 border-t border-line">
+              <Button variant="outline" onClick={() => setVerifyingSkill(null)}>
+                {isTr ? "İptal" : "Cancel"}
+              </Button>
+              <Button variant="primary" onClick={handleSaveEvidence}>
+                {isTr ? "Doğrula ve Ekle" : "Verify & Add"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

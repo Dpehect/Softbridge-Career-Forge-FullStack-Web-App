@@ -7,6 +7,8 @@ import { isProtectedWorkspacePath } from "@/lib/auth/protected-routes";
 import { useCareerStore } from "@/store/useCareerStore";
 import { CloudSyncStatus } from "@/components/sync/CloudSyncStatus";
 
+import { MigrationDialog } from "@/components/sync/MigrationDialog";
+
 function subscribeToPersist(notify: () => void) {
   const stopHydrating = useCareerStore.persist.onHydrate(() => notify());
   const stopFinished = useCareerStore.persist.onFinishHydration(() => notify());
@@ -34,6 +36,7 @@ export function WorkspaceSyncProvider({ children }: { children: React.ReactNode 
   return (
     <>
       {children}
+      <MigrationDialog />
       {showLoadingGate && (
         <div className="fixed inset-0 z-[70] grid place-items-center bg-background/90 px-6" aria-busy="true">
           <CloudSyncStatus className="border border-line bg-surface px-4 py-3 shadow-lg" />
