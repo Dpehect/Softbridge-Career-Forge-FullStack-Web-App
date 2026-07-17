@@ -155,26 +155,27 @@ export function CvDropZone({
         )}
       </div>
 
-      <p className="font-bold tracking-tight text-lg md:text-xl text-slate-900 dark:text-white">
-        {loading ? "Kariyer asistanı hazırlanıyor…" : "PDF/TXT dosyanı buraya sürükle"}
+      <p className="font-bold tracking-tight text-base md:text-lg text-slate-900 dark:text-white">
+        {loading ? "Özgeçmişiniz işleniyor..." : "Özgeçmiş Dosyası Yükleyin"}
       </p>
-      <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md leading-relaxed">
+      <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed">
         {loading
-          ? "Metin çıkarılıyor, lütfen bekleyin."
-          : "veya tıklayarak dosya seç. Verileriniz cihazınızda kalır."}
+          ? "Lütfen bekleyin..."
+          : "Sürükleyip bırakın veya tıklayıp PDF/TXT seçin"}
       </p>
 
       {!loading && (
         <span
-          className="inline-flex h-11 items-center rounded-full px-6 text-sm font-bold text-white shadow-lg transition-transform hover:scale-105"
+          className="inline-flex h-9 items-center rounded-full px-5 text-xs font-bold text-white shadow-md transition-transform hover:scale-102"
           style={{
-            background: "linear-gradient(135deg, #6B21A8, #F97316)",
-            boxShadow: "0 4px 12px rgba(107, 33, 168, 0.3)",
+            background: "linear-gradient(135deg, #6B21A8, #A855F7, #F97316)",
+            boxShadow: "0 4px 12px rgba(107, 33, 168, 0.25)",
           }}
         >
-          Yükle
+          Dosya Seç
         </span>
       )}
+
 
       <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-400">
         <Lock className="w-3.5 h-3.5" />

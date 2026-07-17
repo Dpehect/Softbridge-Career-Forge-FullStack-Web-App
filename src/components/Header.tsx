@@ -162,67 +162,61 @@ export function Header() {
               </div>
             </Link>
 
-            {/* Ana menü: Analiz · Özgeçmişim — gap-8, sade */}
-            <nav
-              className="hidden items-center gap-8 md:flex"
-              aria-label="Ana menü"
-            >
-              {MAIN_NAV.map((item) => {
-                const active = isActive(item.path);
-                return (
-                  <Link
-                    key={item.path}
-                    href={item.path}
-                    className={cn(
-                      "text-sm font-medium transition-colors",
-                      active
-                        ? "text-indigo-600 dark:text-indigo-400"
-                        : "text-black hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400"
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
+            {/* Empty space in the middle for a clean SaaS look */}
+            <div className="hidden md:flex flex-1" />
 
-            {/* Sağ: Sistem Hazır · Başla · Profil */}
-            <div className="flex items-center gap-3 sm:gap-4">
+             {/* Sağ: Menü Linkleri + Sistem Hazır · Başla · Profil */}
+            <div className="flex items-center gap-4 sm:gap-6">
+              {/* Desktop Nav Links on the Right side */}
+              <nav className="hidden items-center gap-6 md:flex" aria-label="Ana menü">
+                {MAIN_NAV.map((item) => {
+                  const active = isActive(item.path);
+                  return (
+                    <Link
+                      key={item.path}
+                      href={item.path}
+                      className={cn(
+                        "text-sm font-medium transition-colors hover:text-purple-600 dark:hover:text-[#C084FC]",
+                        active
+                          ? "text-purple-600 dark:text-[#C084FC]"
+                          : "text-slate-700 dark:text-slate-200"
+                      )}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+
               <div className="hidden sm:block">
                 <AiStatusDot />
               </div>
 
               <Link
                 href="/forge"
-                className="inline-flex h-10 items-center rounded-full bg-indigo-600 px-5 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:bg-indigo-500 active:scale-[0.98]"
+                className="inline-flex h-9 items-center rounded-full px-4 text-xs font-bold text-white shadow-lg transition-all hover:opacity-95 hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  background: "linear-gradient(135deg, #6B21A8, #A855F7, #F97316)",
+                  boxShadow: "0 4px 12px rgba(107, 33, 168, 0.25)",
+                }}
               >
                 Başla
               </Link>
 
-              {/* Profil menüsü — diğer sayfalar burada */}
-              <div className="relative" ref={profileRef}>
+              {/* Profil menüsü — sadece şık bir dairesel avatar */}
+              <div className="relative flex items-center" ref={profileRef}>
                 <button
                   type="button"
                   onClick={() => setProfileOpen((v) => !v)}
-                  className={cn(
-                    "flex h-10 items-center gap-2 rounded-full border border-slate-200 bg-white pl-1.5 pr-2.5 transition-colors hover:border-purple-200 hover:bg-purple-50/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 cursor-pointer",
-                    profileOpen && "border-purple-300 bg-purple-50/80 dark:bg-purple-500/10"
-                  )}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#6B21A8] to-[#F97316] text-white transition-all hover:scale-105 active:scale-95 cursor-pointer relative"
                   aria-expanded={profileOpen}
                   aria-haspopup="menu"
+                  title={displayName}
                 >
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#6B21A8] to-[#F97316] text-white">
-                    <User className="h-3.5 w-3.5" />
-                  </span>
-                  <span className="hidden max-w-[72px] truncate text-xs font-semibold text-slate-900 dark:text-slate-100 sm:inline">
-                    {displayName}
-                  </span>
-                  <ChevronDown
-                    className={cn(
-                      "h-3.5 w-3.5 text-slate-400 transition-transform",
-                      profileOpen && "rotate-180"
-                    )}
-                  />
+                  <User className="h-4 w-4" />
+                  {hasContent && (
+                    <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#10B981] dark:border-[#020617]" />
+                  )}
                 </button>
 
                 <AnimatePresence>
@@ -326,10 +320,12 @@ export function Header() {
             </div>
           </div>
 
-          {/* Stepper şeridi */}
-          <div className="border-t border-slate-100 dark:border-white/5">
-            <JourneyStepper className="!border-0 !bg-transparent" />
-          </div>
+          {/* Stepper şeridi — Sadece /forge sayfasında gösterilir */}
+          {pathname === "/forge" && (
+            <div className="border-t border-slate-100 dark:border-white/5">
+              <JourneyStepper className="!border-0 !bg-transparent" />
+            </div>
+          )}
         </div>
 
         {/* Mobil menü */}

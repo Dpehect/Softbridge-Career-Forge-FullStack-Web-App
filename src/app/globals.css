@@ -29,42 +29,42 @@
 
 /* ─── Light Mode ─────────────────────────────────────────────────────────── */
 :root {
-  --background:    #FAF5FF;
-  --panel:         #FFFFFF;
-  --text-primary:  #1A0A2E;
-  --text-secondary:#5B3F8C;
-  --text-muted:    #7C6A9A;
+  --background:    #FFFFFF;   /* Clean white background */
+  --panel:         #F8FAFC;   /* Slate-50 panel for hierarchy */
+  --text-primary:  #0F172A;   /* slate-900 */
+  --text-secondary:#334155;   /* slate-700 */
+  --text-muted:    #64748B;   /* slate-500 */
   --accent:        #6B21A8;   /* Deep Purple/Magenta */
   --accent-hover:  #581C87;
   --accent-dark:   #4C1D95;
   --accent-2:      #F97316;   /* Vibrant Orange/Coral */
-  --accent-3:      #4ADE80;   /* Soft Green */
-  --grid-line:     rgba(107, 33, 168, 0.06);
-  --glass-bg:      rgba(255, 255, 255, 0.72);
-  --border-color:  rgba(107, 33, 168, 0.10);
-  --glow-purple:   rgba(107, 33, 168, 0.18);
-  --glow-coral:    rgba(249, 115, 22, 0.20);
-  --glow-green:    rgba(74, 222, 128, 0.20);
+  --accent-3:      #10B981;   /* Soft Green */
+  --grid-line:     rgba(15, 23, 42, 0.05);
+  --glass-bg:      rgba(255, 255, 255, 0.85);
+  --border-color:  rgba(15, 23, 42, 0.08);
+  --glow-purple:   rgba(107, 33, 168, 0.12);
+  --glow-coral:    rgba(249, 115, 22, 0.15);
+  --glow-green:    rgba(16, 185, 129, 0.15);
 }
 
 /* ─── Dark Mode — Utopian Cosmic Violet ─────────────────────────────────── */
 .dark {
-  --background:    #060010;   /* Deepest cosmic void — near-black with violet soul */
-  --panel:         #110720;   /* Mystic deep violet panel */
-  --text-primary:  #F5EEFF;
-  --text-secondary:#D9B8FF;
-  --text-muted:    #A07BC4;
+  --background:    #020617;   /* Slate-950 cosmic void */
+  --panel:         #0F172A;   /* slate-900 mystic panel */
+  --text-primary:  #F8FAFC;   /* slate-50 */
+  --text-secondary:#CBD5E1;   /* slate-300 */
+  --text-muted:    #94A3B8;   /* slate-400 */
   --accent:        #C084FC;   /* Electric violet */
   --accent-hover:  #A855F7;
   --accent-dark:   #7C3AED;
   --accent-2:      #FF6B35;   /* Vivid cosmic orange */
   --accent-3:      #34D399;   /* Neon mint-green */
-  --grid-line:     rgba(192, 132, 252, 0.05);
-  --glass-bg:      rgba(17, 7, 32, 0.88);   /* Pure dark violet glass */
-  --border-color:  rgba(192, 132, 252, 0.12);
-  --glow-purple:   rgba(192, 132, 252, 0.28);
-  --glow-coral:    rgba(255, 107, 53, 0.28);
-  --glow-green:    rgba(52, 211, 153, 0.22);
+  --grid-line:     rgba(248, 250, 252, 0.04);
+  --glass-bg:      rgba(15, 23, 42, 0.9);    /* High-contrast dark glass */
+  --border-color:  rgba(248, 250, 252, 0.1);
+  --glow-purple:   rgba(192, 132, 252, 0.2);
+  --glow-coral:    rgba(255, 107, 53, 0.2);
+  --glow-green:    rgba(52, 211, 153, 0.15);
 }
 
 /* ─── Base ────────────────────────────────────────────────────────────────── */

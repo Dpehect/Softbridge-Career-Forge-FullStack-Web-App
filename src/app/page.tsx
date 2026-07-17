@@ -154,17 +154,13 @@ export default function HomePage() {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href="/forge"
-                className="inline-flex h-11 items-center gap-2 rounded-full px-6 text-sm font-bold text-white shadow-lg transition-transform hover:scale-102"
-                style={{
-                  background: "linear-gradient(135deg, #6B21A8, #A855F7)",
-                  boxShadow: "0 4px 12px rgba(107, 33, 168, 0.25)",
-                }}
+                className="inline-flex h-11 items-center gap-2 rounded-full border-2 border-slate-200 px-6 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200"
               >
-                Analiz sayfasına git <ArrowRight className="w-4 h-4" />
+                Analiz çalışma alanına geç <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/resume"
-                className="inline-flex h-11 items-center gap-2 rounded-full px-6 text-sm font-semibold border-2 border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-500 dark:text-slate-200"
+                className="inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
               >
                 Özgeçmişim
               </Link>
