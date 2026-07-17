@@ -119,6 +119,28 @@ export default function ForgePage() {
     }
   }, []);
 
+  // Hooks must run every render — never below an early return
+  const cvText = forgeCvText;
+  const jdText = forgeJdText;
+  const isLoading = busy || aiLoading;
+
+  const cvFeedback = useMemo(
+    () => (forgeParsedCv ? generateCvFeedback(forgeParsedCv, forgeCvText) : null),
+    [forgeParsedCv, forgeCvText]
+  );
+
+  const journeyInsight = useMemo(
+    () =>
+      buildJourneyInsight({
+        cv: forgeParsedCv,
+        goalId: careerGoalId,
+        atsScore: ats?.atsScore ?? forgeAnalysis?.atsScore ?? cvFeedback?.atsScore,
+        feedback: cvFeedback,
+        missingFromMatch: forgeAnalysis?.missingSkills,
+      }),
+    [forgeParsedCv, careerGoalId, ats, forgeAnalysis, cvFeedback]
+  );
+
   if (!mounted) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -127,10 +149,6 @@ export default function ForgePage() {
       </div>
     );
   }
-
-  const cvText = forgeCvText;
-  const jdText = forgeJdText;
-  const isLoading = busy || aiLoading;
 
   const run = async (fn: () => Promise<void> | void) => {
     setBusy(true);
@@ -337,24 +355,6 @@ export default function ForgePage() {
       });
       setPreviewTab("chat");
     });
-
-  // Dynamic values
-  const cvFeedback = useMemo(
-    () => (forgeParsedCv ? generateCvFeedback(forgeParsedCv, forgeCvText) : null),
-    [forgeParsedCv, forgeCvText]
-  );
-
-  const journeyInsight = useMemo(
-    () =>
-      buildJourneyInsight({
-        cv: forgeParsedCv,
-        goalId: careerGoalId,
-        atsScore: ats?.atsScore ?? forgeAnalysis?.atsScore ?? cvFeedback?.atsScore,
-        feedback: cvFeedback,
-        missingFromMatch: forgeAnalysis?.missingSkills,
-      }),
-    [forgeParsedCv, careerGoalId, ats, forgeAnalysis, cvFeedback]
-  );
 
   // Form Editor Actions
   const updateParsedField = (patch: Partial<ParsedCV>) => {
