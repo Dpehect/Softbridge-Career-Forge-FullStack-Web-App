@@ -141,7 +141,7 @@ export function Header() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50">
-        <div className="border-b border-slate-200/70 bg-white/80 backdrop-blur-xl dark:bg-[#0a0612]/92 dark:border-white/5">
+        <div className="border-b border-slate-200/70 bg-white/80 backdrop-blur-xl dark:bg-slate-950/80 dark:border-slate-800/80">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-8 px-4 sm:px-6">
             {/* Logo */}
             <Link
@@ -215,7 +215,7 @@ export function Header() {
                 >
                   <User className="h-4 w-4" />
                   {hasContent && (
-                    <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#10B981] dark:border-[#020617]" />
+                    <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#10B981] dark:border-slate-950" />
                   )}
                 </button>
 
@@ -227,7 +227,7 @@ export function Header() {
                       exit={{ opacity: 0, y: 6, scale: 0.98 }}
                       transition={{ duration: 0.15 }}
                       role="menu"
-                      className="absolute right-0 top-[calc(100%+8px)] z-50 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10 dark:border-white/10 dark:bg-[#12081f]"
+                      className="absolute right-0 top-[calc(100%+8px)] z-50 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900"
                     >
                       <div className="border-b border-slate-100 px-4 py-3 dark:border-white/5">
                         <p className="text-sm font-semibold text-slate-900 dark:text-white">
@@ -335,7 +335,7 @@ export function Header() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden border-b border-slate-200 bg-white/95 backdrop-blur-xl md:hidden dark:border-white/10 dark:bg-[#0a0612]/95"
+              className="overflow-hidden border-b border-slate-200 bg-white/95 backdrop-blur-xl md:hidden dark:border-slate-800 dark:bg-slate-950/95"
             >
               <div className="space-y-1 px-4 py-4">
                 {MAIN_NAV.map((item) => (
@@ -377,7 +377,7 @@ export function Header() {
       </header>
 
       {/* Mobil alt nav — 3 ana odak */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 border-t border-slate-200/80 bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden dark:border-white/10 dark:bg-[#0a0612]/95">
+      <nav className="fixed bottom-0 inset-x-0 z-40 border-t border-slate-200/80 bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden dark:border-slate-800 dark:bg-slate-950/90">
         <div className="flex items-stretch justify-around px-2 py-2">
           {[
             { path: "/forge", label: "Analiz" },
