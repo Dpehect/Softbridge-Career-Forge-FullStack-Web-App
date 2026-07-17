@@ -214,7 +214,7 @@ export default function ResumePage() {
 
   return (
     <div className="px-4 md:px-8 pb-20 pt-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <Badge variant="accent" className="mb-3">
           {t("navResume")}
         </Badge>

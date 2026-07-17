@@ -142,7 +142,7 @@ export function Header() {
     <>
       <header className="fixed top-0 left-0 right-0 z-50">
         <div className="border-b border-slate-200/70 bg-white/80 backdrop-blur-xl dark:bg-[#0a0612]/92 dark:border-white/5">
-          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-8 px-4 sm:px-6">
+          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-8 px-4 sm:px-6">
             {/* Logo */}
             <Link
               href="/"

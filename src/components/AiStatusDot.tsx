@@ -23,16 +23,19 @@ export function AiStatusDot({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50/90 px-2.5 py-1 dark:border-emerald-500/25 dark:bg-emerald-500/10",
+        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold shadow-sm transition-all",
+        warming
+          ? "border-amber-200/80 bg-amber-50/90 text-amber-700 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-300"
+          : "border-emerald-200/80 bg-emerald-50/90 text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300",
         className
       )}
       title={
         warming
           ? "Kariyer asistanı hazırlanıyor…"
-          : "Sistem Hazır · %100 yerel işleme"
+          : "Kariyer Asistanı Aktif · %100 yerel işleme"
       }
       role="status"
-      aria-label="Sistem Hazır"
+      aria-label={warming ? "Asistan Hazırlanıyor" : "Asistan Aktif"}
     >
       <span className="relative flex h-2 w-2 shrink-0">
         <span
@@ -48,15 +51,8 @@ export function AiStatusDot({ className }: { className?: string }) {
           )}
         />
       </span>
-      <span
-        className={cn(
-          "hidden text-[11px] font-semibold tracking-tight sm:inline",
-          warming
-            ? "text-amber-700 dark:text-amber-300"
-            : "text-emerald-800 dark:text-emerald-300"
-        )}
-      >
-        {warming ? "Hazırlanıyor" : "Sistem Hazır"}
+      <span className="hidden sm:inline">
+        {warming ? "Asistan: Hazırlanıyor" : "Asistan: Aktif"}
       </span>
     </div>
   );

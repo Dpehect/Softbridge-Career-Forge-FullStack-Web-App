@@ -121,10 +121,10 @@ export function CvDropZone({
       className={cn(
         "relative flex flex-col items-center gap-4 cursor-pointer rounded-2xl border-2 border-dashed text-center transition-all",
         compact ? "p-10 md:p-12" : "p-12 md:p-16",
-        "bg-white/60 backdrop-blur-sm dark:bg-white/[0.03]",
+        "bg-white border-slate-200/80 shadow-md dark:bg-slate-900 dark:border-slate-800/80",
         dragging
-          ? "border-purple-500 bg-purple-50/90 scale-[1.01] shadow-lg"
-          : "border-slate-300 hover:border-purple-400 hover:bg-purple-50/50 dark:border-slate-600",
+          ? "border-purple-500 bg-purple-50/90 scale-[1.01] shadow-lg dark:bg-purple-950/20 dark:border-purple-400"
+          : "border-slate-300 hover:border-purple-500 hover:bg-purple-50/10 dark:border-slate-700 dark:hover:border-purple-500 dark:hover:bg-purple-500/[0.01]",
         loading && "pointer-events-none opacity-70",
         className
       )}

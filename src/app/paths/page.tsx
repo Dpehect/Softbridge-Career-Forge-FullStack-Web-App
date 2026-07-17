@@ -259,7 +259,7 @@ export default function PathsPage() {
 
   return (
     <div className="px-4 md:px-8 pb-20 pt-6">
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto space-y-8">
 
         {/* Header */}
         <div>

@@ -29,30 +29,6 @@ const fadeUp = (delay = 0) => ({
 const glassCard =
   "rounded-2xl border border-white/10 bg-white/60 backdrop-blur-sm shadow-sm dark:bg-white/5 dark:border-white/10";
 
-const STEPS = [
-  {
-    n: 1,
-    title: "CV Yükle",
-    body: "PDF veya metin olarak özgeçmişinizi ekleyin.",
-    href: "/forge",
-    icon: FileUp,
-  },
-  {
-    n: 2,
-    title: "Analiz Al",
-    body: "ATS puanını ve eksik yetenekleri anında görün.",
-    href: "/forge",
-    icon: Sparkles,
-  },
-  {
-    n: 3,
-    title: "İyileştir",
-    body: "Önerilen yetenekleri ekleyin, ilanlara hazır olun.",
-    href: "/resume",
-    icon: PenLine,
-  },
-] as const;
-
 export default function HomePage() {
   const features = [
     {
@@ -106,7 +82,7 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="max-w-6xl mx-auto relative space-y-20 py-20">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 relative space-y-20 py-20">
           {/* Hero — ne işe yarar? */}
           <motion.div {...fadeUp(0)} className="max-w-3xl space-y-6">
             <motion.div
@@ -151,69 +127,22 @@ export default function HomePage() {
           {/* Primary PLG: drag & drop — first thing users see to act */}
           <motion.div {...fadeUp(0.22)} className="max-w-3xl">
             <CvDropZone redirectTo="/forge" />
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex items-center gap-6 text-sm">
               <Link
                 href="/forge"
-                className="inline-flex h-11 items-center gap-2 rounded-full border-2 border-slate-200 px-6 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200"
+                className="font-bold text-purple-600 dark:text-[#C084FC] hover:underline flex items-center gap-1.5"
               >
                 Analiz çalışma alanına geç <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/resume"
-                className="inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+                className="font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
               >
                 Özgeçmişim
               </Link>
             </div>
           </motion.div>
 
-          {/* Yol haritası — CV Yükle → Analiz Al → İyileştir */}
-          <motion.div {...fadeUp(0.28)} className="space-y-6 py-8">
-            <div className="text-center space-y-2">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-purple-600">
-                Yol haritası
-              </p>
-              <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tighter text-star-white">
-                1. CV Yükle → 2. Analiz Al → 3. İyileştir
-              </h2>
-              <p className="text-sm text-slate-500 max-w-lg mx-auto">
-                “Şimdi ne yapmalıyım?” sorusu kalmaz — adımlar sizi hedefe götürür.
-              </p>
-            </div>
-
-            <div className="relative grid md:grid-cols-3 gap-4">
-              <div
-                className="hidden md:block absolute top-10 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-purple-300 via-purple-400 to-emerald-400 opacity-60"
-                aria-hidden
-              />
-              {STEPS.map((step, idx) => (
-                <Link
-                  key={step.n}
-                  href={step.href}
-                  className={`${glassCard} relative p-6 space-y-3 transition-transform hover:scale-[1.02] group`}
-                >
-                  <div className="relative z-10 flex items-center gap-3">
-                    <div
-                      className="w-12 h-12 rounded-2xl text-white flex items-center justify-center font-extrabold text-lg shadow-sm"
-                      style={{
-                        background: "linear-gradient(135deg, #6B21A8, #A855F7)",
-                      }}
-                    >
-                      {step.n}
-                    </div>
-                    <step.icon className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <h3 className="font-extrabold tracking-tighter text-lg text-star-white">
-                    {step.title}
-                  </h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">{step.body}</p>
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-purple-600">
-                    Bu adıma git <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </motion.div>
 
           {/* Değer önerisi */}
           <motion.div {...fadeUp(0.32)} className="grid grid-cols-1 md:grid-cols-3 gap-4 py-8">
