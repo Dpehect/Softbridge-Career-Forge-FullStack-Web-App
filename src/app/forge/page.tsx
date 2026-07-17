@@ -343,7 +343,7 @@ export default function ForgePage() {
       } catch (e) {
         setModelBanner(null);
         toast.error(
-          "Analiz şu an yapılamıyor. Bağlantını kontrol et veya birkaç saniye sonra tekrar dene."
+          "Yapay zeka motoru şu an meşgul. Lütfen bağlantınızı kontrol edip sayfayı yenileyin."
         );
       }
     });
@@ -620,20 +620,19 @@ export default function ForgePage() {
               
               {/* Tab 1: Drop zone + paste */}
               {editorTab === "raw" && (
-                <div className="space-y-5">
+                <div className="space-y-6">
                   {!forgeParsedCv ? (
                     <>
-                      <div className="text-center space-y-1 pb-1">
-                        <h3 className="font-bold tracking-tight text-base text-star-white">
-                          İlk analizinle kariyerini güçlendir
-                        </h3>
-                        <p className="text-xs text-slate-500">
-                          CV&apos;ni yükle — yapay zeka tarayıcında çalışır, verin sunucuya gitmez.
+                      <div className="rounded-2xl border border-indigo-100 bg-indigo-50/70 px-4 py-3 text-center dark:border-indigo-500/20 dark:bg-indigo-500/10">
+                        <p className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+                          Henüz bir özgeçmiş yüklemedin
+                        </p>
+                        <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                          Başlamak için aşağıdaki kutuya dosyanı bırak. Kariyer asistanı tarayıcında çalışır.
                         </p>
                       </div>
                       <CvDropZone
                         redirectTo={null}
-                        compact
                         onParsed={(_p, _text, fileName) => {
                           setLastCvFileName(fileName);
                           setParseBanner("CV yüklendi. Sağ panelden analiz sonuçlarını inceleyin.");

@@ -174,10 +174,10 @@ export function Header() {
                     key={item.path}
                     href={item.path}
                     className={cn(
-                      "text-sm font-semibold tracking-tight transition-colors",
+                      "text-sm font-medium tracking-tight transition-colors",
                       active
-                        ? "text-indigo-700 dark:text-indigo-400"
-                        : "text-slate-900 hover:text-indigo-700 dark:text-slate-200 dark:hover:text-indigo-300"
+                        ? "text-indigo-600 dark:text-indigo-400"
+                        : "text-slate-800 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400"
                     )}
                   >
                     {item.label}

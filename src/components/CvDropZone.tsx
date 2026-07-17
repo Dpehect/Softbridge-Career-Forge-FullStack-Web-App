@@ -119,12 +119,12 @@ export function CvDropZone({
       }}
       onClick={() => document.getElementById("cv-drop-input-main")?.click()}
       className={cn(
-        "relative cursor-pointer rounded-2xl border-2 border-dashed text-center transition-all",
-        compact ? "p-8 md:p-10" : "p-10 md:p-14",
-        "bg-white/50 backdrop-blur-sm dark:bg-white/[0.03]",
+        "relative flex flex-col items-center gap-4 cursor-pointer rounded-2xl border-2 border-dashed text-center transition-all",
+        compact ? "p-10 md:p-12" : "p-12 md:p-16",
+        "bg-white/60 backdrop-blur-sm dark:bg-white/[0.03]",
         dragging
-          ? "border-indigo-500 bg-indigo-50/80 scale-[1.01] shadow-lg"
-          : "border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/40 dark:border-slate-600",
+          ? "border-indigo-500 bg-indigo-50/90 scale-[1.01] shadow-lg"
+          : "border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/50 dark:border-slate-600",
         loading && "pointer-events-none opacity-70",
         className
       )}
@@ -141,42 +141,32 @@ export function CvDropZone({
         }}
       />
 
-      <div
-        className={cn(
-          "mx-auto mb-4 flex items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-500/30",
-          compact ? "h-12 w-12" : "h-14 w-14"
-        )}
-      >
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-500/30">
         {loading ? (
-          <Loader2 className="h-6 w-6 animate-spin" />
+          <Loader2 className="h-7 w-7 animate-spin" />
         ) : (
-          <FileUp className={compact ? "h-6 w-6" : "h-7 w-7"} />
+          <FileUp className="h-7 w-7" />
         )}
       </div>
 
-      <p
-        className={cn(
-          "font-bold tracking-tight text-star-white",
-          compact ? "text-lg" : "text-xl"
-        )}
-      >
-        {loading ? "Kariyer asistanı hazırlanıyor…" : "PDF / TXT dosyanı buraya sürükle"}
+      <p className="font-bold tracking-tight text-lg md:text-xl text-slate-900 dark:text-white">
+        {loading ? "Kariyer asistanı hazırlanıyor…" : "PDF/TXT dosyanı buraya sürükle"}
       </p>
-      <p className="mt-2 text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+      <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md leading-relaxed">
         {loading
           ? "Metin çıkarılıyor, lütfen bekleyin."
-          : "veya tıklayarak dosya seç. İlk analizinle kariyerini güçlendir."}
+          : "veya tıklayarak dosya seç. Verileriniz cihazınızda kalır."}
       </p>
 
       {!loading && (
-        <span className="mt-5 inline-flex h-11 items-center rounded-full bg-indigo-600 px-6 text-sm font-bold text-white shadow-lg">
-          Dosya seç
+        <span className="inline-flex h-11 items-center rounded-full bg-indigo-600 px-6 text-sm font-bold text-white shadow-lg">
+          Yükle
         </span>
       )}
 
-      <p className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+      <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-400">
         <Lock className="w-3.5 h-3.5" />
-        Verileriniz cihazınızda kalır · sunucuya gitmez
+        🔐 %100 yerel işleme · sunucuya gönderilmez
       </p>
     </div>
   );

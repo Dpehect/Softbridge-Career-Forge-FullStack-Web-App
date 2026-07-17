@@ -39,7 +39,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
             </h2>
             <p className="text-sm text-slate-500 leading-relaxed">
               {this.props.hint ||
-                "Sistemimiz şu an kendini toparlıyor. Lütfen 5 saniye bekleyip sayfayı yenileyin — verileriniz cihazınızda güvende."}
+                "Sistem meşgul, lütfen bağlantınızı kontrol edip tekrar deneyin. Verileriniz cihazınızda güvende."}
             </p>
             <div className="flex flex-wrap justify-center gap-3 pt-2">
               <button

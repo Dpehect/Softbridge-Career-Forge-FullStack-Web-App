@@ -119,31 +119,32 @@ export default function HomePage() {
 
             <motion.h1
               {...fadeUp(0.1)}
-              className="font-display text-4xl sm:text-5xl md:text-[3.1rem] font-extrabold tracking-tighter leading-[1.1] text-balance text-star-white"
+              className="font-display text-4xl sm:text-5xl md:text-[3.1rem] font-bold tracking-tight leading-[1.1] text-balance text-slate-900 dark:text-white"
             >
-              CV&apos;nizi yükleyin, hedefinizi seçin ve{" "}
-              <span className="gradient-text">3 adımda yükselişe geçin</span>
+              Kariyer hedeflerinize uygun,{" "}
+              <span className="gradient-text">ATS uyumlu özgeçmiş analizi</span>
+              {" — "}saniyeler içinde.
             </motion.h1>
 
             <motion.p
               {...fadeUp(0.15)}
-              className="text-base md:text-lg text-slate-500 max-w-2xl leading-relaxed"
+              className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed"
             >
-              Sadece analiz etmiyoruz; sizi hedeflediğiniz pozisyona hazırlıyoruz. Analiz bitiş
-              çizgisi değil — SoftBridge kariyer asistanınızın ilk adımı.
+              CV&apos;nizi yükleyin, hedefinizi seçin ve 3 adımda yükselişe geçin. SoftBridge
+              kariyer asistanı tarayıcınızda çalışır — buluta göndermez.
             </motion.p>
 
-            {/* Güven mesajı — USP */}
+            {/* Güven rozeti — USP */}
             <motion.div
               {...fadeUp(0.18)}
-              className="inline-flex flex-col sm:flex-row sm:items-center gap-2 rounded-2xl border-2 border-emerald-400/60 bg-emerald-50 px-5 py-3.5 text-sm font-bold text-emerald-900 shadow-md dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-200"
+              className="inline-flex flex-col sm:flex-row sm:items-center gap-2 rounded-2xl border-2 border-emerald-500/50 bg-emerald-50 px-5 py-3.5 text-sm font-bold text-emerald-950 shadow-md dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-100"
             >
               <span className="inline-flex items-center gap-2">
                 <Lock className="w-5 h-5 shrink-0" />
-                🚀 Verileriniz Cihazınızda Kalır.
+                🔐 %100 Yerel İşleme
               </span>
               <span className="font-semibold opacity-90">
-                Sunucuya Gönderilmez · %100 Yerel İşleme
+                Verileriniz cihazınızdan asla çıkmaz · sunucuya gönderilmez
               </span>
             </motion.div>
           </motion.div>
