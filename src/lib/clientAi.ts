@@ -221,34 +221,34 @@ export async function analyzeCvJobInBrowser(
   const suggestions: string[] = [];
 
   if (matchScore >= 70) {
-    strengths.push(`Semantic fit is strong (%${matchScore}) for this role description.`);
+    strengths.push(`Bu rol tanımı için anlamsal eşleşme oldukça güçlü (%${matchScore}).`);
   } else if (matchScore >= 45) {
-    strengths.push(`Partial semantic alignment (%${matchScore}) — room to close keyword gaps.`);
+    strengths.push(`Kısmi anlamsal eşleşme (%${matchScore}) — eksik anahtar kelimeleri tamamlayarak skoru artırabilirsiniz.`);
   } else {
-    gaps.push(`Low semantic match (%${matchScore}) — rewrite summary and bullets toward the JD language.`);
+    gaps.push(`Düşük anlamsal eşleşme (%${matchScore}) — özet bölümünü ve deneyim kurşun noktalarını iş tanımındaki dile göre yeniden yazın.`);
   }
 
   if (matchedKeywords.length) {
     strengths.push(
-      `Matched signals: ${matchedKeywords.slice(0, 6).join(", ")}${matchedKeywords.length > 6 ? "…" : ""}.`
+      `Eşleşen sinyaller: ${matchedKeywords.slice(0, 6).join(", ")}${matchedKeywords.length > 6 ? "..." : ""}.`
     );
   }
   if (missingKeywords.length) {
     gaps.push(
-      `Missing high-value terms: ${missingKeywords.slice(0, 8).join(", ")}.`
+      `Eksik yüksek değerli terimler: ${missingKeywords.slice(0, 8).join(", ")}.`
     );
     suggestions.push(
-      `Add these into skills / experience (honestly): ${missingKeywords.slice(0, 5).join(", ")}.`
+      `Bu terimleri (doğruysa) beceriler veya deneyimlerinize ekleyin: ${missingKeywords.slice(0, 5).join(", ")}.`
     );
   }
   suggestions.push(
-    "Rewrite 3 bullets as: action verb + tech + measurable result aligned with the JD."
+    "3 deneyim maddesini şu şekilde yeniden yazın: eylem fiili + kullanılan teknoloji + iş tanımıyla uyumlu ölçülebilir sonuç."
   );
   suggestions.push(
-    "Mirror exact phrases from the job post in your summary (without inventing experience)."
+    "Özet kısmında iş ilanındaki anahtar ifadeleri birebir yansıtmaya çalışın (deneyim uydurmadan)."
   );
 
-  const summary = `Browser AI match %${matchScore} · ATS %${atsScore} · ${missingKeywords.length} keyword gaps. 100% on-device — no server.`;
+  const summary = `Tarayıcı AI eşleşmesi %${matchScore} · ATS %${atsScore} · ${missingKeywords.length} eksik anahtar kelime. %100 cihaz üzerinde çalışır — sunucu bağımsızdır.`;
 
   emit({ status: "ready", message: "Analiz tamamlandı", progress: 1 });
 
