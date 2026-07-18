@@ -217,39 +217,102 @@
   --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.35);
 }
 
-* {
-  border-color: var(--border-default);
-}
+/*
+  CRITICAL: semantic element colors MUST live in @layer base.
+  Unlayered element selectors beat Tailwind utilities (layered) and
+  forced dark ink onto blue/teal/burgundy landing surfaces.
+*/
+@layer base {
+  * {
+    border-color: var(--border-default);
+  }
 
-html {
-  height: 100%;
-  background: var(--bg-canvas);
-  scroll-behavior: smooth;
-  color-scheme: light;
-  color: var(--fg-primary);
-}
+  html {
+    height: 100%;
+    background: var(--bg-canvas);
+    scroll-behavior: smooth;
+    color-scheme: light;
+    color: var(--fg-primary);
+  }
 
-html.dark,
-html[data-theme="dark"] {
-  color-scheme: dark;
-}
+  html.dark,
+  html[data-theme="dark"] {
+    color-scheme: dark;
+  }
 
-body {
-  min-width: 20rem;
-  min-height: 100%;
-  background: var(--bg-canvas);
-  color: var(--fg-primary);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  transition: background-color var(--duration-base) var(--ease-standard), color var(--duration-base) var(--ease-standard);
+  body {
+    min-width: 20rem;
+    min-height: 100%;
+    background: var(--bg-canvas);
+    color: var(--fg-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    transition:
+      background-color var(--duration-base) var(--ease-standard),
+      color var(--duration-base) var(--ease-standard);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--fg-primary);
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+
+  h1 {
+    font-weight: 800;
+  }
+
+  h2 {
+    font-weight: 750;
+    line-height: 1.25;
+  }
+
+  h3 {
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  p {
+    color: var(--fg-secondary);
+    line-height: 1.7;
+  }
+
+  /* Background only — never force selection text color (breaks dark surfaces) */
+  ::selection {
+    background: color-mix(in srgb, var(--action-primary) 25%, transparent);
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  ::-webkit-scrollbar {
+    width: 0.625rem;
+    height: 0.625rem;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border: 0.1875rem solid var(--bg-canvas);
+    border-radius: var(--radius-round);
+  }
 }
 
 /*
-  Light-mode readability guard:
-  Never allow pale slate/gray body text on white surfaces.
-  (Does not touch .text-white on solid brand/gradient buttons.)
+  Light-mode readability for semantic product UI (not landing dark surfaces).
+  Scoped to utility classes only — no element-wide overrides.
 */
 html:not(.dark):not([data-theme="dark"]) {
   color: #0f172a;
@@ -271,7 +334,6 @@ html:not(.dark):not([data-theme="dark"]) .text-zinc-500 {
   color: #334155 !important;
 }
 
-/* Semantic ink utilities — force dark ink in light mode */
 html:not(.dark):not([data-theme="dark"]) .text-ink {
   color: #0f172a !important;
 }
@@ -280,31 +342,6 @@ html:not(.dark):not([data-theme="dark"]) .text-ink-2 {
 }
 html:not(.dark):not([data-theme="dark"]) .text-ink-3 {
   color: #334155 !important;
-}
-
-::selection {
-  background: var(--accent-wash);
-  color: var(--fg-primary);
-}
-
-:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
-::-webkit-scrollbar {
-  width: 0.625rem;
-  height: 0.625rem;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border: 0.1875rem solid var(--bg-canvas);
-  border-radius: var(--radius-round);
 }
 
 @utility text-balance {
@@ -366,25 +403,6 @@ html:not(.dark):not([data-theme="dark"]) .text-ink-3 {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-
-h1, h2, h3, h4 {
-  color: var(--fg-primary);
-  line-height: 1.2;
-  letter-spacing: -0.015em;
-}
-
-h1 { font-weight: 800; }
-h2 { font-weight: 750; line-height: 1.25; }
-h3 { font-weight: 700; line-height: 1.35; }
-p {
-  line-height: 1.7;
-  color: var(--fg-secondary);
-}
-
-/* Headings stay primary (darker); paragraphs use secondary ink */
-h1, h2, h3, h4, h5, h6 {
-  color: var(--fg-primary);
 }
 
 .surface-panel {
@@ -589,18 +607,26 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .landing-shell {
-  width: min(100% - 1.5rem, 72rem);
+  width: min(100% - 1.5rem, 76rem);
+  margin-inline: auto;
+}
+
+.landing-shell-wide {
+  width: min(100% - 1.5rem, 80rem);
   margin-inline: auto;
 }
 
 @media (min-width: 48rem) {
   .landing-shell {
-    width: min(100% - 3rem, 72rem);
+    width: min(100% - 3rem, 76rem);
+  }
+  .landing-shell-wide {
+    width: min(100% - 3rem, 80rem);
   }
 }
 
 .landing-eyebrow {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -609,7 +635,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .landing-h1 {
   color: var(--ld-ink);
-  font-size: clamp(2.25rem, 5.5vw, 4.5rem);
+  font-size: clamp(2.35rem, 5.8vw, 4.6rem);
   font-weight: 700;
   line-height: 1.05;
   letter-spacing: -0.03em;
@@ -618,7 +644,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .landing-h2 {
   color: var(--ld-ink);
-  font-size: clamp(1.75rem, 3.4vw, 2.75rem);
+  font-size: clamp(1.85rem, 3.5vw, 2.85rem);
   font-weight: 700;
   line-height: 1.12;
   letter-spacing: -0.025em;
@@ -627,9 +653,69 @@ h1, h2, h3, h4, h5, h6 {
 
 .landing-lede {
   color: var(--ld-ink-2);
-  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  font-size: clamp(1rem, 1.45vw, 1.125rem);
   line-height: 1.7;
-  max-width: 38rem;
+  max-width: 40rem;
+}
+
+/* Dark solid surfaces: set parent color so unstyled children stay readable */
+.landing-on-dark {
+  color: #faf5ee;
+}
+
+.landing-on-dark h1,
+.landing-on-dark h2,
+.landing-on-dark h3,
+.landing-on-dark h4,
+.landing-on-dark h5,
+.landing-on-dark h6 {
+  color: #faf5ee;
+}
+
+.landing-on-dark p {
+  color: #e8e4f8;
+}
+
+.landing-on-teal {
+  color: #f6f0e8;
+}
+
+.landing-on-teal h1,
+.landing-on-teal h2,
+.landing-on-teal h3,
+.landing-on-teal h4 {
+  color: #f6f0e8;
+}
+
+.landing-on-teal p {
+  color: #cfe8e4;
+}
+
+.landing-on-burgundy {
+  color: #f6f0e8;
+}
+
+.landing-on-burgundy h1,
+.landing-on-burgundy h2,
+.landing-on-burgundy h3,
+.landing-on-burgundy h4,
+.landing-on-burgundy p {
+  color: inherit;
+}
+
+.landing-on-cobalt {
+  color: #faf5ee;
+}
+
+.landing-on-cobalt h1,
+.landing-on-cobalt h2,
+.landing-on-cobalt h3,
+.landing-on-cobalt h4 {
+  color: #faf5ee;
+}
+
+.landing-on-cobalt p {
+  color: #f6f0e8;
 }
 
 .landing-cta-primary {
@@ -700,11 +786,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .landing-tab {
-  min-height: 2.5rem;
+  min-height: 2.75rem;
   border-radius: 999px;
   border: 1px solid transparent;
-  padding: 0.45rem 1rem;
-  font-size: 0.8125rem;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.875rem;
   font-weight: 650;
   color: var(--ld-ink-2);
   background: transparent;

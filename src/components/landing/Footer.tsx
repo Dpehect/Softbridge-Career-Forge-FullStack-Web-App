@@ -35,21 +35,21 @@ const COLS = [
 
 export function LandingFooter() {
   return (
-    <footer className="rounded-t-[1.75rem] bg-[var(--ld-burgundy)] text-[var(--ld-cream)] sm:rounded-t-[2.25rem]">
+    <footer className="landing-on-burgundy rounded-t-[1.75rem] bg-[var(--ld-burgundy)] sm:rounded-t-[2.25rem]">
       <div className="landing-shell py-14 sm:py-16">
         <div className="grid gap-10 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="grid h-8 w-8 place-items-center rounded-md bg-[var(--ld-cream)] text-xs font-bold text-[var(--ld-burgundy)]">
+              <span className="grid h-8 w-8 place-items-center rounded-md bg-[#F6F0E8] text-xs font-bold text-[var(--ld-burgundy)]">
                 CF
               </span>
-              <span className="text-lg font-bold text-[var(--ld-cream)]">CareerForge</span>
+              <span className="text-lg font-bold text-[#F6F0E8]">CareerForge</span>
             </div>
-            <p className="mt-4 max-w-sm text-sm leading-relaxed text-[#e8d9cc]">
+            <p className="mt-4 max-w-sm text-base leading-relaxed text-[#E8D9CC]">
               SoftBridge CareerForge — CV analizi, iş eşleştirme ve mülakat hazırlığını tek
               güvenli çalışma alanında birleştirir.
             </p>
-            <p className="mt-4 text-xs font-semibold leading-relaxed text-[#d4c0b0]">
+            <p className="mt-4 text-sm font-medium leading-relaxed text-[#D9C7B8]">
               Standart analiz tarayıcıda çalışır. Orijinal CV dosyanız siz kaydetmeyi
               seçmedikçe sunucuya yüklenmez. İsteğe bağlı hesap senkronu 256-bit TLS ile
               korunur.
@@ -58,15 +58,15 @@ export function LandingFooter() {
 
           {COLS.map((col) => (
             <div key={col.title}>
-              <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-[#c9a894]">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#D4B6A4]">
                 {col.title}
               </p>
-              <ul className="mt-4 space-y-2.5">
+              <ul className="mt-4 space-y-3">
                 {col.links.map((link) => (
                   <li key={link.href + link.label}>
                     <Link
                       href={link.href}
-                      className="text-sm font-medium text-[var(--ld-cream)] transition hover:text-white"
+                      className="text-base font-medium text-[#F6F0E8] transition hover:text-[#FAF5EE]"
                     >
                       {link.label}
                     </Link>
@@ -77,7 +77,7 @@ export function LandingFooter() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs text-[#d4c0b0] sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12 flex flex-col gap-2 border-t border-white/15 pt-6 text-sm text-[#D9C7B8] sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} SoftBridge Solutions · CareerForge</p>
           <p>Türkçe öncelikli · şeffaf ATS · yerel analiz</p>
         </div>

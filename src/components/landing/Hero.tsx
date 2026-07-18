@@ -101,7 +101,7 @@ export function Hero() {
 
   return (
     <section className="border-b border-[var(--ld-border)] bg-[var(--ld-bg)]">
-      <div className="landing-shell py-14 sm:py-20 lg:py-24">
+      <div className="landing-shell-wide py-12 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-3xl text-center">
           <motion.h1
             className="landing-h1"
@@ -146,19 +146,19 @@ export function Hero() {
               silentSuccess
               onText={handleResumeText}
             />
-            <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--ld-ink-2)]">
-              <Shield className="h-3.5 w-3.5 text-[var(--ld-teal)]" aria-hidden />
+            <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ld-ink-2)]">
+              <Shield className="h-4 w-4 text-[var(--ld-teal)]" aria-hidden />
               Private &amp; Local · veriler cihazınızda kalır
             </p>
           </div>
         </div>
 
-        {/* Product tabs + composition */}
-        <div className="mx-auto mt-12 max-w-4xl sm:mt-16">
+        {/* Product tabs + composition — tighter to copy */}
+        <div className="mx-auto mt-10 max-w-5xl sm:mt-12">
           <div
             role="tablist"
             aria-label="Ürün önizleme"
-            className="mx-auto flex w-fit max-w-full flex-wrap items-center justify-center gap-1 rounded-full border border-[var(--ld-border)] bg-[var(--ld-surface)] p-1"
+            className="mx-auto flex w-fit max-w-full flex-wrap items-center justify-center gap-1 rounded-full border border-[var(--ld-border)] bg-[var(--ld-surface)] p-1.5 shadow-[var(--ld-shadow-sm)]"
           >
             {TABS.map((item, index) => (
               <button
@@ -178,7 +178,7 @@ export function Hero() {
             ))}
           </div>
 
-          <p className="mx-auto mt-4 max-w-xl text-center text-sm font-medium text-[var(--ld-ink-2)]">
+          <p className="mx-auto mt-3 max-w-xl text-center text-base font-medium text-[var(--ld-ink-2)]">
             {active.note}
           </p>
 
@@ -187,7 +187,7 @@ export function Hero() {
             role="tabpanel"
             aria-labelledby={`${tabListId}-${tab}`}
             className={cn(
-              "relative mt-8 min-h-[22rem] rounded-2xl p-4 sm:min-h-[26rem] sm:p-8",
+              "relative mt-5 min-h-[24rem] rounded-2xl border border-[var(--ld-border)] p-4 sm:min-h-[28rem] sm:p-8",
               tab === "ats" && "bg-[var(--ld-mint)]",
               tab === "jobs" && "bg-[#e8ecff]",
               tab === "match" && "bg-[#fff6df]"
@@ -200,13 +200,10 @@ export function Hero() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={reduced ? undefined : { opacity: 0, y: -6 }}
                 transition={{ duration: 0.25 }}
+                className="mx-auto max-w-3xl origin-top sm:scale-[1.04] lg:scale-110"
               >
                 {tab === "ats" && <AtsWorkspaceMockup />}
-                {tab === "jobs" && (
-                  <div className="mx-auto max-w-2xl">
-                    <JobTrackerMockup />
-                  </div>
-                )}
+                {tab === "jobs" && <JobTrackerMockup />}
                 {tab === "match" && (
                   <div className="mx-auto max-w-xl">
                     <MatchInsightsMockup />

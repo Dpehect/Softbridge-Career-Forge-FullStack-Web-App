@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function FinalCta() {
   return (
-    <section className="bg-[var(--ld-cream)] py-20 sm:py-28">
+    <section className="bg-[var(--ld-cream)] py-16 sm:py-24">
       <div className="landing-shell text-center">
         <h2 className="landing-h2 mx-auto max-w-2xl">
           Kariyerinizi bir sonraki seviyeye taşımaya hazır mısınız?
@@ -14,7 +14,10 @@ export function FinalCta() {
           <Link href="/forge" className="landing-cta-primary">
             Ücretsiz Başlayın
           </Link>
-          <Link href="/dashboard" className="landing-cta-secondary">
+          <Link
+            href="/dashboard"
+            className="inline-flex min-h-11 items-center gap-1 text-sm font-bold text-[var(--ld-teal)] hover:underline"
+          >
             Panele git
           </Link>
         </div>

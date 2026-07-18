@@ -5,10 +5,34 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
-  { id: "ats", label: "CV Analizi", href: "/forge", blurb: "Şeffaf ATS skoru ve aksiyon listesi." },
-  { id: "track", label: "İş Takibi", href: "/jobs", blurb: "Başvuru aşamalarını tek panelde yönetin." },
-  { id: "jobs", label: "İş İlanları", href: "/jobs", blurb: "Uyum skoruna göre roller bulun." },
-  { id: "saved", label: "Kaydedilenler", href: "/dashboard", blurb: "Kaydettiğiniz ilanlar ve ilerlemeniz." },
+  {
+    id: "ats",
+    label: "CV Analizi",
+    href: "/forge",
+    blurb: "Şeffaf ATS skoru, kategori dökümü ve aksiyon listesi.",
+    cta: "CV Analizini Aç",
+  },
+  {
+    id: "track",
+    label: "İş Takibi",
+    href: "/jobs",
+    blurb: "Başvuru aşamalarını tek panelde yönetin.",
+    cta: "İş Takibini Aç",
+  },
+  {
+    id: "jobs",
+    label: "İş İlanları",
+    href: "/jobs",
+    blurb: "Uyum skoruna göre roller bulun.",
+    cta: "Uygun Rolleri Gör",
+  },
+  {
+    id: "saved",
+    label: "Kaydedilenler",
+    href: "/dashboard",
+    blurb: "Kaydettiğiniz ilanlar ve ilerlemeniz.",
+    cta: "Kaydedilenleri Gör",
+  },
 ] as const;
 
 export function ProductSwitcher() {
@@ -16,13 +40,13 @@ export function ProductSwitcher() {
   const current = ITEMS.find((i) => i.id === active)!;
 
   return (
-    <section className="border-b border-[var(--ld-border)] bg-[var(--ld-surface)] py-10">
+    <section className="border-b border-[var(--ld-border)] bg-[var(--ld-surface)] py-8 sm:py-10">
       <div className="landing-shell">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-5 rounded-2xl border border-[var(--ld-border)] bg-[var(--ld-bg)] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
           <div
             role="tablist"
             aria-label="Ürün geçişi"
-            className="flex max-w-full gap-1 overflow-x-auto rounded-xl border border-[var(--ld-border)] bg-[var(--ld-bg)] p-1"
+            className="flex max-w-full gap-1 overflow-x-auto pb-1"
           >
             {ITEMS.map((item) => (
               <button
@@ -31,9 +55,9 @@ export function ProductSwitcher() {
                 role="tab"
                 aria-selected={active === item.id}
                 className={cn(
-                  "shrink-0 rounded-lg px-3 py-2 text-xs font-bold transition sm:text-sm",
+                  "shrink-0 rounded-xl px-3.5 py-2.5 text-sm font-bold transition min-h-11",
                   active === item.id
-                    ? "bg-[var(--ld-ink)] text-[var(--ld-offwhite)]"
+                    ? "bg-[var(--ld-ink)] text-[var(--ld-offwhite)] shadow-sm"
                     : "text-[var(--ld-ink-2)] hover:bg-black/5 hover:text-[var(--ld-ink)]"
                 )}
                 onClick={() => setActive(item.id)}
@@ -42,10 +66,13 @@ export function ProductSwitcher() {
               </button>
             ))}
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-sm font-medium text-[var(--ld-ink-2)]">{current.blurb}</p>
-            <Link href={current.href} className="landing-cta-primary !min-h-9 !px-3.5 !text-xs">
-              Aç
+          <div className="flex min-w-0 flex-1 flex-col gap-3 sm:max-w-md sm:items-end sm:text-right">
+            <p className="text-base font-semibold text-[var(--ld-ink)]">{current.blurb}</p>
+            <Link
+              href={current.href}
+              className="inline-flex min-h-11 items-center justify-center rounded-full border-2 border-[var(--ld-teal)] px-4 text-sm font-bold text-[var(--ld-teal)] transition hover:bg-[var(--ld-mint)]"
+            >
+              {current.cta}
             </Link>
           </div>
         </div>

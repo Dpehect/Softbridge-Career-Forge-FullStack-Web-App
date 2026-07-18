@@ -55,7 +55,7 @@ function Dropdown({
     <div ref={ref} className="relative">
       <button
         type="button"
-        className="inline-flex min-h-9 items-center gap-1 rounded-md px-2.5 text-[0.8125rem] font-semibold text-[var(--ld-ink)] hover:bg-black/5"
+        className="inline-flex min-h-10 items-center gap-1 rounded-md px-2.5 text-sm font-semibold text-[var(--ld-ink)] hover:bg-black/5"
         aria-expanded={open}
         aria-controls={id}
         onClick={() => setOpen((v) => !v)}
@@ -126,7 +126,7 @@ export function Navbar() {
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-md px-2.5 py-1.5 text-[0.8125rem] font-semibold text-[var(--ld-ink)] hover:bg-black/5"
+              className="rounded-md px-2.5 py-1.5 text-sm font-semibold text-[var(--ld-ink)] hover:bg-black/5"
             >
               {item.label}
             </Link>
