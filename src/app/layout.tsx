@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { DemoNotice } from "@/components/DemoNotice";
+import { OnboardingModal } from "@/components/OnboardingModal";
 import { WorkspaceSyncProvider } from "@/components/providers/WorkspaceSyncProvider";
 import "./globals.css";
 
@@ -109,11 +110,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="min-h-full flex flex-col bg-background text-ink font-sans">
         <WorkspaceSyncProvider>
           <Header />
-          <div className="flex-1 pt-16 pb-16 md:pt-[6.5rem] md:pb-0">
+          <div className="flex-1 pt-16 pb-20 md:pt-[6.5rem] md:pb-0">
             <DemoNotice />
             {children}
           </div>
           <Footer />
+          <OnboardingModal />
           <Toaster
             theme="system"
             position="bottom-right"

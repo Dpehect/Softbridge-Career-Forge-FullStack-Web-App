@@ -1,25 +1,37 @@
+import { Skeleton } from "@/components/ui/skeleton";
+
 export default function Loading() {
   return (
     <div
-      className="grid min-h-[60vh] place-items-center px-4"
+      className="product-page"
       role="status"
       aria-live="polite"
+      aria-busy="true"
     >
-      <div className="flex flex-col items-center gap-4">
-        <div className="relative">
-          <span className="block h-10 w-10 animate-spin rounded-full border-[3px] border-line-strong border-t-[#3b82f6]" />
-          <span className="absolute inset-0 animate-ping rounded-full bg-sky-400/20" />
+      <span className="sr-only">Loading workspace</span>
+      <div className="space-y-8">
+        <div className="space-y-3">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-10 w-full max-w-md" />
+          <Skeleton className="h-4 w-full max-w-xl" />
         </div>
-        <div className="space-y-2 text-center">
-          <p className="text-sm font-bold text-ink">CareerForge</p>
-          <p className="text-xs text-ink-3">Loading workspace…</p>
+        <div className="grid gap-5 md:grid-cols-3">
+          <Skeleton className="h-36 w-full rounded-2xl" />
+          <Skeleton className="h-36 w-full rounded-2xl" />
+          <Skeleton className="h-36 w-full rounded-2xl" />
         </div>
-        <div className="mt-2 w-48 space-y-2">
-          <div className="h-2 rounded-full skeleton-shimmer" />
-          <div className="h-2 w-2/3 mx-auto rounded-full skeleton-shimmer" />
+        <div className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
+          <div className="space-y-4">
+            <Skeleton className="h-48 w-full rounded-2xl" />
+            <Skeleton className="h-32 w-full rounded-2xl" />
+            <Skeleton className="h-32 w-full rounded-2xl" />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-56 w-full rounded-2xl" />
+            <Skeleton className="h-40 w-full rounded-2xl" />
+          </div>
         </div>
       </div>
-      <span className="sr-only">Loading workspace</span>
     </div>
   );
 }

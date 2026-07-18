@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { resumeToParsed, useCareerStore } from "@/store/useCareerStore";
 import { exportCvAsPdf } from "@/lib/forge";
 import { AuthControl } from "@/components/auth/AuthControl";
+import { PrivateLocalBadge } from "@/components/PrivateLocalBadge";
 import { useMessages } from "@/i18n/useMessages";
 
 const NAV_ITEMS = [
@@ -177,6 +178,9 @@ export function Header() {
             </span>
             <span className="text-[0.9375rem] font-semibold text-ink">CareerForge</span>
           </Link>
+          <div className="hidden md:block">
+            <PrivateLocalBadge compact />
+          </div>
 
           <nav className="mx-auto hidden items-stretch self-stretch xl:flex" aria-label={messages.nav.primary}>
             {NAV_ITEMS.map((item) => {
@@ -365,29 +369,47 @@ export function Header() {
         </div>
       )}
 
-      {/* Mobile bottom navigation — exactly 4 primary items: Home, Resume, Jobs, More */}
+      {/* Mobile bottom nav: Home · Analiz (primary) · CV · More */}
       <nav
         className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] xl:hidden"
         aria-label={messages.nav.quick}
       >
-        <div className="grid h-16 grid-cols-4 px-1">
+        <div className="grid h-[4.25rem] grid-cols-4 items-end px-1">
           <Link
             href="/dashboard"
             className={cn(
-              "flex min-w-0 flex-col items-center justify-center gap-1 text-[0.625rem] font-medium transition-colors min-h-[44px]",
-              pathname === "/dashboard" ? "text-brand-strong" : "text-ink-3 hover:text-ink-2"
+              "flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 text-[0.625rem] font-semibold transition-colors",
+              pathname === "/dashboard" ? "text-brand-strong" : "text-ink-3 hover:text-ink"
             )}
             aria-current={pathname === "/dashboard" ? "page" : undefined}
           >
             <Home className="h-5 w-5" />
-            <span className="truncate">{locale === "tr" ? "Ana Sayfa" : "Home"}</span>
+            <span className="truncate">{locale === "tr" ? "Panel" : "Home"}</span>
+          </Link>
+
+          <Link
+            href="/forge"
+            className="relative -top-3 flex min-w-0 flex-col items-center justify-center"
+            aria-current={pathname === "/forge" || pathname.startsWith("/forge/") ? "page" : undefined}
+          >
+            <span
+              className={cn(
+                "flex h-14 w-14 items-center justify-center rounded-full bg-brand text-[var(--action-primary-ink)] shadow-lg shadow-blue-500/30 ring-4 ring-surface transition-transform active:scale-95",
+                (pathname === "/forge" || pathname.startsWith("/forge/")) && "ring-brand/20"
+              )}
+            >
+              <ScanLine className="h-6 w-6" />
+            </span>
+            <span className="mt-0.5 text-[0.625rem] font-bold text-brand-strong">
+              {locale === "tr" ? "Analiz Et" : "Analyze"}
+            </span>
           </Link>
 
           <Link
             href="/resume"
             className={cn(
-              "flex min-w-0 flex-col items-center justify-center gap-1 text-[0.625rem] font-medium transition-colors min-h-[44px]",
-              pathname === "/resume" ? "text-brand-strong" : "text-ink-3 hover:text-ink-2"
+              "flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 text-[0.625rem] font-semibold transition-colors",
+              pathname === "/resume" ? "text-brand-strong" : "text-ink-3 hover:text-ink"
             )}
             aria-current={pathname === "/resume" ? "page" : undefined}
           >
@@ -395,30 +417,18 @@ export function Header() {
             <span className="truncate">{locale === "tr" ? "CV" : "Resume"}</span>
           </Link>
 
-          <Link
-            href="/jobs"
-            className={cn(
-              "flex min-w-0 flex-col items-center justify-center gap-1 text-[0.625rem] font-medium transition-colors min-h-[44px]",
-              pathname === "/jobs" ? "text-brand-strong" : "text-ink-3 hover:text-ink-2"
-            )}
-            aria-current={pathname === "/jobs" ? "page" : undefined}
-          >
-            <BriefcaseBusiness className="h-5 w-5" />
-            <span className="truncate">{locale === "tr" ? "İşler" : "Jobs"}</span>
-          </Link>
-
           <button
             type="button"
             onClick={() => setMoreOpen(true)}
             className={cn(
-              "flex min-w-0 flex-col items-center justify-center gap-1 text-[0.625rem] font-medium transition-colors min-h-[44px]",
-              moreOpen ? "text-brand-strong" : "text-ink-3 hover:text-ink-2"
+              "flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 text-[0.625rem] font-semibold transition-colors",
+              moreOpen ? "text-brand-strong" : "text-ink-3 hover:text-ink"
             )}
             aria-expanded={moreOpen}
             aria-haspopup="true"
           >
             <Menu className="h-5 w-5" />
-            <span className="truncate">{locale === "tr" ? "Daha Fazla" : "More"}</span>
+            <span className="truncate">{locale === "tr" ? "Menü" : "Menu"}</span>
           </button>
         </div>
       </nav>

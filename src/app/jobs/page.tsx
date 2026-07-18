@@ -13,6 +13,7 @@ import { useHydrated } from "@/hooks/useHydrated";
 import { useMessages } from "@/i18n/useMessages";
 import { getLocalizedCompany, getLocalizedJobs } from "@/i18n/content";
 import { AnimatedNumber } from "@/motion/AnimatedNumber";
+import { NextStepCta } from "@/components/NextStepCta";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -396,6 +397,24 @@ export default function JobsPage() {
         )}
       </header>
       {renderContent()}
+      {mounted ? (
+        <NextStepCta
+          title={
+            locale === "tr"
+              ? "Bir ilan seçtin mi? CV’ni o role göre güçlendir."
+              : "Picked a role? Tailor your resume next."
+          }
+          body={
+            locale === "tr"
+              ? "Eksik becerileri özgeçmişe ekle, sonra mülakat koçunda prova yap."
+              : "Add missing skills to your resume, then rehearse with the coach."
+          }
+          href="/resume"
+          actionLabel={locale === "tr" ? "CV’yi düzenle" : "Edit resume"}
+          secondaryHref="/coach"
+          secondaryLabel={locale === "tr" ? "Mülakat koçu" : "Interview coach"}
+        />
+      ) : null}
     </main>
   );
 }

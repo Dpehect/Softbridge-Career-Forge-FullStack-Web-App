@@ -59,53 +59,54 @@
 :root {
   color-scheme: light;
 
-  --bg-canvas: #f6f3ed;
-  --bg-surface: #fbf9f5;
-  --bg-surface-subtle: #eee9e1;
-  --bg-surface-strong: #e4ded4;
-  --fg-primary: #182033;
-  --fg-secondary: #3e4a5f;
-  --fg-tertiary: #667085;
-  --border-default: #d8d2c8;
-  --border-strong: #aaa397;
+  /* WCAG-oriented slate system: bg white/near-white, text gray-900 */
+  --bg-canvas: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-surface-subtle: #f8fafc; /* slate-50 */
+  --bg-surface-strong: #f1f5f9; /* slate-100 */
+  --fg-primary: #111827; /* gray-900 — ≥4.5:1 on white */
+  --fg-secondary: #334155; /* slate-700 */
+  --fg-tertiary: #475569; /* slate-600 — readable muted */
+  --border-default: #e2e8f0; /* slate-200 */
+  --border-strong: #94a3b8; /* slate-400 */
 
-  --text-on-light-primary: #182033;
-  --text-on-light-secondary: #3e4a5f;
-  --text-on-light-muted: #667085;
-  --text-on-dark-primary: #d8dee9;
-  --text-on-dark-secondary: #bcc5d3;
-  --text-on-dark-muted: #8e99aa;
-  --text-on-accent-primary: #eef2f4;
-  --text-on-accent-secondary: #d5e0e4;
+  --text-on-light-primary: #111827;
+  --text-on-light-secondary: #334155;
+  --text-on-light-muted: #475569;
+  --text-on-dark-primary: #f9fafb;
+  --text-on-dark-secondary: #e5e7eb;
+  --text-on-dark-muted: #d1d5db;
+  --text-on-accent-primary: #ffffff;
+  --text-on-accent-secondary: #eff6ff;
 
-  --action-primary: #356a78;
-  --action-primary-hover: #28535f;
-  --action-primary-ink: #eef2f4;
-  --action-secondary: #6f5c8f;
-  --status-info: #496c97;
-  --status-positive: #3f7658;
-  --status-caution: #a76d2a;
-  --status-negative: #a84c4c;
+  --action-primary: #2563eb; /* blue-600 high contrast CTA */
+  --action-primary-hover: #1d4ed8; /* blue-700 */
+  --action-primary-ink: #ffffff;
+  --action-secondary: #7c3aed; /* violet-600 */
+  --status-info: #1d4ed8;
+  --status-positive: #047857; /* emerald-700 */
+  --status-caution: #b45309; /* amber-700 */
+  --status-negative: #b91c1c; /* red-700 */
 
-  --accent-wash: #dce8eb;
-  --signal-wash: #e8e1ef;
-  --info-wash: #e1e8f0;
-  --positive-wash: #dee9e1;
-  --caution-wash: #f1e7d8;
-  --negative-wash: #f0dede;
+  --accent-wash: #eff6ff;
+  --signal-wash: #f5f3ff;
+  --info-wash: #eff6ff;
+  --positive-wash: #ecfdf5;
+  --caution-wash: #fffbeb;
+  --negative-wash: #fef2f2;
 
-  --paper-bg: #fbf9f5;
-  --paper-ink: #182033;
-  --paper-copy: #3e4a5f;
-  --paper-muted: #667085;
-  --paper-line: #d8d2c8;
-  --paper-accent: #356a78;
-  --paper-accent-strong: #28535f;
-  --paper-accent-wash: #dce8eb;
-  --paper-info: #496c97;
-  --paper-info-wash: #e1e8f0;
-  --paper-signal: #6f5c8f;
-  --paper-signal-wash: #e8e1ef;
+  --paper-bg: #ffffff;
+  --paper-ink: #111827;
+  --paper-copy: #334155;
+  --paper-muted: #475569;
+  --paper-line: #e2e8f0;
+  --paper-accent: #2563eb;
+  --paper-accent-strong: #1d4ed8;
+  --paper-accent-wash: #eff6ff;
+  --paper-info: #1d4ed8;
+  --paper-info-wash: #eff6ff;
+  --paper-signal: #7c3aed;
+  --paper-signal-wash: #f5f3ff;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -163,36 +164,50 @@
 .dark {
   color-scheme: dark;
 
-  --bg-canvas: #111722;
-  --bg-surface: #171f2b;
-  --bg-surface-subtle: #1d2734;
-  --bg-surface-strong: #253140;
-  --fg-primary: #d8dee9;
-  --fg-secondary: #bcc5d3;
-  --fg-tertiary: #8e99aa;
-  --border-default: #2c3745;
-  --border-strong: #4a586a;
+  /* gray-950 canvas, gray-50 primary text */
+  --bg-canvas: #030712;
+  --bg-surface: #0f172a; /* slate-900 */
+  --bg-surface-subtle: #1e293b; /* slate-800 */
+  --bg-surface-strong: #334155; /* slate-700 */
+  --fg-primary: #f9fafb; /* gray-50 */
+  --fg-secondary: #e5e7eb; /* gray-200 */
+  --fg-tertiary: #cbd5e1; /* slate-300 */
+  --border-default: #334155;
+  --border-strong: #64748b;
 
-  --action-primary: #6fa5b5;
-  --action-primary-hover: #87b7c4;
-  --action-primary-ink: #111722;
-  --action-secondary: #9986b8;
-  --status-info: #83a3cf;
-  --status-positive: #6c9a7d;
-  --status-caution: #c28b4b;
-  --status-negative: #c06b6b;
+  --action-primary: #3b82f6; /* blue-500 */
+  --action-primary-hover: #60a5fa; /* blue-400 */
+  --action-primary-ink: #030712;
+  --action-secondary: #a78bfa;
+  --status-info: #93c5fd;
+  --status-positive: #34d399;
+  --status-caution: #fbbf24;
+  --status-negative: #f87171;
 
-  --accent-wash: #233947;
-  --signal-wash: #342f46;
-  --info-wash: #253449;
-  --positive-wash: #243b31;
-  --caution-wash: #403321;
-  --negative-wash: #42292e;
+  --accent-wash: #1e3a5f;
+  --signal-wash: #2e1065;
+  --info-wash: #1e3a5f;
+  --positive-wash: #064e3b;
+  --caution-wash: #78350f;
+  --negative-wash: #7f1d1d;
 
-  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.24);
-  --elevation-2: 0 14px 36px rgba(0, 0, 0, 0.27);
-  --elevation-3: 0 28px 70px rgba(0, 0, 0, 0.36);
-  --focus-ring: 0 0 0 3px rgba(111, 165, 181, 0.28);
+  --paper-bg: #0f172a;
+  --paper-ink: #f9fafb;
+  --paper-copy: #e5e7eb;
+  --paper-muted: #cbd5e1;
+  --paper-line: #334155;
+  --paper-accent: #3b82f6;
+  --paper-accent-strong: #60a5fa;
+  --paper-accent-wash: #1e3a5f;
+  --paper-info: #93c5fd;
+  --paper-info-wash: #1e3a5f;
+  --paper-signal: #a78bfa;
+  --paper-signal-wash: #2e1065;
+
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --elevation-2: 0 14px 36px rgba(0, 0, 0, 0.4);
+  --elevation-3: 0 28px 70px rgba(0, 0, 0, 0.5);
+  --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.35);
 }
 
 * {
@@ -250,9 +265,9 @@ body {
 }
 
 .product-page {
-  width: min(100% - 2rem, 80rem);
+  width: min(100% - 2.5rem, 80rem);
   margin-inline: auto;
-  padding-block: var(--space-8) var(--space-20);
+  padding-block: var(--space-10) var(--space-20);
 }
 
 .page-kicker {
@@ -261,54 +276,97 @@ body {
   gap: var(--space-2);
   color: var(--action-primary);
   font-size: 0.75rem;
-  font-weight: 650;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .page-title {
-  max-width: 18ch;
+  max-width: 20ch;
   color: var(--fg-primary);
-  font-size: clamp(2rem, 5vw, 4.5rem);
-  font-weight: 620;
-  line-height: 0.98;
-  letter-spacing: 0;
+  font-size: clamp(2.25rem, 5.5vw, 4.75rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
 
 .page-title-compact {
   color: var(--fg-primary);
-  font-size: clamp(1.75rem, 3.2vw, 3rem);
-  font-weight: 620;
-  line-height: 1.03;
-  letter-spacing: 0;
+  font-size: clamp(1.875rem, 3.4vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
 }
 
 .page-lede {
-  max-width: 43rem;
+  max-width: 42rem;
   color: var(--fg-secondary);
-  font-size: clamp(0.95rem, 1.4vw, 1.125rem);
-  line-height: 1.65;
+  font-size: clamp(1rem, 1.5vw, 1.125rem);
+  line-height: 1.75;
+  font-weight: 450;
 }
 
 .section-label {
   color: var(--fg-tertiary);
   font-family: var(--font-mono);
   font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+
+h1, h2, h3, h4 {
+  color: var(--fg-primary);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+h1 { font-weight: 800; }
+h2 { font-weight: 750; line-height: 1.25; }
+h3 { font-weight: 700; line-height: 1.35; }
+p { line-height: 1.7; }
 
 .surface-panel {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-panel);
+  border-radius: 0.875rem;
   box-shadow: var(--elevation-1);
 }
 
 .surface-subtle {
   background: var(--bg-surface-subtle);
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-panel);
+  border-radius: 0.875rem;
+}
+
+/* Privacy / local AI badge */
+.privacy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--status-positive) 28%, var(--border-default));
+  background: var(--positive-wash);
+  color: var(--status-positive);
+  padding: 0.25rem 0.65rem;
+  font-size: 0.625rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.next-step-bar {
+  margin-top: var(--space-12);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border-radius: 1rem;
+  border: 1px solid var(--border-default);
+  background: linear-gradient(135deg, var(--accent-wash), var(--signal-wash));
+  padding: var(--space-5) var(--space-6);
 }
 
 .metric-number {
@@ -354,8 +412,9 @@ body {
 
 @media (min-width: 48rem) {
   .product-page {
-    width: min(100% - 4rem, 80rem);
-    padding-block-start: var(--space-12);
+    width: min(100% - 5rem, 80rem);
+    padding-block-start: var(--space-14, 3.5rem);
+    padding-block-end: var(--space-24, 6rem);
   }
 }
 

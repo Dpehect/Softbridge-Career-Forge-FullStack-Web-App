@@ -254,25 +254,23 @@ export function HomeHero() {
             initial={prefersReduced ? false : { opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.05 }}
-            className="text-balance text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl md:text-6xl lg:text-[4.1rem] lg:leading-[1.02] dark:text-white"
+            className="text-balance text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl md:text-5xl lg:text-[3.35rem] lg:leading-[1.12] dark:text-white"
           >
             {isTr ? (
               <>
-                Kariyerini{" "}
-                <span className="relative inline-block">
-                  <span className="bg-gradient-to-r from-[#3b82f6] via-violet-500 to-orange-500 bg-clip-text text-transparent">
-                    Forge
-                  </span>
-                  <span className="absolute -bottom-1 left-0 h-1 w-full rounded-full bg-gradient-to-r from-[#3b82f6]/40 via-violet-400/40 to-orange-400/40" />
+                CV’ni{" "}
+                <span className="bg-gradient-to-r from-[#2563eb] via-violet-600 to-orange-500 bg-clip-text text-transparent">
+                  ATS ile uyumlu
                 </span>{" "}
-                Et ✨
+                hale getir, mülakatlara hazırlan.
               </>
             ) : (
               <>
-                Forge your career{" "}
-                <span className="bg-gradient-to-r from-[#3b82f6] via-violet-500 to-orange-500 bg-clip-text text-transparent">
-                  ✨
+                Make your resume{" "}
+                <span className="bg-gradient-to-r from-[#2563eb] via-violet-600 to-orange-500 bg-clip-text text-transparent">
+                  ATS-ready
                 </span>
+                , then prepare for interviews.
               </>
             )}
           </motion.h1>
@@ -281,11 +279,11 @@ export function HomeHero() {
             initial={prefersReduced ? false : { opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.12 }}
-            className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg dark:text-slate-300"
+            className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-700 sm:text-lg dark:text-slate-200"
           >
             {isTr
-              ? "CV’ni güçlendir, doğru ilanlarla eşleş, mülakata hazırlan — hepsi tarayıcında, güvenli ve motive edici bir akışla."
-              : "Strengthen your CV, match the right roles, prep for interviews — all in your browser, safely and with momentum."}
+              ? "Şeffaf ATS skoru, aksiyon alınabilir öneriler ve mülakat koçu — analiz tarayıcında çalışır, verilerin cihazından çıkmaz."
+              : "Transparent ATS scoring, actionable fixes, and interview prep — analysis runs in your browser so data stays on your device."}
           </motion.p>
 
           <motion.div
@@ -300,12 +298,14 @@ export function HomeHero() {
             >
               <Link
                 href="/forge"
-                className="cta-glow group relative inline-flex min-h-12 items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-[#3b82f6] via-violet-500 to-orange-500 px-8 text-sm font-bold text-white"
+                className="cta-glow group relative inline-flex min-h-12 items-center gap-2 overflow-hidden rounded-full bg-[#2563eb] px-9 py-3.5 text-base font-extrabold text-white shadow-xl shadow-blue-500/35 ring-4 ring-blue-500/15"
               >
-                <span className="absolute inset-0 bg-white/0 transition-colors group-hover:bg-white/15" />
-                <Zap className="relative h-4 w-4" />
-                <span className="relative">{isTr ? "Hemen Başla" : "Start now"}</span>
-                <ArrowRight className="relative h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                <span className="absolute inset-0 bg-gradient-to-r from-violet-600/0 via-violet-600/30 to-orange-500/40 opacity-0 transition-opacity group-hover:opacity-100" />
+                <Zap className="relative h-5 w-5" />
+                <span className="relative">
+                  {isTr ? "Ücretsiz ATS Analizi Yap" : "Run free ATS analysis"}
+                </span>
+                <ArrowRight className="relative h-5 w-5 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </motion.div>
 
@@ -316,7 +316,7 @@ export function HomeHero() {
               <button
                 type="button"
                 onClick={openDemo}
-                className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-slate-200/90 bg-white/90 px-8 text-sm font-bold text-slate-800 shadow-md backdrop-blur-sm transition-all hover:border-violet-300 hover:shadow-lg hover:shadow-violet-200/40 dark:border-white/15 dark:bg-white/10 dark:text-white dark:hover:border-violet-400"
+                className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-slate-300 bg-white px-7 text-sm font-bold text-slate-900 shadow-md transition-all hover:border-blue-400 hover:shadow-lg dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:border-blue-400"
               >
                 {isTr ? "Demo’yu Dene" : "Try the demo"}
                 <ArrowRight className="h-4 w-4" />
@@ -328,21 +328,28 @@ export function HomeHero() {
             initial={prefersReduced ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.32 }}
-            className="mt-6 flex flex-wrap items-center justify-center gap-3"
+            className="mt-6 flex flex-col items-center gap-3"
           >
-            <FilePickButton
-              label={isTr ? "CV yükle" : "Upload CV"}
-              variant="outline"
-              size="sm"
-              silentSuccess
-              onText={handleResumeText}
-            />
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-              <Shield className="h-3.5 w-3.5" />
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <FilePickButton
+                label={isTr ? "CV yükle" : "Upload CV"}
+                variant="outline"
+                size="sm"
+                silentSuccess
+                onText={handleResumeText}
+              />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">
+                <Shield className="h-3.5 w-3.5" />
+                {isTr
+                  ? "Private & Local · ağ çıkışı yok"
+                  : "Private & Local · no network upload"}
+              </span>
+            </div>
+            <p className="max-w-md text-center text-[11px] font-medium leading-relaxed text-slate-600 dark:text-slate-400">
               {isTr
-                ? "Verilerin cihazında · %100 yerel AI"
-                : "On-device data · 100% local AI"}
-            </span>
+                ? "Tarayıcıyı kapatsan bile verilerin Local Storage’da kalır. Giriş yapmadan da çalışır."
+                : "Your workspace persists in Local Storage even after you close the browser. No login required."}
+            </p>
           </motion.div>
 
           {/* Progress tease card with parallax */}

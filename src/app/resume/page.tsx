@@ -57,6 +57,7 @@ import { buildActionableRecommendations, type ActionableRecommendation, type Rec
 import { AtsScoreBreakdown } from "@/components/AtsScoreBreakdown";
 import { ActionableRecommendations } from "@/components/ActionableRecommendations";
 import { CloudSyncStatus } from "@/components/sync/CloudSyncStatus";
+import { NextStepCta } from "@/components/NextStepCta";
 import type { CvBackup } from "@/lib/forge/types";
 
 type EditorTab = "profile" | "experience" | "skills" | "credentials" | "sections" | "styling";
@@ -1154,6 +1155,20 @@ export default function ResumePage() {
       </header>
 
       {renderContent()}
+      {mounted && hasContent ? (
+        <NextStepCta
+          title={isTr ? "CV hazırsa iş ilanlarıyla eşleştir." : "Resume ready? Match it to open roles."}
+          body={
+            isTr
+              ? "Uyum skorunu gör, eksik becerileri tamamla, sonra mülakat koçuna geç."
+              : "See match scores, close skill gaps, then move to interview prep."
+          }
+          href="/jobs"
+          actionLabel={isTr ? "İş ilanlarına git" : "Browse jobs"}
+          secondaryHref="/coach"
+          secondaryLabel={isTr ? "Mülakat koçu" : "Interview coach"}
+        />
+      ) : null}
     </main>
   );
 }

@@ -27,6 +27,7 @@ import { getLocalizedCompany, getLocalizedJobs, getLocalizedPaths } from "@/i18n
 import { calculateAtsScore } from "@/features/analysis/atsScore";
 import { AtsScoreBreakdown } from "@/components/AtsScoreBreakdown";
 import { CloudSyncStatus } from "@/components/sync/CloudSyncStatus";
+import { NextStepCta } from "@/components/NextStepCta";
 import { AnimatedNumber } from "@/motion/AnimatedNumber";
 import { cn } from "@/lib/utils";
 
@@ -581,6 +582,20 @@ export default function DashboardPage() {
         )}
       </header>
       {renderContent()}
+      {mounted && hasResume ? (
+        <NextStepCta
+          title={isTr ? "Analizi bitirdin mi? Mülakat koçuna geç." : "Analysis done? Move to interview prep."}
+          body={
+            isTr
+              ? "ATS skoru ve önerilerden sonra STAR cevaplarını pratik et."
+              : "After ATS and recommendations, rehearse STAR answers."
+          }
+          href="/coach"
+          actionLabel={isTr ? "Mülakat Koçuna Git" : "Open Interview Coach"}
+          secondaryHref="/jobs"
+          secondaryLabel={isTr ? "İş ilanları" : "Browse jobs"}
+        />
+      ) : null}
     </main>
   );
 }

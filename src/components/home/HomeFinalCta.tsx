@@ -14,8 +14,7 @@ import { FilePickButton } from "@/components/FilePickButton";
 import { useReducedMotionPreference } from "@/motion/useReducedMotionPreference";
 
 export function HomeFinalCta() {
-  const { locale, messages, page } = useMessages();
-  const copy = page.home;
+  const { locale, messages } = useMessages();
   const router = useRouter();
   const prefersReduced = useReducedMotionPreference();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -103,13 +102,14 @@ export function HomeFinalCta() {
           </motion.div>
 
           <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
-            {copy.ctaTitle ||
-              (isTr ? "Hazır mısın? Haydi başlayalım 🚀" : "Ready? Let's go 🚀")}
-          </h2>
-          <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-600 dark:text-slate-300">
             {isTr
-              ? "CV yükle, analiz al, iyileştir — hepsi tarayıcında, güvenli ve keyifli."
-              : "Upload, analyze, improve — all in your browser, safely and enjoyably."}
+              ? "CV’ni güçlendir, bir sonraki mülakata hazır ol"
+              : "Strengthen your resume. Walk into the next interview ready."}
+          </h2>
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+            {isTr
+              ? "ATS skoru, somut düzeltmeler ve mülakat koçu — verilerin cihazında kalır."
+              : "ATS score, concrete fixes, and interview coach — data stays on your device."}
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
@@ -119,10 +119,10 @@ export function HomeFinalCta() {
             >
               <Link
                 href="/forge"
-                className="cta-glow inline-flex min-h-12 items-center gap-2 rounded-full bg-gradient-to-r from-[#3b82f6] via-violet-500 to-orange-500 px-8 text-sm font-bold text-white"
+                className="cta-glow inline-flex min-h-12 items-center gap-2 rounded-full bg-[#2563eb] px-8 text-sm font-extrabold text-white shadow-lg shadow-blue-500/30"
               >
                 <Sparkles className="h-4 w-4" />
-                {isTr ? "Hemen Başla" : "Start now"}
+                {isTr ? "Ücretsiz ATS Analizi Yap" : "Run free ATS analysis"}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </motion.div>

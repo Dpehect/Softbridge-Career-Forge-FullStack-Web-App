@@ -18,65 +18,65 @@ export function PrivacySection() {
   const itemVariants = prefersReducedMotion ? { hidden: { opacity: 0 }, visible: { opacity: 1 } } : fadeUp;
 
   return (
-    <section className="py-20 bg-[var(--bg-canvas)]">
-      <div className="max-w-[80rem] mx-auto px-4 sm:px-8">
+    <section className="bg-[var(--bg-canvas)] py-24">
+      <div className="mx-auto max-w-[80rem] px-4 sm:px-8">
         
-        <div className="text-center max-w-2xl mx-auto mb-12">
+        <div className="mx-auto mb-14 max-w-2xl text-center">
           <Reveal variants={itemVariants}>
-            <h2 className="text-3xl font-semibold text-[var(--fg-primary)] tracking-tight">
+            <h2 className="text-3xl font-extrabold tracking-tight text-[var(--fg-primary)] sm:text-4xl">
               {copy.privacySectionTitle}
             </h2>
           </Reveal>
           <Reveal variants={itemVariants} delay={0.1}>
-            <p className="text-base text-[var(--fg-secondary)] mt-4">
+            <p className="mt-5 text-base leading-relaxed text-[var(--fg-secondary)]">
               {copy.privacySectionSub}
             </p>
           </Reveal>
         </div>
 
         <motion.div 
-          className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-4xl mx-auto"
+          className="mx-auto grid max-w-4xl grid-cols-1 gap-5 sm:grid-cols-2"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
         >
-          <motion.div variants={itemVariants} className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-5 flex flex-col">
-            <Cpu className="w-6 h-6 text-[var(--action-primary)] mb-3" />
-            <h3 className="text-sm font-semibold text-[var(--fg-primary)] mt-3">
+          <motion.div variants={itemVariants} className="premium-card flex flex-col p-6">
+            <Cpu className="mb-3 h-6 w-6 text-[var(--action-primary)]" />
+            <h3 className="mt-2 text-sm font-bold text-[var(--fg-primary)]">
               {copy.privacyLocal}
             </h3>
-            <p className="text-xs text-[var(--fg-secondary)] leading-5 mt-1.5">
+            <p className="mt-2 text-sm leading-relaxed text-[var(--fg-secondary)]">
               {copy.privacyLocalBody}
             </p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-5 flex flex-col">
-            <CloudUpload className="w-6 h-6 text-[var(--action-primary)] mb-3" />
-            <h3 className="text-sm font-semibold text-[var(--fg-primary)] mt-3">
+          <motion.div variants={itemVariants} className="premium-card flex flex-col p-6">
+            <CloudUpload className="mb-3 h-6 w-6 text-[var(--action-primary)]" />
+            <h3 className="mt-2 text-sm font-bold text-[var(--fg-primary)]">
               {copy.privacySync}
             </h3>
-            <p className="text-xs text-[var(--fg-secondary)] leading-5 mt-1.5">
+            <p className="mt-2 text-sm leading-relaxed text-[var(--fg-secondary)]">
               {copy.privacySyncBody}
             </p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-5 flex flex-col">
-            <FileX2 className="w-6 h-6 text-[var(--action-primary)] mb-3" />
-            <h3 className="text-sm font-semibold text-[var(--fg-primary)] mt-3">
+          <motion.div variants={itemVariants} className="premium-card flex flex-col p-6">
+            <FileX2 className="mb-3 h-6 w-6 text-[var(--action-primary)]" />
+            <h3 className="mt-2 text-sm font-bold text-[var(--fg-primary)]">
               {copy.privacyFile}
             </h3>
-            <p className="text-xs text-[var(--fg-secondary)] leading-5 mt-1.5">
+            <p className="mt-2 text-sm leading-relaxed text-[var(--fg-secondary)]">
               {copy.privacyFileBody}
             </p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-5 flex flex-col">
-            <Key className="w-6 h-6 text-[var(--action-primary)] mb-3" />
-            <h3 className="text-sm font-semibold text-[var(--fg-primary)] mt-3">
+          <motion.div variants={itemVariants} className="premium-card flex flex-col p-6">
+            <Key className="mb-3 h-6 w-6 text-[var(--action-primary)]" />
+            <h3 className="mt-2 text-sm font-bold text-[var(--fg-primary)]">
               {copy.privacyGoogle}
             </h3>
-            <p className="text-xs text-[var(--fg-secondary)] leading-5 mt-1.5">
+            <p className="mt-2 text-sm leading-relaxed text-[var(--fg-secondary)]">
               {copy.privacyGoogleBody}
             </p>
           </motion.div>
