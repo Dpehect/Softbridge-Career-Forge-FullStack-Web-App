@@ -85,18 +85,19 @@
   --text-on-accent-primary: #ffffff;
   --text-on-accent-secondary: #eff6ff;
 
-  --action-primary: #2563eb; /* blue-600 high contrast CTA */
-  --action-primary-hover: #1d4ed8; /* blue-700 */
+  /* TealHQ-inspired brand (also used by product chrome) */
+  --action-primary: #0f766e; /* teal-700 */
+  --action-primary-hover: #0d9488; /* teal-600 */
   --action-primary-ink: #ffffff;
-  --action-secondary: #7c3aed; /* violet-600 */
-  --status-info: #1d4ed8;
-  --status-positive: #047857; /* emerald-700 */
-  --status-caution: #b45309; /* amber-700 */
-  --status-negative: #b91c1c; /* red-700 */
+  --action-secondary: #d97706; /* amber-600 accent */
+  --status-info: #0f766e;
+  --status-positive: #047857;
+  --status-caution: #b45309;
+  --status-negative: #b91c1c;
 
-  --accent-wash: #eff6ff;
-  --signal-wash: #f5f3ff;
-  --info-wash: #eff6ff;
+  --accent-wash: #f0fdfa; /* teal-50 */
+  --signal-wash: #fffbeb; /* amber-50 */
+  --info-wash: #f0fdfa;
   --positive-wash: #ecfdf5;
   --caution-wash: #fffbeb;
   --negative-wash: #fef2f2;
@@ -181,10 +182,10 @@
   --border-default: #334155;
   --border-strong: #64748b;
 
-  --action-primary: #3b82f6; /* blue-500 */
-  --action-primary-hover: #60a5fa; /* blue-400 */
-  --action-primary-ink: #030712;
-  --action-secondary: #a78bfa;
+  --action-primary: #14b8a6; /* teal-500 */
+  --action-primary-hover: #2dd4bf; /* teal-400 */
+  --action-primary-ink: #042f2e;
+  --action-secondary: #fbbf24; /* amber accent */
   --status-info: #93c5fd;
   --status-positive: #34d399;
   --status-caution: #fbbf24;

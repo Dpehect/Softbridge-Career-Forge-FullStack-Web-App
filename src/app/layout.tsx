@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
-import { DemoNotice } from "@/components/DemoNotice";
 import { OnboardingModal } from "@/components/OnboardingModal";
+import { SiteChrome } from "@/components/SiteChrome";
 import { WorkspaceSyncProvider } from "@/components/providers/WorkspaceSyncProvider";
 import "./globals.css";
 
@@ -91,12 +89,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full flex flex-col bg-background text-ink font-sans`}
       >
         <WorkspaceSyncProvider>
-          <Header />
-          <div className="flex-1 pt-16 pb-20 md:pt-[6.5rem] md:pb-0">
-            <DemoNotice />
-            {children}
-          </div>
-          <Footer />
+          <SiteChrome>{children}</SiteChrome>
           <OnboardingModal />
           <Toaster
             theme="system"
