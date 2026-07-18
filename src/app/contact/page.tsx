@@ -1,143 +1,83 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { ArrowLeft, Mail, MessageSquare, Send, ShieldCheck } from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, ArrowUpRight, Clock3, Mail, ShieldCheck } from "lucide-react";
 import { useMessages } from "@/i18n/useMessages";
-import { useHydrated } from "@/hooks/useHydrated";
 
 export default function ContactPage() {
-  const mounted = useHydrated();
   const { locale } = useMessages();
-  const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" });
-  const [sending, setSending] = useState(false);
-
   const isTr = locale === "tr";
   const copy = isTr ? {
-    kicker: "İletişim & Destek",
-    title: "Güvenli Destek Kanalı",
-    lede: "Sorularınız, geri bildirimleriniz veya veri yönetimi talepleriniz için ekibimizle doğrudan iletişime geçin.",
+    kicker: "İletişim",
+    title: "Gerçek bir konuşma başlatalım.",
+    lede: "Ürün geri bildirimi, veri yönetimi veya teknik bir sorun için doğrudan e-posta gönderin. Otomatik başarı mesajı göstermiyoruz; mesajınız kendi e-posta uygulamanızdan gönderilir.",
     back: "Ana sayfaya dön",
-    name: "Adınız",
-    email: "E-posta Adresiniz",
-    subject: "Konu",
-    message: "Mesajınız",
-    send: "Gönder",
-    sending: "Gönderiliyor...",
-    success: "Mesajınız güvenli kanal üzerinden iletildi. 24 saat içinde dönüş yapacağız.",
-    trustTitle: "Veri Güvenliği",
-    trustBody: "Bu form üzerinden gönderdiğiniz bilgiler şifrelenir ve yalnızca talebinizi yanıtlamak amacıyla kullanılır. Üçüncü taraflarla asla paylaşılmaz.",
+    emailLabel: "Destek e-postası",
+    emailNote: "Mesajınıza kullandığınız tarayıcıyı ve sorunun oluştuğu sayfayı ekleyin. CV’nizin tamamını göndermeniz gerekmez.",
+    response: "Yanıt hedefi",
+    responseValue: "2 iş günü",
+    privacy: "Gizlilik notu",
+    privacyBody: "E-postaya hassas kimlik, finans veya sağlık verisi eklemeyin. CV örneği gerekiyorsa yalnız ilgili ve anonimleştirilmiş bölümü paylaşın.",
+    action: "E-posta oluştur",
   } : {
-    kicker: "Contact & Support",
-    title: "Secure Support Channel",
-    lede: "Get in touch with our team directly for questions, feedback, or data privacy requests.",
+    kicker: "Contact",
+    title: "Let’s start a real conversation.",
+    lede: "Email us directly about product feedback, data management, or a technical problem. We do not show a simulated success state; your message is sent from your own email app.",
     back: "Back to home",
-    name: "Your Name",
-    email: "Email Address",
-    subject: "Subject",
-    message: "Your Message",
-    send: "Send Message",
-    sending: "Sending...",
-    success: "Your message has been sent securely. We will respond within 24 hours.",
-    trustTitle: "Data Privacy",
-    trustBody: "Information sent via this form is encrypted and used strictly to resolve your query. It is never shared with third parties.",
+    emailLabel: "Support email",
+    emailNote: "Include your browser and the page where the problem occurred. You do not need to send your complete resume.",
+    response: "Response target",
+    responseValue: "2 business days",
+    privacy: "Privacy note",
+    privacyBody: "Do not include sensitive identity, financial, or health data. If a resume example is necessary, share only the relevant anonymized section.",
+    action: "Compose email",
   };
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!formData.name || !formData.email || !formData.message) {
-      toast.error(isTr ? "Lütfen tüm zorunlu alanları doldurun." : "Please fill in all required fields.");
-      return;
-    }
-
-    setSending(true);
-    // Simulate API request
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setSending(false);
-    toast.success(copy.success);
-    setFormData({ name: "", email: "", subject: "", message: "" });
-  };
-
-  if (!mounted) {
-    return <div className="grid min-h-[60vh] place-items-center"><span className="h-6 w-6 animate-spin rounded-full border-2 border-line-strong border-t-brand" /></div>;
-  }
+  const subject = encodeURIComponent(isTr ? "CareerForge destek talebi" : "CareerForge support request");
 
   return (
-    <main className="product-page max-w-3xl mx-auto py-12 px-4 sm:px-6">
-      <Link href="/" className="inline-flex items-center gap-2 text-xs font-semibold text-ink-3 transition-colors hover:text-ink">
-        <ArrowLeft className="h-3.5 w-3.5" /> {copy.back}
+    <main className="product-page max-w-5xl">
+      <Link href="/" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-ink-2 hover:text-ink">
+        <ArrowLeft className="h-4 w-4" /> {copy.back}
       </Link>
 
-      <header className="mt-8 border-b border-line pb-8">
-        <p className="page-kicker"><MessageSquare className="h-3.5 w-3.5" /> {copy.kicker}</p>
-        <h1 className="page-title-compact mt-4">{copy.title}</h1>
-        <p className="mt-3 text-sm leading-6 text-ink-2">{copy.lede}</p>
+      <header className="editorial-page-header mt-8">
+        <div>
+          <p className="page-kicker">{copy.kicker}</p>
+          <h1 className="page-title-compact mt-4 max-w-2xl">{copy.title}</h1>
+        </div>
+        <p className="max-w-xl text-base leading-7 text-ink-2">{copy.lede}</p>
       </header>
 
-      <div className="mt-8 grid gap-8 md:grid-cols-[1.5fr_1fr]">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-ink-2 mb-1.5">{copy.name} *</label>
-            <Input
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-              className="bg-surface text-xs"
-            />
+      <div className="mt-12 grid border-y border-line lg:grid-cols-[1.2fr_0.8fr]">
+        <section className="py-8 lg:border-r lg:border-line lg:pr-10">
+          <p className="section-label">{copy.emailLabel}</p>
+          <a
+            href={`mailto:support@careerforge.dev?subject=${subject}`}
+            className="mt-5 flex items-center justify-between gap-5 border-b border-line pb-5 text-xl font-semibold text-ink transition-colors hover:text-brand-strong"
+          >
+            <span className="inline-flex items-center gap-3"><Mail className="h-5 w-5" /> support@careerforge.dev</span>
+            <ArrowUpRight className="h-5 w-5" />
+          </a>
+          <p className="mt-5 max-w-2xl text-sm leading-6 text-ink-2">{copy.emailNote}</p>
+          <a
+            href={`mailto:support@careerforge.dev?subject=${subject}`}
+            className="mt-8 inline-flex min-h-11 items-center gap-2 border border-ink bg-ink px-5 text-sm font-semibold text-background hover:bg-brand"
+          >
+            {copy.action} <ArrowUpRight className="h-4 w-4" />
+          </a>
+        </section>
+
+        <aside className="grid divide-y divide-line lg:pl-10">
+          <div className="py-8">
+            <Clock3 className="h-5 w-5 text-brand-strong" />
+            <p className="section-label mt-5">{copy.response}</p>
+            <p className="mt-2 text-2xl font-semibold text-ink">{copy.responseValue}</p>
           </div>
-
-          <div>
-            <label className="block text-xs font-medium text-ink-2 mb-1.5">{copy.email} *</label>
-            <Input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-              className="bg-surface text-xs"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-ink-2 mb-1.5">{copy.subject}</label>
-            <Input
-              value={formData.subject}
-              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-              className="bg-surface text-xs"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-ink-2 mb-1.5">{copy.message} *</label>
-            <Textarea
-              value={formData.message}
-              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              required
-              className="min-h-32 bg-surface text-xs"
-            />
-          </div>
-
-          <Button type="submit" variant="primary" disabled={sending} className="w-full flex justify-center items-center gap-2">
-            <Send className="h-3.5 w-3.5" />
-            {sending ? copy.sending : copy.send}
-          </Button>
-        </form>
-
-        <aside className="space-y-6">
-          <div className="surface-subtle p-5 rounded-lg border border-line">
-            <div className="flex items-center gap-2 mb-3">
-              <ShieldCheck className="h-4 w-4 text-brand-strong" />
-              <h2 className="text-xs font-semibold text-ink">{copy.trustTitle}</h2>
-            </div>
-            <p className="text-[0.6875rem] leading-5 text-ink-3">{copy.trustBody}</p>
-          </div>
-
-          <div className="text-xs text-ink-3 space-y-2 pl-1">
-            <p className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /> support@careerforge.dev</p>
-            <p>Mon - Fri, 09:00 - 18:00 (GMT+3)</p>
+          <div className="py-8">
+            <ShieldCheck className="h-5 w-5 text-positive" />
+            <p className="section-label mt-5">{copy.privacy}</p>
+            <p className="mt-3 text-sm leading-6 text-ink-2">{copy.privacyBody}</p>
           </div>
         </aside>
       </div>

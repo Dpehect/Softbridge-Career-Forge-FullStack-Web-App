@@ -96,12 +96,12 @@ export function analyzeMatch(cv: ParsedCV, jd: string, locale: Locale = "tr"): M
     return cvSkills.some((c) => c.includes(n) || n.includes(c)) || cvBlob.includes(n);
   });
 
-  const requiredSkillsCoverage = requiredSkills.length ? Math.round((matchedRequired.length / requiredSkills.length) * 100) : 100;
-  const preferredSkillsCoverage = preferredSkills.length ? Math.round((matchedPreferred.length / preferredSkills.length) * 100) : 100;
+  const requiredSkillsCoverage = requiredSkills.length ? Math.round((matchedRequired.length / requiredSkills.length) * 100) : 0;
+  const preferredSkillsCoverage = preferredSkills.length ? Math.round((matchedPreferred.length / preferredSkills.length) * 100) : 0;
 
   // 2. Experience Alignment
   const jdYearsMatch = jd.match(/(\d+)\+?\s*(?:years?|yıl)\b/i);
-  const jdYearsTarget = jdYearsMatch ? parseInt(jdYearsMatch[1], 10) : 2;
+  const jdYearsTarget = jdYearsMatch ? parseInt(jdYearsMatch[1], 10) : null;
   
   let cvYearsTotal = 0;
   cv.experience.forEach((exp) => {
@@ -113,10 +113,12 @@ export function analyzeMatch(cv: ParsedCV, jd: string, locale: Locale = "tr"): M
       cvYearsTotal += 1.5;
     }
   });
-  const experienceAlignment = Math.min(100, Math.round((cvYearsTotal / jdYearsTarget) * 100));
+  const experienceAlignment = jdYearsTarget
+    ? Math.min(100, Math.round((cvYearsTotal / jdYearsTarget) * 100))
+    : 0;
 
   // 3. Location Compatibility
-  let locationCompatibility = 100;
+  let locationCompatibility = 0;
   const isJdRemote = /remote|uzaktan|evden/i.test(jd);
   const isJdOnsite = /on-site|onsite|ofiste|ofisten/i.test(jd);
   
@@ -130,16 +132,15 @@ export function analyzeMatch(cv: ParsedCV, jd: string, locale: Locale = "tr"): M
   }
 
   // 4. Language Compatibility
-  let languageCompatibility = 100;
+  let languageCompatibility = 0;
   const requiresEnglish = /english|ingilizce/i.test(jd);
   const requiresTurkish = /turkish|türkçe/i.test(jd);
   const cvTextLower = cvBlob;
   
-  if (requiresEnglish && !cvTextLower.includes("english") && !cvTextLower.includes("ingilizce")) {
-    languageCompatibility -= 40;
-  }
-  if (requiresTurkish && !cvTextLower.includes("turkish") && !cvTextLower.includes("türkçe")) {
-    languageCompatibility -= 30;
+  if (requiresEnglish || requiresTurkish) {
+    languageCompatibility = 100;
+    if (requiresEnglish && !cvTextLower.includes("english") && !cvTextLower.includes("ingilizce")) languageCompatibility -= 40;
+    if (requiresTurkish && !cvTextLower.includes("turkish") && !cvTextLower.includes("türkçe")) languageCompatibility -= 30;
   }
 
   // 5. Evidence Strength
@@ -153,46 +154,60 @@ export function analyzeMatch(cv: ParsedCV, jd: string, locale: Locale = "tr"): M
       evidenceHits++;
     }
   });
-  const evidenceStrength = matchedSkills.length ? Math.round((evidenceHits / matchedSkills.length) * 100) : 100;
+  const evidenceStrength = matchedSkills.length ? Math.round((evidenceHits / matchedSkills.length) * 100) : 0;
 
   // 6. Overall Weighted Match Score
-  let matchScore = Math.round(
-    (requiredSkillsCoverage * 0.35) +
-    (preferredSkillsCoverage * 0.15) +
-    (experienceAlignment * 0.25) +
-    (locationCompatibility * 0.10) +
-    (languageCompatibility * 0.10) +
-    (evidenceStrength * 0.05)
-  );
-  matchScore = Math.max(15, Math.min(98, matchScore));
+  const dimensions = [
+    requiredSkills.length > 0 && { score: requiredSkillsCoverage, weight: 35 },
+    preferredSkills.length > 0 && { score: preferredSkillsCoverage, weight: 15 },
+    jdYearsTarget !== null && cvYearsTotal > 0 && { score: experienceAlignment, weight: 25 },
+    (isJdRemote || isJdOnsite) && { score: locationCompatibility, weight: 10 },
+    (requiresEnglish || requiresTurkish) && { score: languageCompatibility, weight: 10 },
+    matchedSkills.length > 0 && { score: evidenceStrength, weight: 5 },
+  ].filter((value): value is { score: number; weight: number } => Boolean(value));
+  const totalWeight = dimensions.reduce((sum, item) => sum + item.weight, 0);
+  const matchScore = totalWeight
+    ? Math.min(96, Math.round(dimensions.reduce((sum, item) => sum + item.score * item.weight, 0) / totalWeight))
+    : 0;
+  const scoreConfidence = totalWeight >= 80 && jdSkills.length >= 5
+    ? "high"
+    : totalWeight >= 45 && jdSkills.length >= 2
+      ? "medium"
+      : "low";
+  const missingInputs = [
+    jdSkills.length === 0 && (isTr ? "İlandan güvenilir beceri çıkarılamadı" : "No reliable skills could be extracted from the listing"),
+    jdYearsTarget === null && (isTr ? "Deneyim yılı belirtilmemiş" : "Required years of experience were not specified"),
+    !(isJdRemote || isJdOnsite) && (isTr ? "Çalışma modeli belirtilmemiş" : "Work model was not specified"),
+    !(requiresEnglish || requiresTurkish) && (isTr ? "Dil gereksinimi belirtilmemiş" : "Language requirement was not specified"),
+  ].filter((value): value is string => Boolean(value));
 
   // 7. Explanations
   const scoreExplanations: string[] = [];
-  if (requiredSkillsCoverage >= 80) {
+  if (requiredSkills.length > 0 && requiredSkillsCoverage >= 80) {
     scoreExplanations.push(isTr 
       ? `+ İlandaki zorunlu becerilerin çoğuna (%${requiredSkillsCoverage}) sahipsiniz.` 
       : `+ You match most of the required skills (%${requiredSkillsCoverage}).`);
-  } else {
+  } else if (requiredSkills.length > 0) {
     scoreExplanations.push(isTr 
       ? `- Zorunlu becerilerin %${100 - requiredSkillsCoverage}'si özgeçmişinizde eksik.` 
       : `- Missing %${100 - requiredSkillsCoverage} of the required skills.`);
   }
 
-  if (experienceAlignment >= 90) {
+  if (jdYearsTarget !== null && cvYearsTotal > 0 && experienceAlignment >= 90) {
     scoreExplanations.push(isTr
       ? `+ İstenen deneyim süresini (%${experienceAlignment}) tam karşılıyorsunuz.`
       : `+ Your years of experience match the target (%${experienceAlignment}).`);
-  } else {
+  } else if (jdYearsTarget !== null && cvYearsTotal > 0) {
     scoreExplanations.push(isTr
       ? `- İstenen deneyim süresinin (%${100 - experienceAlignment}) altındasınız.`
       : `- Your experience length is below the target (%${100 - experienceAlignment}).`);
   }
 
-  if (evidenceStrength >= 70) {
+  if (matchedSkills.length > 0 && evidenceStrength >= 70) {
     scoreExplanations.push(isTr
       ? `+ Becerilerinizin çoğu (%${evidenceStrength}) iş deneyimi açıklamalarında kanıtlarla desteklenmiş.`
       : `+ Most skills (%${evidenceStrength}) are backed by evidence in experience bullets.`);
-  } else {
+  } else if (matchedSkills.length > 0) {
     scoreExplanations.push(isTr
       ? `- Becerileriniz sadece listelenmiş; iş deneyiminde kanıt eksikliği var.`
       : `- Skills are only listed; they lack verifiable evidence in your roles.`);
@@ -253,6 +268,9 @@ export function analyzeMatch(cv: ParsedCV, jd: string, locale: Locale = "tr"): M
     languageCompatibility,
     evidenceStrength,
     scoreExplanations,
+    scoreConfidence,
+    rubricVersion: "match-v2",
+    missingInputs,
   };
 }
 
@@ -303,5 +321,8 @@ export function analyzeAts(cv: ParsedCV, jd = "", locale: Locale = "tr") {
     status: score.status,
     summary: getAtsSummary(score.total, locale),
     breakdown: score.categories,
+    confidence: score.confidence,
+    rubricVersion: score.rubricVersion,
+    missingInputs: score.missingInputs,
   };
 }

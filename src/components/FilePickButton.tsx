@@ -33,9 +33,9 @@ export function FilePickButton({
 }: Props) {
   const { locale } = useMessages();
   const copy = locale === "tr" ? {
-    loaded: "yüklendi.", scanned: "Bu PDF taranmış görünüyor. Aranabilir metin olarak dışa aktarın veya metni yapıştırın.", unsupported: "Desteklenen formatlar: PDF, DOCX ve TXT.", empty: "Dosya boş görünüyor.", failed: "Dosya okunamadı. Tekrar deneyin.", reading: "Okunuyor...",
+    loaded: "yüklendi.", scanned: "Bu PDF taranmış görünüyor. Aranabilir metin olarak dışa aktarın veya metni yapıştırın.", unsupported: "Desteklenen formatlar: PDF, DOCX ve TXT.", tooLarge: "Dosya en fazla 10 MB olabilir.", empty: "Dosya boş görünüyor.", failed: "Dosya okunamadı. Tekrar deneyin.", reading: "Okunuyor...",
   } : {
-    loaded: "uploaded.", scanned: "This PDF appears to be scanned. Export it with searchable text or paste the text.", unsupported: "Supported formats: PDF, DOCX, and TXT.", empty: "The file appears to be empty.", failed: "The file could not be read. Try again.", reading: "Reading...",
+    loaded: "uploaded.", scanned: "This PDF appears to be scanned. Export it with searchable text or paste the text.", unsupported: "Supported formats: PDF, DOCX, and TXT.", tooLarge: "Files must be 10 MB or smaller.", empty: "The file appears to be empty.", failed: "The file could not be read. Try again.", reading: "Reading...",
   };
   const inputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -66,6 +66,8 @@ export function FilePickButton({
         );
       } else if (code === "UNSUPPORTED") {
         toast.error(copy.unsupported);
+      } else if (code === "TOO_LARGE") {
+        toast.error(copy.tooLarge);
       } else if (code === "EMPTY") {
         toast.error(copy.empty);
       } else {

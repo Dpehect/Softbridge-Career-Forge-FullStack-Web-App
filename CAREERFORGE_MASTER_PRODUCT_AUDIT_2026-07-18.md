@@ -2,7 +2,7 @@
 
 **Tarih:** 18 Temmuz 2026
 
-**İncelenen commit:** `09da2dd`
+**İncelenen sürüm:** 18 Temmuz 2026 iyileştirme çalışma ağacı (commit doğrulama sonunda güncellenecek)
 
 **Ürün:** https://softbridge-career-forge-full-stack-brown.vercel.app/
 **Kapsam:** Landing, kayıt/giriş, onboarding, CV yükleme ve analiz, editör, iş eşleştirme ve takip, kariyer koçu, yol haritası, hesap, erişilebilirlik, güvenlik, mimari, ATS güvenilirliği ve portföy değeri.
@@ -11,27 +11,37 @@
 
 Bu turda ekran kaydı eklenmedi. Canlı Vercel alan adı da denetim tarayıcısının güvenlik politikası tarafından engellendi. Görsel değerlendirme; paylaşılan 1402×1178 ekran görüntüsü, güncel React/Tailwind render kodu ve önceki doğrulanmış mobil/Lighthouse bulguları üzerinden yapıldı. Canlı ödeme, OAuth, gerçek Supabase RLS ve üçüncü taraf AI çağrısı uçtan uca tekrar doğrulanamadı. Bu rapor, doğrulanmayan noktaları gerçekmiş gibi sunmaz.
 
-## Yönetici özeti
+## Yeniden denetim — yönetici özeti
 
-CareerForge üretime hazır bir AI kariyer SaaS değildir. İyi paketlenmiş, geniş kapsamlı ve ürün düşüncesi gösteren bir portföy prototipidir. Aradaki fark görsel ciladan değil; güvenilir veri, gerçek kullanıcı döngüsü, skor kalibrasyonu, güvenlik, test ve operasyon eksiklerinden kaynaklanıyor.
+Bu sürüm, ilk denetimdeki en riskli doğruluk ve mühendislik açıklarını gerçekten kapatıyor; ancak ürün hâlâ “binlerce kullanıcıya hazır premium SaaS” seviyesinde değildir. En doğru tanım: **güçlü bir production-candidate ve senior portföy ürünü**.
 
-En ciddi gerçekler:
+Doğrulanan iyileştirmeler:
 
-1. **AI koç endpoint’i kötüye kullanıma açık.** Auth, rate limit, request schema, boyut sınırı, timeout, maliyet kotası, güvenli hata modeli ve kullanım telemetrisi yok.
-2. **ATS ve rol uyumu skorları bilimsel görünmesine rağmen kalibre değil.** Boş veya yetersiz veri varsayılan puan kazanabiliyor; beceri adedi kalite ve rol uygunluğu yerine geçiyor; düşük güven seviyeleri kullanıcıya gösterilmiyor.
-3. **Ürün büyük ölçüde demo veri.** İşler, şirketler, maaşlar, testimonial’lar, yol haritaları ve dönüşüm iddiaları gerçek veri döngüsüne bağlı değil.
-4. **Sahte başarı davranışı var.** İletişim formu hiçbir yere veri göndermediği halde “güvenli kanal üzerinden iletildi” ve “24 saat içinde dönüş” diyor. Bu tek başına güven skorunu ciddi biçimde düşürür.
-5. **Kalite kapısı kırmızı.** Build ve strict TypeScript geçiyor; ESLint 16 hata/82 uyarıyla başarısız. Uygulamaya ait unit, integration, E2E, accessibility veya AI eval testi ve CI yok.
-6. **Veri modeli prototip seviyesinde.** Kullanıcının tüm çalışma alanı tek büyük JSON satırında tutuluyor. Resume version, application event, AI provenance ve analitik ilişkileri kalıcı domain modeli değil.
-7. **Premium görünüm ile ürün gerçeği uyuşmuyor.** UI bir SaaS beklentisi yaratıyor; fakat gerçek ilan kaynağı, bildirim, e-posta, ödeme, destek, ölçümleme, admin operasyonu ve gözlemlenebilirlik yok.
+1. **AI endpoint korumaları eklendi.** Supabase oturumu, same-origin kontrolü, Zod şeması, gerçek byte sınırı, saatlik kullanıcı kotası, provider timeout’u, yapılandırılmış hata modeli ve provenance mevcut.
+2. **ATS ve rol eşleştirme v2’ye geçirildi.** Bilinmeyen veri artık otomatik 100 puan almıyor; skorlar kanıt bulunan boyutlara göre yeniden ağırlıklandırılıyor, 96’da sınırlandırılıyor ve güven/eksik girdi bilgisi gösteriliyor.
+3. **Sahte başarı kaldırıldı.** İletişim ekranı mesaj gönderilmiş gibi davranmıyor; doğrulanabilir e-posta akışı ve gerçekçi iki iş günü hedefi sunuyor. Sahte sosyal kanıt niteliğindeki testimonial bölümü de kaldırıldı.
+4. **Kalite kapısı yeşil.** ESLint 0 hata/0 uyarı, strict TypeScript, 6 kritik skorlayıcı unit testi ve production build geçiyor. GitHub Actions bunları her push/PR için zorunlu çalıştırıyor.
+5. **Supabase şeması ve RLS repository’ye eklendi.** Owner-only profile/workspace politikaları ve AI kota RPC’si migration olarak sürümlendi. Bu denetimde migration’ın uzak production projesine uygulanması ayrıca doğrulanmadı.
+6. **UI tek tasarım diline yaklaştırıldı.** Kullanılmayan 19 eski WebGL/gradient bileşeni temizlendi; yüzen mobil AI düğmesi, sahte yorumlar, aşırı gradient ve kart gölgeleri azaltıldı. Metodoloji ve ürün sınırları arayüzün parçası oldu.
+7. **Temel web güvenlik başlıkları ve dosya sınırları eklendi.** HSTS, frame denial, nosniff, referrer/permissions politikaları ve 10 MB yükleme sınırı mevcut.
+
+Kalan temel gerçekler:
+
+- İş, şirket, maaş ve yol haritası içeriği hâlâ demo/static veri; gerçek veri tedariki ve güncellik SLA’sı yok.
+- ATS v2 daha dürüst, fakat etiketli gerçek CV–ilan corpus’u ve recruiter benchmark’ı olmadan “kalibre edilmiş tahmin” sayılamaz.
+- 6 unit test iyi bir başlangıçtır; E2E, axe, visual regression, Supabase cross-user integration ve AI eval henüz yoktur.
+- Observability, error tracking, analytics, notification delivery, billing ve destek ticket backend’i yoktur.
+- Workspace hâlâ büyük ölçüde tek JSON aggregate olarak saklanıyor; application event/version domain modeli kurulmadı.
 
 ### Net karar
 
 - **5 saniyede ürün anlaşılır mı?** Evet. Başlık ve alt metin CV analizi, rol eşleştirme ve mülakat hazırlığını açık anlatıyor.
 - **Ziyaretçi hesap açar mı?** Büyük olasılıkla önce demosunu dener; hesap açmak için güçlü neden görmez. Ücretsiz yerel kullanım ana değeri veriyor, Pro “yakında” ve fiyat/kanıt yok.
 - **Kullanıcı ödeme yapar mı?** Bugünkü haliyle hayır. Senkronizasyon tek başına ücretli plan gerekçesi değil; gerçek iş verisi ve ölçülebilir başvuru sonucu yok.
-- **Senior Engineer mülakatı getirir mi?** Görüşme açabilir, fakat senior full-stack işe alımını tek başına taşımaz. Başarısız lint, test/CI yokluğu, güvenlik açıkları ve demo backend’i teknik derinlik iddiasını zayıflatır.
-- **Premium SaaS mı?** Görsel olarak yer yer evet; operasyonel ve güvenilirlik açısından hayır.
+- **Senior Engineer mülakatı getirir mi?** Evet, artık anlamlı bir senior product-engineering görüşmesi açabilecek kanıt var. Staff seviyesi için ölçek, gözlemlenebilirlik ve gerçek kullanıcı sonucu hâlâ eksik.
+- **Premium SaaS mı?** Görsel ve etkileşim kalitesi production-candidate; operasyonel olarak hâlâ beta seviyesinde.
+
+> Aşağıdaki ayrıntılı bulgular ilk audit anındaki baseline’ı korur. Nihai durum ve güncel karar için “Final skor kartı” esas alınmalıdır.
 
 ---
 
@@ -663,23 +673,23 @@ Her skor şu metadata’yı göstermeli: `rubricVersion`, `parserConfidence`, `j
 
 | Kategori | Skor | Gerekçe |
 |---|---:|---|
-| UI | **7/10** | Tasarım dili ve landing kompozisyonu güçlü; küçük metin, paralel component aileleri ve yakın tarihli kontrast regresyonu premium tutarlılığı bozuyor. |
-| UX | **5/10** | Ana modüller anlaşılır; ancak tek activation akışı, gerçek next-action ve account value eksik. |
-| Readability | **6/10** | Son düzeltmeler mockup ve badge okunabilirliğini artırdı; 10–11 px metin borcu sürüyor. |
-| Accessibility | **5/10** | ARIA/focus/reduced-motion niyeti var; otomatik axe ve keyboard regression yok. Önceki mobil ölçüm 83’tü, bu tur canlı tekrar yapılamadı. |
-| Performance | **7/10** | Next production build hızlı ve client-side parsing gizlilik avantajı; eski WebGL/animation kodu ve ölçülmeyen bundle/field data riski var. |
-| Architecture | **5/10** | App Router, strict TS, Supabase katmanı iyi temel; monolitik page/store ve JSON workspace ölçeklenmiyor. |
-| Engineering | **4/10** | Build/typecheck geçiyor fakat lint kırmızı, test/CI/observability/migrations yok. Senior production bar altında. |
-| Product Thinking | **6/10** | Connected workflow ve explainability doğru yön; scope discipline ve outcome loop zayıf. |
+| UI | **8.2/10** | Editorial renk dili, daha düz yüzeyler ve özgün metodoloji bölümü tutarlı. 19 eski template/WebGL bileşeni kaldırıldı; bazı küçük metadata metinleri hâlâ borç. |
+| UX | **6.8/10** | Ana modüller, next-action ve skor sınırları anlaşılır; ancak tek activation akışı ve hesap değer döngüsü tamamlanmış değil. |
+| Readability | **7.6/10** | Hero mockup kontrastı, dashboard yüzeyleri ve skor açıklamaları okunur. Bazı 10–11 px etiketler hâlâ büyütülmeli. |
+| Accessibility | **6.2/10** | ARIA/focus/reduced-motion temeli ve 44 px ana hedefler var; axe, klavye E2E ve görsel regresyon kapısı yok. |
+| Performance | **7.8/10** | Production build temiz, ölü WebGL/animation kodu kaldırıldı ve local parsing korunuyor; bundle budget ve field telemetry yok. |
+| Architecture | **6.7/10** | App Router, strict TS, doğrulanmış API boundary, versioned migration ve typed mapper iyi temel; monolitik resume/store ve JSON aggregate sürüyor. |
+| Engineering | **7.6/10** | Lint 0/0, typecheck, 6 unit test, CI, build ve migration mevcut. E2E/integration/coverage/observability eksikleri nedeniyle 8+ değil. |
+| Product Thinking | **7/10** | Explainability, confidence ve product-truth iyileşti; gerçek outcome loop ve scope discipline hâlâ eksik. |
 | Business Value | **4/10** | Gerçek problem var; ödeme gerekçesi, gerçek job supply ve ölçülmüş outcome yok. |
-| Originality | **4/10** | Bilinen ATS/job tracker/chat özelliklerinin iyi paketlenmiş birleşimi; savunulabilir yeni mekanizma yok. |
-| AI Features | **3/10** | Tek generic Gemini endpoint ve local fallback; structured output, eval, memory, action ve provenance yok. |
-| ATS Credibility | **3/10** | Açıklamalı breakdown iyi fikir; pozitif varsayım ve kolay manipüle edilen rubric güvenilirliği düşürüyor. |
-| Trustworthiness | **4/10** | Local-first ve conflict koruması doğru; fake contact success, kanıtsız trust copy ve skor belirsizliği ciddi zarar veriyor. |
-| Portfolio Value | **6/10** | Kapsam, UI ve ürün merakı dikkat çeker; test/security/backend kanıtı olmaması senior seviyeyi sınırlar. |
-| Production Readiness | **3/10** | Demo olarak yayınlanabilir; gerçek kullanıcı verisi ve ücretli SaaS için hazır değil. |
+| Originality | **5.8/10** | Görsel dil ve kanıt/confidence sunumu daha özgün; çekirdek özellik seti hâlâ bilinen kategori birleşimi. |
+| AI Features | **6.3/10** | Auth, quota, validation, timeout, prompt boundary ve provenance var; streaming, eval, memory ve structured action yok. |
+| ATS Credibility | **6.6/10** | Pozitif varsayımlar kaldırıldı, güven/eksik girdi ve v2 testleri eklendi. Gerçek corpus kalibrasyonu olmadığı için 7+ değil. |
+| Trustworthiness | **7.3/10** | Fake success/social proof kaldırıldı, skor disclaimer’ı, RLS migration ve dürüst veri dili eklendi. Production RLS deployment kanıtı ve audit log eksik. |
+| Portfolio Value | **8/10** | UI, product truth, CI, güvenlik sınırı ve migration birlikte senior product-engineering tartışması için güçlü kanıt oluşturuyor. |
+| Production Readiness | **6/10** | Güvenli beta için anlamlı temel var; gerçek job supply, E2E/integration, monitoring, incident ve delivery sistemleri olmadan genel kullanıma hazır değil. |
 
-## Genel skor: **4.9 / 10**
+## Genel skor: **6.8 / 10**
 
 Bu skor görsel kaliteyi değil, ürünün “binlerce gerçek kullanıcıya hizmet eden premium SaaS” olma iddiasını ölçer.
 
@@ -689,7 +699,7 @@ Bu skor görsel kaliteyi değil, ürünün “binlerce gerçek kullanıcıya hiz
 
 ## Google/Meta/Microsoft Senior Engineer lensi
 
-**Bugünkü karar:** Tek başına güçlü hire sinyali değil. Aday geniş bir ürün yüzeyi kurabildiğini gösteriyor; fakat production correctness kanıtı eksik. Review sırasında ilk sorular lint neden kırmızı, test neden yok, RLS nerede, skor nasıl kalibre edildi, contact form neden fake ve API maliyeti nasıl korunuyor olurdu.
+**Bugünkü karar:** Senior product-minded frontend/full-stack görüşmesi için güçlü bir başlangıç sinyali. Review artık “neden lint/test/RLS yok?” sorusunda takılmaz; tartışma skor kalibrasyon datası, domain model, observability ve E2E güvenilirliğine geçer. Staff/Principal için gereken gerçek ölçek ve sonuç kanıtı hâlâ yok.
 
 ## Principal Product Designer lensi
 
@@ -702,13 +712,13 @@ Bu skor görsel kaliteyi değil, ürünün “binlerce gerçek kullanıcıya hiz
 ## Mülakat daveti
 
 - **Frontend/product-minded pozisyon:** Evet, kod tartışması için davet edilebilir.
-- **Senior full-stack production owner:** Ancak Critical roadmap’in büyük kısmı tamamlanırsa.
+- **Senior full-stack production owner:** Evet, derin teknik görüşmeye davet edilebilir; production ownership kararı için kalan integration/operations kanıtı ayrıca sınanmalı.
 - **Staff/Principal:** Hayır. Ölçek, operasyon, güvenlik, veri modeli ve ölçülmüş ürün sonucu kanıtı yok.
 
 ## Portföyde nasıl sunulmalı
 
-“Production-ready AI career platform” deme. Şunu de:
+"Tam production-ready AI career platform" deme. Şunu de:
 
-> Local-first CV analysis and application workflow prototype built with Next.js, Supabase and an explainable scoring rubric. I identified and am closing the gaps required for production: calibrated evaluation, RLS-backed persistence, AI cost controls, versioned applications, accessibility and end-to-end quality gates.
+> Production-candidate, local-first career workspace built with Next.js and Supabase. It includes an explainable versioned scoring rubric, authenticated and rate-limited AI boundaries, RLS migrations, CI quality gates and explicit confidence limits. Remaining work is real-corpus calibration, end-to-end accessibility testing and operational observability.
 
 Bu ifade daha az gösterişli ama daha senior’dır; çünkü ürünün sınırlarını dürüstçe bilir.

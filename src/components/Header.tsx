@@ -17,13 +17,12 @@ import {
   Trash2,
   X,
   Home,
-  MoreHorizontal,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { resumeToParsed, useCareerStore } from "@/store/useCareerStore";
+import { useCareerStore } from "@/store/useCareerStore";
 import { exportCvAsPdf } from "@/lib/forge";
 import { AuthControl } from "@/components/auth/AuthControl";
 import { PrivateLocalBadge } from "@/components/PrivateLocalBadge";
@@ -47,7 +46,6 @@ function isPublicRoute(pathname: string): boolean {
 export function Header() {
   const pathname = usePathname();
   const profileRef = useRef<HTMLDivElement>(null);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const { locale, messages } = useMessages();
@@ -63,12 +61,6 @@ export function Header() {
 
   const { scrollY } = useScroll();
   const headerHeight = useTransform(scrollY, [0, 60], [64, 56]);
-  const headerBg = useTransform(
-    scrollY,
-    [0, 40],
-    ["var(--bg-surface)", "var(--bg-surface)"]
-  );
-  const borderOpacity = useTransform(scrollY, [0, 40], [0.5, 1]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -91,12 +83,6 @@ export function Header() {
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, []);
-
-  // Close mobile menu on route change
-  useEffect(() => {
-    setMobileOpen(false);
-    setMoreOpen(false);
-  }, [pathname]);
 
   const hasResume = Boolean(
     forgeParsedCv ||
@@ -373,12 +359,12 @@ export function Header() {
         </div>
       )}
 
-      {/* Mobile bottom nav: Home · Analiz (primary) · CV · More */}
+      {/* Mobile bottom nav */}
       <nav
         className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] xl:hidden"
         aria-label={messages.nav.quick}
       >
-        <div className="grid h-[4.25rem] grid-cols-4 items-end px-1">
+        <div className="grid h-16 grid-cols-4 px-1">
           <Link
             href="/dashboard"
             className={cn(
@@ -393,18 +379,15 @@ export function Header() {
 
           <Link
             href="/forge"
-            className="relative -top-3 flex min-w-0 flex-col items-center justify-center"
+            className={cn(
+              "relative flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 text-[0.625rem] font-semibold transition-colors",
+              pathname === "/forge" || pathname.startsWith("/forge/") ? "text-brand-strong" : "text-ink-3 hover:text-ink"
+            )}
             aria-current={pathname === "/forge" || pathname.startsWith("/forge/") ? "page" : undefined}
           >
-            <span
-              className={cn(
-                "flex h-14 w-14 items-center justify-center rounded-full bg-brand text-[var(--action-primary-ink)] shadow-lg shadow-blue-500/30 ring-4 ring-surface transition-transform active:scale-95",
-                (pathname === "/forge" || pathname.startsWith("/forge/")) && "ring-brand/20"
-              )}
-            >
-              <ScanLine className="h-6 w-6" />
-            </span>
-            <span className="mt-0.5 text-[0.625rem] font-bold text-brand-strong">
+            {(pathname === "/forge" || pathname.startsWith("/forge/")) && <span className="absolute inset-x-5 top-0 h-0.5 bg-brand" />}
+            <ScanLine className="h-5 w-5" />
+            <span className="truncate">
               {locale === "tr" ? "Analiz Et" : "Analyze"}
             </span>
           </Link>

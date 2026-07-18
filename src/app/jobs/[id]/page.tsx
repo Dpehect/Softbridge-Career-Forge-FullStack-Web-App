@@ -11,7 +11,6 @@ import {
   MapPin,
   Plus,
   Users,
-  Briefcase,
   Calendar,
   DollarSign,
   Bell,
@@ -31,7 +30,7 @@ import { analyzeMatch } from "@/lib/forge/analyze";
 
 export default function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { locale, messages } = useMessages();
+  const { locale } = useMessages();
   const isTr = locale === "tr";
   
   const [showWhy, setShowWhy] = useState(false);
@@ -571,7 +570,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
               <label className="font-semibold text-ink-2">{isTr ? "Kanıt Türü" : "Evidence Type"}</label>
               <select
                 value={evidenceType}
-                onChange={(e) => setEvidenceType(e.target.value as any)}
+                onChange={(e) => setEvidenceType(e.target.value as typeof evidenceType)}
                 className="w-full bg-surface border border-line rounded-[var(--radius-control)] px-3 py-1.5 h-10 text-xs font-semibold text-ink"
               >
                 <option value="work">{isTr ? "İş Deneyimi" : "Work Experience"}</option>

@@ -23,6 +23,9 @@ export interface AtsScoreResult {
   total: number;
   status: "critical" | "needsWork" | "good" | "veryGood" | "strong";
   categories: AtsCategoryScore[];
+  confidence: "low" | "medium" | "high";
+  rubricVersion: "ats-v2";
+  missingInputs: string[];
 }
 
 const METRIC_PATTERN = /\d+\s*%|\d+[kKmM]?\+?\s*(users?|kullanıcı|ms|seconds?|saniye|hours?|saat|days?|gün|requests?|istek)|[$€£₺]\s*\d+|\b\d{2,}\+?\b/i;
@@ -33,10 +36,10 @@ function clamp(value: number, max: number) {
 }
 
 export function getAtsStatus(score: number): AtsScoreResult["status"] {
-  if (score < 50) return "critical";
-  if (score < 70) return "needsWork";
-  if (score < 85) return "good";
-  if (score < 95) return "veryGood";
+  if (score < 40) return "critical";
+  if (score < 60) return "needsWork";
+  if (score < 75) return "good";
+  if (score < 93) return "veryGood";
   return "strong";
 }
 
@@ -115,7 +118,12 @@ export function calculateAtsScore(cv: ParsedCV, locale: Locale = "en"): AtsScore
   }
 
   // Check for portfolio/linkedin links in profile summary or website
-  const hasLinks = Boolean(cv.photoDataUrl || cv.email?.includes("@") || cv.summary?.toLowerCase().includes("linkedin.com") || cv.summary?.toLowerCase().includes("github.com"));
+  const hasLinks = Boolean(
+    cv.summary?.toLowerCase().includes("linkedin.com") ||
+      cv.summary?.toLowerCase().includes("github.com") ||
+      cv.summary?.toLowerCase().includes("http://") ||
+      cv.summary?.toLowerCase().includes("https://")
+  );
   if (hasLinks) {
     contactScore += 1;
     contactEvidence.push(isTr ? "Profesyonel ağ/portfolyo bağlantısı algılandı" : "Professional link detected");
@@ -138,9 +146,9 @@ export function calculateAtsScore(cv: ParsedCV, locale: Locale = "en"): AtsScore
   // --- 2. Structure Category ---
   const structEvidence: string[] = [];
   const structMissing: string[] = [];
-  let structScore = 5;
+  let structScore = 0;
 
-  if (cv.rawLength > 200 && cv.rawLength < 7000) {
+  if (cv.rawLength > 300 && cv.rawLength < 7000) {
     structScore += 5;
     structEvidence.push(isTr ? "Optimal karakter uzunluğu (tek veya iki sayfa sığabilir)" : "Optimal character length");
   } else {
@@ -148,19 +156,35 @@ export function calculateAtsScore(cv: ParsedCV, locale: Locale = "en"): AtsScore
   }
 
   const longBullets = bullets.filter((bullet) => bullet.length > 220);
-  if (longBullets.length === 0) {
+  if (bullets.length > 0 && longBullets.length === 0) {
     structScore += 5;
     structEvidence.push(isTr ? "Maddeler kısa ve net (okunabilirlik yüksek)" : "Concise bullet points");
   } else {
     structMissing.push(isTr ? `${longBullets.length} madde çok uzun (220+ karakter)` : `${longBullets.length} bullets are too long (220+ chars)`);
   }
 
-  const missingExpDetails = experience.some((item) => !item.company || !item.position || !item.duration);
-  if (!missingExpDetails) {
+  const hasCompleteExperience =
+    experience.length > 0 &&
+    experience.every((item) => item.company && item.position && item.duration && item.duration !== "—");
+  if (hasCompleteExperience) {
     structScore += 5;
     structEvidence.push(isTr ? "Tüm deneyimlerde şirket, ünvan ve tarih bilgisi tam" : "Complete experience metadata");
   } else {
     structMissing.push(isTr ? "Bazı deneyimlerde şirket, ünvan veya tarih eksik" : "Missing company, title, or dates in some experience entries");
+  }
+
+  const hasMachineReadableCore = Boolean(
+    cv.name &&
+      cv.email &&
+      experience.length > 0 &&
+      skills.length > 0 &&
+      cv.rawLength >= 500
+  );
+  if (hasMachineReadableCore) {
+    structScore += 5;
+    structEvidence.push(isTr ? "Temel bölümler ayrıştırılabilir metin olarak bulundu" : "Core sections were parsed as machine-readable text");
+  } else {
+    structMissing.push(isTr ? "Ayrıştırılabilir temel bölüm kanıtı yetersiz" : "Insufficient machine-readable core-section evidence");
   }
 
   const structCat: AtsCategoryScore = {
@@ -269,12 +293,20 @@ export function calculateAtsScore(cv: ParsedCV, locale: Locale = "en"): AtsScore
   // --- 5. Keywords Category ---
   const kwEvidence: string[] = [];
   const kwMissing: string[] = [];
-  let kwScore = clamp(skills.length * 2, 20);
+  const uniqueSkills = Array.from(new Set(skills.map((skill) => skill.toLowerCase().trim()).filter(Boolean)));
+  const evidenceBlob = [cv.summary ?? "", ...bullets].join(" ").toLowerCase();
+  const evidencedSkills = uniqueSkills.filter((skill) => evidenceBlob.includes(skill));
+  const kwScore = clamp(Math.min(uniqueSkills.length, 10) + Math.min(evidencedSkills.length * 2, 10), 20);
 
   if (skills.length >= 8) {
     kwEvidence.push(isTr ? "Güçlü anahtar kelime ve araç yelpazesi" : "Rich variety of tools and keywords");
   } else {
     kwMissing.push(isTr ? "Kısıtlı anahtar kelime kapsamı" : "Limited keyword range");
+  }
+  if (evidencedSkills.length > 0) {
+    kwEvidence.push(isTr ? `${evidencedSkills.length} beceri özet veya deneyim kanıtıyla destekleniyor` : `${evidencedSkills.length} skills are supported by summary or experience evidence`);
+  } else if (uniqueSkills.length > 0) {
+    kwMissing.push(isTr ? "Listelenen beceriler deneyim kanıtıyla desteklenmiyor" : "Listed skills are not supported by experience evidence");
   }
 
   const kwCat: AtsCategoryScore = {
@@ -292,7 +324,7 @@ export function calculateAtsScore(cv: ParsedCV, locale: Locale = "en"): AtsScore
   // --- 6. Impact Category ---
   const impactEvidence: string[] = [];
   const impactMissing: string[] = [];
-  let impactScore = clamp(metricCount * 4 + (metricCount > 0 ? 2 : 0), 10);
+  const impactScore = clamp(metricCount * 4 + (metricCount > 0 ? 2 : 0), 10);
 
   if (metricCount > 0) {
     impactEvidence.push(isTr ? `${metricCount} maddede ölçülebilir sonuç/metrik algılandı` : `${metricCount} metrics/percentages detected`);
@@ -314,6 +346,26 @@ export function calculateAtsScore(cv: ParsedCV, locale: Locale = "en"): AtsScore
 
   const categories = [structCat, compCat, expCat, kwCat, impactCat, contactCat];
   const total = categories.reduce((sum, category) => sum + category.score, 0);
+  const missingInputs = [
+    !cv.email && (isTr ? "e-posta" : "email"),
+    !cv.summary && (isTr ? "profesyonel özet" : "professional summary"),
+    experience.length === 0 && (isTr ? "deneyim" : "experience"),
+    skills.length === 0 && (isTr ? "beceriler" : "skills"),
+    education.length === 0 && (isTr ? "eğitim" : "education"),
+  ].filter((value): value is string => Boolean(value));
+  const evidenceSignals = bullets.length + experience.length + skills.length + education.length;
+  const confidence = evidenceSignals >= 14 && missingInputs.length === 0
+    ? "high"
+    : evidenceSignals >= 6
+      ? "medium"
+      : "low";
 
-  return { total, status: getAtsStatus(total), categories };
+  return {
+    total,
+    status: getAtsStatus(total),
+    categories,
+    confidence,
+    rubricVersion: "ats-v2",
+    missingInputs,
+  };
 }

@@ -79,12 +79,12 @@ export function JobCard({ job, index = 0 }: { job: Job; index?: number }) {
 
   const matchTone =
     match >= 80
-      ? "from-emerald-500 to-teal-500 text-white"
+      ? "border-positive/30 bg-[var(--positive-wash)] text-positive"
       : match >= 60
-        ? "from-sky-500 to-blue-600 text-white"
+        ? "border-brand/30 bg-[var(--accent-wash)] text-brand-strong"
         : match >= 40
-          ? "from-orange-400 to-amber-500 text-white"
-          : "from-slate-200 to-slate-300 text-slate-700 dark:from-slate-700 dark:to-slate-600 dark:text-slate-100";
+          ? "border-caution/30 bg-[var(--caution-wash)] text-caution"
+          : "border-line bg-surface-2 text-ink-2";
 
   return (
     <motion.article
@@ -99,7 +99,7 @@ export function JobCard({ job, index = 0 }: { job: Job; index?: number }) {
       }
       className="premium-card group relative grid gap-4 p-4 sm:grid-cols-[3.25rem_minmax(0,1fr)_auto] sm:items-start sm:p-5"
     >
-      <div className="grid h-12 w-12 place-items-center rounded-xl border border-line bg-gradient-to-br from-sky-50 to-violet-50 text-xs font-bold text-ink-2 shadow-sm dark:from-sky-950/40 dark:to-violet-950/40">
+      <div className="grid h-12 w-12 place-items-center border border-line bg-surface-2 font-mono text-xs font-bold text-ink-2">
         {company?.logo || "CF"}
       </div>
 
@@ -117,7 +117,7 @@ export function JobCard({ job, index = 0 }: { job: Job; index?: number }) {
             </span>
           )}
           {job.featured && (
-            <span className="inline-flex min-h-6 items-center gap-1 rounded-full bg-gradient-to-r from-orange-100 to-pink-100 px-2.5 py-1 text-xs font-bold text-orange-700 dark:from-orange-500/20 dark:to-pink-500/20 dark:text-orange-300">
+            <span className="inline-flex min-h-6 items-center gap-1 border border-caution/30 bg-[var(--caution-wash)] px-2.5 py-1 text-xs font-bold text-caution">
               <Sparkles className="h-3 w-3" />
               {copy.featured}
             </span>
@@ -164,7 +164,7 @@ export function JobCard({ job, index = 0 }: { job: Job; index?: number }) {
         <div className="text-left sm:text-right">
           <div
             className={cn(
-              "inline-flex items-center justify-center rounded-xl bg-gradient-to-br px-2.5 py-1.5 shadow-sm",
+              "inline-flex items-center justify-center border px-2.5 py-1.5",
               matchTone
             )}
           >

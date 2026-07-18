@@ -11,9 +11,20 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#039;");
 }
 
-function isResumeProfile(obj: any): obj is ResumeProfile {
-  return obj && typeof obj === "object" && ("customization" in obj || "sectionVisibility" in obj);
+function isResumeProfile(obj: unknown): obj is ResumeProfile {
+  return typeof obj === "object" && obj !== null && ("customization" in obj || "sectionVisibility" in obj);
 }
+
+type PdfExperience = {
+  role: string;
+  position?: string;
+  company: string;
+  start: string;
+  end: string;
+  highlights: string[];
+};
+
+type PdfEducation = { school: string; degree: string; year: string };
 
 export async function exportCvAsPdf(cvOrProfile: ParsedCV | ResumeProfile, filename?: string) {
   if (typeof window === "undefined") return;
@@ -31,14 +42,14 @@ export async function exportCvAsPdf(cvOrProfile: ParsedCV | ResumeProfile, filen
   let photoDataUrl = "";
   
   let skills: string[] = [];
-  let experience: any[] = [];
-  let education: any[] = [];
-  let projects: any[] = [];
-  let certifications: any[] = [];
-  let languages: any[] = [];
-  let awards: any[] = [];
-  let publications: any[] = [];
-  let socialLinks: any[] = [];
+  let experience: PdfExperience[] = [];
+  let education: PdfEducation[] = [];
+  let projects: NonNullable<ResumeProfile["projects"]> = [];
+  let certifications: NonNullable<ResumeProfile["certifications"]> = [];
+  let languages: NonNullable<ResumeProfile["languages"]> = [];
+  let awards: NonNullable<ResumeProfile["awards"]> = [];
+  let publications: NonNullable<ResumeProfile["publications"]> = [];
+  let socialLinks: NonNullable<ResumeProfile["socialLinks"]> = [];
   
   let template = "classic";
   let fontFamily = "sans";
@@ -174,7 +185,7 @@ export async function exportCvAsPdf(cvOrProfile: ParsedCV | ResumeProfile, filen
           return `
             <div class="item">
               <div class="item-header">
-                <span class="item-title">${escapeHtml(exp.role || exp.position)}</span>
+                <span class="item-title">${escapeHtml(exp.role || exp.position || "")}</span>
                 <span class="item-date">${escapeHtml(dateRange)}</span>
               </div>
               <div class="item-subtitle">${escapeHtml(exp.company)}</div>

@@ -1,39 +1,23 @@
 "use client";
 
-import { type ChangeEvent, useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import {
   Camera,
-  Check,
-  ChevronDown,
-  ChevronUp,
   Download,
   FileText,
-  GraduationCap,
   Plus,
-  Sparkles,
   Trash2,
-  Undo2,
-  UserRound,
-  Wrench,
-  Redo2,
-  Eye,
   EyeOff,
   Palette,
   Clock,
   Save,
   AlertTriangle,
-  ExternalLink,
   ArrowUp,
   ArrowDown,
   Eye as EyeIcon,
   Copy,
   Edit2,
-  Layout,
-  Layers,
-  HelpCircle,
-  ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -42,7 +26,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { FilePickButton } from "@/components/FilePickButton";
 import { useCareerStore, parsedToResume, resumeToParsed } from "@/store/useCareerStore";
 import {
-  buildJourneyInsight,
   cleanExtractedText,
   exportCvAsPdf,
   generateCvFeedback,
@@ -56,9 +39,9 @@ import { calculateAtsScore } from "@/features/analysis/atsScore";
 import { buildActionableRecommendations, type ActionableRecommendation, type RecommendationAction } from "@/features/analysis/recommendations";
 import { AtsScoreBreakdown } from "@/components/AtsScoreBreakdown";
 import { ActionableRecommendations } from "@/components/ActionableRecommendations";
-import { CloudSyncStatus } from "@/components/sync/CloudSyncStatus";
 import { NextStepCta } from "@/components/NextStepCta";
 import type { CvBackup } from "@/lib/forge/types";
+import type { ResumeCustomization } from "@/types";
 
 type EditorTab = "profile" | "experience" | "skills" | "credentials" | "sections" | "styling";
 
@@ -88,14 +71,9 @@ export default function ResumePage() {
     updateResume,
     setResume,
     forgeParsedCv,
-    careerGoalId,
-    lastAnalysisMeta,
     addSkills,
     pushForgeHistory,
     undoResume,
-    redoResume,
-    resumePast,
-    resumeFuture,
     resumeSectionOrder,
     moveResumeSection,
     loadDemoProfile,
@@ -103,8 +81,6 @@ export default function ResumePage() {
     saveForgeBackup,
     restoreForgeBackup,
     deleteForgeBackup,
-    resetResume,
-    clearForgeCv,
   } = useCareerStore();
 
   const hasContent = Boolean(resume.fullName || resume.headline || resume.summary || resume.skills.length || resume.experience.length);
@@ -359,7 +335,7 @@ export default function ResumePage() {
 
         <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1.2fr)_minmax(21rem,0.8fr)] xl:items-start">
           {/* PAPER PREVIEW — live A4 */}
-          <section className="relative min-h-[52rem] overflow-hidden rounded-2xl border border-line bg-gradient-to-b from-slate-100/80 to-surface-2 p-3 sm:p-8 dark:from-slate-900/40">
+          <section className="relative min-h-[52rem] overflow-hidden border border-line bg-surface-2 p-3 sm:p-8">
             <div className="mb-3 flex items-center justify-between px-1">
               <p className="text-[10px] font-bold uppercase tracking-wider text-ink-3">
                 {isTr ? "Canlı A4 önizleme" : "Live A4 preview"}
@@ -966,7 +942,7 @@ export default function ResumePage() {
                     <div className="grid gap-4 sm:grid-cols-3">
                       <label className="block">
                         <span className="text-[10px] font-semibold text-ink-3 uppercase block mb-1.5">{isTr ? "Şablon" : "Template"}</span>
-                        <select value={template} onChange={(e) => updateStyle({ template: e.target.value as any })} className="w-full bg-surface border border-line rounded px-2 py-1.5 text-xs">
+                        <select value={template} onChange={(e) => updateStyle({ template: e.target.value as ResumeCustomization["template"] })} className="w-full bg-surface border border-line rounded px-2 py-1.5 text-xs">
                           <option value="classic">{isTr ? "Klasik" : "Classic"}</option>
                           <option value="modern">{isTr ? "Modern" : "Modern"}</option>
                           <option value="minimal">{isTr ? "Minimal" : "Minimal"}</option>

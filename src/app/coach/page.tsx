@@ -7,7 +7,6 @@ import {
   BrainCircuit,
   Check,
   CircleDot,
-  Loader2,
   RotateCcw,
   Send,
   Sparkles,

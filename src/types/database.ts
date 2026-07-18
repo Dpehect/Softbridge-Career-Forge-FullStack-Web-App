@@ -108,9 +108,20 @@ export type Database = {
         };
         Relationships: [];
       };
+      ai_usage_events: {
+        Row: { id: number; user_id: string; feature: string; created_at: string };
+        Insert: { id?: never; user_id: string; feature: string; created_at?: string };
+        Update: { id?: never; user_id?: string; feature?: string; created_at?: string };
+        Relationships: [];
+      };
     };
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Functions: {
+      consume_ai_quota: {
+        Args: { p_feature: string; p_limit?: number; p_window_seconds?: number };
+        Returns: boolean;
+      };
+    };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
   };

@@ -71,6 +71,9 @@ export interface MatchAnalysis {
   languageCompatibility?: number;
   evidenceStrength?: number;
   scoreExplanations?: string[];
+  scoreConfidence?: "low" | "medium" | "high";
+  rubricVersion?: "match-v2";
+  missingInputs?: string[];
 }
 
 export interface OptimizedCV {
@@ -113,6 +116,9 @@ export interface AtsResult {
   keywordCoverage: number;
   status: "critical" | "needsWork" | "good" | "veryGood" | "strong";
   summary: string;
+  confidence?: "low" | "medium" | "high";
+  rubricVersion?: "ats-v2";
+  missingInputs?: string[];
   breakdown: Array<{
     id: "structure" | "completeness" | "experience" | "keywords" | "impact" | "contact";
     score: number;

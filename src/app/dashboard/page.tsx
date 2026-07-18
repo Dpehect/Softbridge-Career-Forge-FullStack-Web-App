@@ -185,10 +185,10 @@ export default function DashboardPage() {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-6 grid gap-8 rounded-2xl border border-line bg-surface p-8 lg:grid-cols-[1fr_0.85fr] lg:items-center"
+          className="mt-6 grid gap-8 border border-line border-l-[3px] border-l-caution bg-surface p-8 lg:grid-cols-[1fr_0.85fr] lg:items-center"
         >
           <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
+            <div className="mb-3 inline-flex items-center gap-2 border-b border-caution/40 pb-1 text-xs font-bold text-caution">
               <Sparkles className="h-3.5 w-3.5" />
               {isTr ? "İlk adım" : "First step"}
             </div>
@@ -250,7 +250,7 @@ export default function DashboardPage() {
           className="motivation-banner mt-6 flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5"
         >
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-orange-400 text-white shadow-md">
+            <div className="flex h-10 w-10 items-center justify-center border border-brand bg-brand text-[var(--action-primary-ink)]">
               <Flame className="h-5 w-5" />
             </div>
             <div>
@@ -274,7 +274,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="mt-6 grid overflow-hidden rounded-2xl border border-line bg-surface shadow-sm md:grid-cols-[1.15fr_0.85fr]"
+          className="mt-6 grid overflow-hidden border border-line bg-surface md:grid-cols-[1.15fr_0.85fr]"
         >
           <div className="border-b border-line p-6 md:border-b-0 md:border-r md:p-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

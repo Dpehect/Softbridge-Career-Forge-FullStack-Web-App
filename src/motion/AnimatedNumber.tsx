@@ -23,7 +23,7 @@ export function AnimatedNumber({
   const prefersReduced = useReducedMotionPreference();
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-10% 0px" });
-  const [displayValue, setDisplayValue] = useState(prefersReduced ? value : 0);
+  const [displayValue, setDisplayValue] = useState(0);
 
   const motionValue = useMotionValue(prefersReduced ? value : 0);
   const springValue = useSpring(motionValue, {
@@ -32,10 +32,7 @@ export function AnimatedNumber({
   });
 
   useEffect(() => {
-    if (prefersReduced) {
-      setDisplayValue(value);
-      return;
-    }
+    if (prefersReduced) return;
     if (inView) {
       motionValue.set(value);
     }
@@ -51,7 +48,7 @@ export function AnimatedNumber({
 
   return (
     <span ref={ref} className={cn("font-mono tabular-nums", className)}>
-      {prefix}{displayValue}{suffix}
+      {prefix}{prefersReduced ? value : displayValue}{suffix}
     </span>
   );
 }

@@ -432,6 +432,8 @@ export async function extractTextWithPdfJS(bytes: Uint8Array): Promise<string> {
 export async function extractTextFromFile(
   file: File
 ): Promise<{ text: string; kind: "text" | "pdf" }> {
+  const maxFileBytes = 10 * 1024 * 1024;
+  if (file.size > maxFileBytes) throw new Error("TOO_LARGE");
   const name = file.name.toLowerCase();
   const isPdf =
     name.endsWith(".pdf") ||
@@ -445,6 +447,7 @@ export async function extractTextFromFile(
     const archive = unzipSync(new Uint8Array(await file.arrayBuffer()));
     const documentXml = archive["word/document.xml"];
     if (!documentXml) throw new Error("UNSUPPORTED");
+    if (documentXml.byteLength > 4 * 1024 * 1024) throw new Error("TOO_LARGE");
     const xml = new TextDecoder("utf-8").decode(documentXml);
     const document = new DOMParser().parseFromString(xml, "application/xml");
     if (document.querySelector("parsererror")) throw new Error("UNSUPPORTED");

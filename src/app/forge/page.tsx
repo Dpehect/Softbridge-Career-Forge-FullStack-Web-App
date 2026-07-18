@@ -57,7 +57,16 @@ export default function ForgePage() {
   };
 
   const ats = useMemo(() => forgeParsedCv ? analyzeAts(forgeParsedCv, "", locale) : null, [forgeParsedCv, locale]);
-  const atsResult = ats ? { total: ats.atsScore, status: ats.status, categories: ats.breakdown } : null;
+  const atsResult = ats
+    ? {
+        total: ats.atsScore,
+        status: ats.status,
+        categories: ats.breakdown,
+        confidence: ats.confidence,
+        rubricVersion: ats.rubricVersion,
+        missingInputs: ats.missingInputs,
+      }
+    : null;
   const recommendations = useMemo(() => forgeParsedCv ? buildActionableRecommendations(forgeParsedCv, locale) : [], [forgeParsedCv, locale]);
 
   const parseResume = (raw: string, fileName?: string) => {

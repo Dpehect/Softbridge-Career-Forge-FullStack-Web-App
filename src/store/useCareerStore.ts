@@ -241,10 +241,10 @@ function cloudMutation(state: CareerState) {
   };
 }
 
-function mergeWorkspaceSnapshots(local: any, cloud: any): any {
-  const merged = { ...local };
-  const rLocal = local.resume || {};
-  const rCloud = cloud.resume || {};
+function mergeWorkspaceSnapshots(local: StoreHydrationData, cloud: StoreHydrationData): StoreHydrationData {
+  const merged: StoreHydrationData = { ...local };
+  const rLocal = local.resume;
+  const rCloud = cloud.resume;
   
   merged.resume = {
     ...rLocal,
@@ -259,50 +259,50 @@ function mergeWorkspaceSnapshots(local: any, cloud: any): any {
     skills: Array.from(new Set([...(rLocal.skills || []), ...(rCloud.skills || [])])),
     experience: [
       ...(rLocal.experience || []),
-      ...(rCloud.experience || []).filter((ce: any) => 
-        !(rLocal.experience || []).some((le: any) => le.company === ce.company && le.role === ce.role)
+      ...(rCloud.experience || []).filter((ce) =>
+        !(rLocal.experience || []).some((le) => le.company === ce.company && le.role === ce.role)
       )
     ],
     education: [
       ...(rLocal.education || []),
-      ...(rCloud.education || []).filter((ce: any) => 
-        !(rLocal.education || []).some((le: any) => le.school === ce.school && le.degree === ce.degree)
+      ...(rCloud.education || []).filter((ce) =>
+        !(rLocal.education || []).some((le) => le.school === ce.school && le.degree === ce.degree)
       )
     ],
     projects: [
       ...(rLocal.projects || []),
-      ...(rCloud.projects || []).filter((ce: any) => 
-        !(rLocal.projects || []).some((le: any) => le.title === ce.title)
+      ...(rCloud.projects || []).filter((ce) =>
+        !(rLocal.projects || []).some((le) => le.title === ce.title)
       )
     ],
     certifications: [
       ...(rLocal.certifications || []),
-      ...(rCloud.certifications || []).filter((ce: any) => 
-        !(rLocal.certifications || []).some((le: any) => le.name === ce.name)
+      ...(rCloud.certifications || []).filter((ce) =>
+        !(rLocal.certifications || []).some((le) => le.name === ce.name)
       )
     ],
     languages: [
       ...(rLocal.languages || []),
-      ...(rCloud.languages || []).filter((ce: any) => 
-        !(rLocal.languages || []).some((le: any) => le.name === ce.name)
+      ...(rCloud.languages || []).filter((ce) =>
+        !(rLocal.languages || []).some((le) => le.name === ce.name)
       )
     ],
     awards: [
       ...(rLocal.awards || []),
-      ...(rCloud.awards || []).filter((ce: any) => 
-        !(rLocal.awards || []).some((le: any) => le.title === ce.title)
+      ...(rCloud.awards || []).filter((ce) =>
+        !(rLocal.awards || []).some((le) => le.title === ce.title)
       )
     ],
     publications: [
       ...(rLocal.publications || []),
-      ...(rCloud.publications || []).filter((ce: any) => 
-        !(rLocal.publications || []).some((le: any) => le.title === ce.title)
+      ...(rCloud.publications || []).filter((ce) =>
+        !(rLocal.publications || []).some((le) => le.title === ce.title)
       )
     ],
     socialLinks: [
       ...(rLocal.socialLinks || []),
-      ...(rCloud.socialLinks || []).filter((ce: any) => 
-        !(rLocal.socialLinks || []).some((le: any) => le.label === ce.label)
+      ...(rCloud.socialLinks || []).filter((ce) =>
+        !(rLocal.socialLinks || []).some((le) => le.label === ce.label)
       )
     ],
     sectionVisibility: {
@@ -310,6 +310,9 @@ function mergeWorkspaceSnapshots(local: any, cloud: any): any {
       ...(rLocal.sectionVisibility || {})
     },
     customization: {
+      template: "classic",
+      fontFamily: "sans",
+      primaryColor: "brand",
       ...(rCloud.customization || {}),
       ...(rLocal.customization || {})
     }
@@ -330,21 +333,21 @@ function mergeWorkspaceSnapshots(local: any, cloud: any): any {
 
   merged.coachMessages = [
     ...(local.coachMessages || []),
-    ...(cloud.coachMessages || []).filter((cm: any) => 
-      !(local.coachMessages || []).some((lm: any) => lm.id === cm.id || lm.content === cm.content)
+    ...(cloud.coachMessages || []).filter((cm) =>
+      !(local.coachMessages || []).some((lm) => lm.id === cm.id || lm.content === cm.content)
     )
   ];
 
   merged.forgeHistory = [
     ...(local.forgeHistory || []),
-    ...(cloud.forgeHistory || []).filter((ch: any) => 
-      !(local.forgeHistory || []).some((lh: any) => lh.id === ch.id)
+    ...(cloud.forgeHistory || []).filter((ch) =>
+      !(local.forgeHistory || []).some((lh) => lh.id === ch.id)
     )
   ];
   merged.forgeBackups = [
     ...(local.forgeBackups || []),
-    ...(cloud.forgeBackups || []).filter((cb: any) => 
-      !(local.forgeBackups || []).some((lb: any) => lb.id === cb.id)
+    ...(cloud.forgeBackups || []).filter((cb) =>
+      !(local.forgeBackups || []).some((lb) => lb.id === cb.id)
     )
   ];
   
@@ -408,7 +411,7 @@ export const useCareerStore = create<CareerState>()(
           return;
         }
         if (choice === "keep") {
-          set((state) => ({
+          set(() => ({
             showMigrationDialog: false,
             cloudConflictIncoming: null,
             cloudConflictUserId: null,

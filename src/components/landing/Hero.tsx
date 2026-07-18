@@ -116,7 +116,7 @@ export function Hero() {
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link href="/forge" className="landing-cta-primary">
-              Ücretsiz Başla — %100 Ücretsiz
+              CV&apos;mi Ücretsiz Analiz Et
             </Link>
             <button type="button" onClick={openDemo} className="landing-cta-secondary">
               Demo Profili İncele
@@ -133,7 +133,7 @@ export function Hero() {
             />
             <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ld-ink-2)]">
               <Shield className="h-4 w-4 text-[var(--ld-teal)]" aria-hidden />
-              Private &amp; Local · veriler cihazınızda kalır
+              Standart analiz tarayıcıda çalışır · dosyanız sunucuya yüklenmez
             </p>
           </div>
         </div>

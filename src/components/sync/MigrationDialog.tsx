@@ -19,7 +19,6 @@ type Phase = "choose" | "loading" | "success";
 
 type Option = {
   id: Choice;
-  emoji: string;
   Icon: typeof Laptop;
   titleTr: string;
   titleEn: string;
@@ -34,7 +33,6 @@ type Option = {
 const OPTIONS: Option[] = [
   {
     id: "keep",
-    emoji: "💻",
     Icon: Laptop,
     titleTr: "Bu cihazdaki verileri kullan",
     titleEn: "Use data from this device",
@@ -46,7 +44,6 @@ const OPTIONS: Option[] = [
   },
   {
     id: "replace",
-    emoji: "☁️",
     Icon: Cloud,
     titleTr: "Hesaptaki verileri kullan",
     titleEn: "Use data from your account",
@@ -58,7 +55,6 @@ const OPTIONS: Option[] = [
   },
   {
     id: "merge",
-    emoji: "✨",
     Icon: Sparkles,
     titleTr: "Verileri birleştir",
     titleEn: "Combine data",
@@ -90,10 +86,10 @@ const toneStyles: Record<
     badge: "bg-slate-200 text-slate-700 dark:bg-white/10 dark:text-slate-200",
   },
   violet: {
-    card: "border-violet-300 bg-gradient-to-br from-violet-50 via-white to-emerald-50 hover:border-violet-400 dark:from-violet-500/15 dark:via-[#12081f] dark:to-emerald-500/10 dark:border-violet-400/40 dark:hover:border-violet-300/50",
-    icon: "bg-gradient-to-br from-violet-600 to-emerald-500 text-white shadow-md shadow-violet-500/30",
-    ring: "ring-violet-400/50",
-    badge: "bg-gradient-to-r from-violet-600 to-emerald-500 text-white",
+    card: "border-violet-300 bg-violet-50/70 hover:border-violet-500 dark:border-violet-400/40 dark:bg-violet-500/10 dark:hover:border-violet-300/60",
+    icon: "bg-violet-700 text-white dark:bg-violet-300 dark:text-violet-950",
+    ring: "ring-violet-400/40",
+    badge: "bg-violet-700 text-white dark:bg-violet-300 dark:text-violet-950",
   },
 };
 
@@ -138,7 +134,7 @@ export function MigrationDialog() {
 
   return (
     <div
-      className="fixed inset-0 z-[80] grid place-items-center overflow-y-auto bg-slate-900/50 px-4 py-8 backdrop-blur-md dark:bg-black/70"
+      className="fixed inset-0 z-[80] grid place-items-center overflow-y-auto bg-slate-950/60 px-4 py-8 dark:bg-black/75"
       role="dialog"
       aria-modal="true"
       aria-labelledby="migration-title"
@@ -147,10 +143,10 @@ export function MigrationDialog() {
         initial={{ opacity: 0, y: 18, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="relative w-full max-w-xl overflow-hidden rounded-3xl border border-white/20 bg-white/95 shadow-2xl shadow-slate-900/20 dark:border-white/10 dark:bg-[#110720]/95"
+        className="relative w-full max-w-xl overflow-hidden border border-slate-300 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-950"
       >
         {/* Üst gradient şerit */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 via-violet-500 to-emerald-400" />
+        <div className="h-1 w-full bg-violet-700 dark:bg-violet-300" />
 
         <div className="space-y-5 p-6 sm:p-7">
           <AnimatePresence mode="wait">
@@ -215,16 +211,16 @@ export function MigrationDialog() {
                         transition={{ delay: 0.05 * index + 0.08, duration: 0.3 }}
                         onClick={() => void runChoice(opt.id)}
                         className={cn(
-                          "group relative w-full rounded-2xl border p-4 text-left transition-all sm:p-5",
+                          "group relative w-full border p-4 text-left transition-colors sm:p-5",
                           styles.card,
-                          isRec && "p-5 shadow-lg shadow-violet-500/10 sm:p-6 ring-2",
+                          isRec && "p-5 sm:p-6 ring-2",
                           isRec && styles.ring
                         )}
                       >
                         {isRec && (
                           <span
                             className={cn(
-                              "absolute -top-2.5 right-4 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                              "absolute -top-2.5 right-4 border px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide",
                               styles.badge
                             )}
                           >
@@ -235,13 +231,13 @@ export function MigrationDialog() {
                         <div className="flex items-start gap-3.5">
                           <div
                             className={cn(
-                              "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg",
+                              "flex h-11 w-11 shrink-0 items-center justify-center text-lg",
                               styles.icon,
                               isRec && "h-12 w-12 text-xl"
                             )}
                             aria-hidden
                           >
-                            <span className="select-none">{opt.emoji}</span>
+                            <opt.Icon className="h-5 w-5" aria-hidden />
                           </div>
 
                           <div className="min-w-0 flex-1 space-y-1">
@@ -274,7 +270,7 @@ export function MigrationDialog() {
                               >
                                 <Info className="h-4 w-4 text-slate-400 transition-colors hover:text-violet-600 dark:hover:text-violet-300" />
                                 {tipOpen === opt.id && (
-                                  <span className="absolute right-0 top-6 z-10 w-52 rounded-xl border border-slate-200 bg-white p-2.5 text-[11px] font-medium leading-relaxed text-slate-600 shadow-lg dark:border-white/10 dark:bg-[#1a0f2e] dark:text-slate-300">
+                                  <span className="absolute right-0 top-6 z-10 w-52 border border-slate-200 bg-white p-2.5 text-[11px] font-medium leading-relaxed text-slate-600 shadow-lg dark:border-white/10 dark:bg-[#1a0f2e] dark:text-slate-300">
                                     <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-violet-600 dark:text-violet-300">
                                       {isTr ? "Ne olur?" : "What happens?"}
                                     </span>
@@ -301,8 +297,8 @@ export function MigrationDialog() {
                 <div className="flex flex-col-reverse items-stretch justify-between gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center dark:border-white/5">
                   <p className="text-center text-[11px] text-slate-500 dark:text-slate-400 sm:text-left">
                     {isTr
-                      ? "Endişelenme, verilerin yedekleniyor."
-                      : "Don't worry — your data is being kept safe."}
+                      ? "Seçimin uygulanmadan önce mevcut kayıtlar karşılaştırılır."
+                      : "Existing records are compared before your choice is applied."}
                   </p>
                   <button
                     type="button"
@@ -325,7 +321,6 @@ export function MigrationDialog() {
                 className="flex min-h-[280px] flex-col items-center justify-center gap-4 py-10 text-center"
               >
                 <div className="relative flex h-14 w-14 items-center justify-center">
-                  <span className="absolute inset-0 rounded-full bg-violet-400/20 animate-ping" />
                   <Loader2 className="relative h-10 w-10 animate-spin text-violet-600 dark:text-violet-300" />
                 </div>
                 <div className="space-y-1.5">

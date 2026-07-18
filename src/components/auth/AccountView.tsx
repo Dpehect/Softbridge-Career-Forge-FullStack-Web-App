@@ -79,8 +79,8 @@ export function AccountView({ email, name, provider }: AccountViewProps) {
   const handleDeleteCloudData = async () => {
     const confirmed = window.confirm(
       isTr
-        ? "Buluttaki tüm çalışma alanınızı ve profilinizi silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve oturumunuz kapatılacaktır."
-        : "Are you sure you want to delete your cloud workspace and profile? This action cannot be undone and you will be signed out."
+        ? "Buluttaki çalışma alanı ve profil verilerini silmek istediğinize emin misiniz? Giriş hesabınız korunur; bu işlem geri alınamaz ve oturumunuz kapatılır."
+        : "Delete your cloud workspace and profile data? Your sign-in account remains; this cannot be undone and you will be signed out."
     );
     if (!confirmed) return;
 
@@ -172,9 +172,14 @@ export function AccountView({ email, name, provider }: AccountViewProps) {
               </Button>
               <Button onClick={handleDeleteCloudData} variant="outline" className="flex items-center gap-1.5 text-xs font-semibold text-negative hover:bg-[var(--negative-wash)]">
                 <ShieldAlert className="h-4 w-4" />
-                {isTr ? "Hesabımı ve Bulut Verilerimi Sil" : "Delete Account & Cloud Data"}
+                {isTr ? "Bulut Çalışma Alanımı Sil" : "Delete Cloud Workspace"}
               </Button>
             </div>
+            <p className="max-w-2xl text-xs leading-5 text-ink-3">
+              {isTr
+                ? "Bu işlem CareerForge verilerini siler; kimlik sağlayıcınızdaki giriş hesabını silmez. Hesap erişiminin tamamen kaldırılması için destekle iletişime geçin."
+                : "This removes CareerForge data, not the identity-provider account. Contact support to request complete account-access removal."}
+            </p>
           </div>
         </section>
 

@@ -119,7 +119,7 @@ export default function JobsPage() {
           .includes(normalizedQuery);
       })
       .sort((a, b) => computeJobMatch(resume.skills, b.tags) - computeJobMatch(resume.skills, a.tags));
-  }, [query, mode, level, type, savedOnly, savedJobIds, resume.skills, localizedJobs]);
+  }, [query, mode, level, type, savedOnly, savedJobIds, resume.skills, localizedJobs, locale]);
 
   const topMatch = filtered[0];
   const topFit = topMatch ? computeJobMatch(resume.skills, topMatch.tags) : 0;
@@ -151,7 +151,7 @@ export default function JobsPage() {
           <motion.section
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-6 grid gap-4 rounded-2xl border border-sky-200/60 bg-gradient-to-r from-sky-50 to-violet-50 p-5 sm:grid-cols-[1fr_auto] sm:items-center dark:border-sky-500/20 dark:from-sky-950/30 dark:to-violet-950/30"
+            className="mt-6 grid gap-4 border border-line border-l-[3px] border-l-brand bg-surface-2 p-5 sm:grid-cols-[1fr_auto] sm:items-center"
           >
             <div>
               <h2 className="text-sm font-bold text-ink">{messages.empty.jobsTitle}</h2>
@@ -306,7 +306,7 @@ export default function JobsPage() {
 
           <aside className="xl:sticky xl:top-32 xl:self-start">
             <div className="premium-card overflow-hidden p-0">
-              <div className="bg-gradient-to-r from-sky-500/10 via-violet-500/10 to-orange-500/10 px-6 py-4">
+              <div className="border-b border-line bg-surface-2 px-6 py-4">
                 <div className="flex items-center justify-between">
                   <p className="section-label">{copy.strongest}</p>
                   <Sparkles className="h-4 w-4 text-orange-500" />

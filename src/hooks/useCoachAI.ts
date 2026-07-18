@@ -335,7 +335,7 @@ export function useCoachAI() {
 
       if (response.ok) {
         const data = await response.json();
-        if (data.fallback === false && data.reply) {
+        if (data.reply) {
           addCoachMessage({ role: "assistant", content: data.reply });
           setModelState("AI active");
           setLoading(false);

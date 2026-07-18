@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, CircleAlert, ChevronDown, ChevronUp, ShieldAlert, Sparkles } from "lucide-react";
+import { CheckCircle2, CircleAlert, ChevronDown, ChevronUp, ShieldAlert, ListChecks } from "lucide-react";
 import type { AtsScoreResult } from "@/features/analysis/atsScore";
 import { getAtsStatusLabel, getAtsSummary } from "@/features/analysis/atsScore";
 import { useMessages } from "@/i18n/useMessages";
@@ -79,7 +79,6 @@ export function AtsScoreBreakdown({ result, compact = false }: AtsScoreBreakdown
     }
   };
 
-  const gapPoints = Math.max(0, 100 - result.total);
   const actionItems = result.categories
     .filter((c) => c.score < c.maxScore)
     .sort((a, b) => b.maxScore - b.score - (a.maxScore - a.score))
@@ -94,13 +93,9 @@ export function AtsScoreBreakdown({ result, compact = false }: AtsScoreBreakdown
             <strong className="metric-number text-5xl font-extrabold text-brand-strong">{result.total}</strong>
             <span className="pb-1.5 text-sm font-semibold text-ink-3">/100</span>
           </div>
-          {gapPoints > 0 && (
-            <p className="mt-2 text-xs font-semibold text-caution">
-              {isTr
-                ? `${gapPoints} puan daha kazanılabilir`
-                : `${gapPoints} points still available`}
-            </p>
-          )}
+          <p className="mt-2 text-xs font-semibold text-ink-3">
+            {isTr ? "Model güveni" : "Model confidence"}: {result.confidence === "high" ? (isTr ? "yüksek" : "high") : result.confidence === "medium" ? (isTr ? "orta" : "medium") : (isTr ? "düşük" : "low")}
+          </p>
         </div>
         <div>
           <div className="flex items-center gap-2">
@@ -111,11 +106,11 @@ export function AtsScoreBreakdown({ result, compact = false }: AtsScoreBreakdown
         </div>
       </div>
 
-      {/* Actionable path to 100 */}
+      {/* Highest-impact actions within the current rubric */}
       {!compact && actionItems.length > 0 && (
         <div className="border-b border-line bg-[var(--caution-wash)]/40 px-6 py-5 sm:px-8">
           <p className="text-xs font-bold uppercase tracking-wider text-caution">
-            {isTr ? "100’e ulaşmak için öncelikli aksiyonlar" : "Priority actions to reach 100"}
+            {isTr ? "Mevcut rubriğe göre öncelikli düzeltmeler" : "Priority corrections under the current rubric"}
           </p>
           <ol className="mt-3 space-y-2.5">
             {actionItems.map((cat, i) => {
@@ -186,7 +181,7 @@ export function AtsScoreBreakdown({ result, compact = false }: AtsScoreBreakdown
             onClick={() => setExpanded(!expanded)}
             className="inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-brand-strong hover:underline"
           >
-            <Sparkles className="h-4 w-4" />
+            <ListChecks className="h-4 w-4" />
             <span>{isTr ? "Neden bu puan? Detaylı kanıtlar" : "Why this score? Full evidence"}</span>
             {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
@@ -253,6 +248,12 @@ export function AtsScoreBreakdown({ result, compact = false }: AtsScoreBreakdown
               : "Disclaimer: Transparent, rule-based estimate. Not a real ATS vendor or hiring decision — but it shows which signals are missing."}
           </p>
         </div>
+        {result.missingInputs.length > 0 && (
+          <div className="mt-3 border-l-2 border-caution bg-[var(--caution-wash)]/35 px-3 py-2 text-xs leading-relaxed text-ink-2">
+            <strong className="text-ink">{isTr ? "Güveni sınırlayan girdiler: " : "Inputs limiting confidence: "}</strong>
+            {result.missingInputs.join(" · ")}
+          </div>
+        )}
       </div>
     </section>
   );

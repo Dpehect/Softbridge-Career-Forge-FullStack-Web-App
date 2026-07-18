@@ -4,7 +4,7 @@ import { ProductSwitcher } from "@/components/landing/ProductSwitcher";
 import { ProductShowcases } from "@/components/landing/ProductShowcases";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { ResumeExamples } from "@/components/landing/ResumeExamples";
-import { Testimonials } from "@/components/landing/Testimonials";
+import { ScoreMethodology } from "@/components/landing/ScoreMethodology";
 import { Pricing } from "@/components/landing/Pricing";
 import { FinalCta } from "@/components/landing/FinalCta";
 import { LandingFooter } from "@/components/landing/Footer";
@@ -23,7 +23,7 @@ export default function HomePage() {
         <ProductShowcases />
         <HowItWorks />
         <ResumeExamples />
-        <Testimonials />
+        <ScoreMethodology />
         <Pricing />
         <FinalCta />
       </main>

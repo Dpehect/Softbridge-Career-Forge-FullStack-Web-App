@@ -359,6 +359,24 @@ html:not(.dark):not([data-theme="dark"]) .text-ink-3 {
   padding-block: var(--space-10) var(--space-20);
 }
 
+.product-page > header,
+.editorial-page-header {
+  position: relative;
+  display: grid;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--border-default);
+  padding: 0 0 2rem 1.25rem;
+}
+
+.product-page > header::before,
+.editorial-page-header::before {
+  position: absolute;
+  inset: 0 auto 2rem 0;
+  width: 3px;
+  background: var(--action-primary);
+  content: "";
+}
+
 .page-kicker {
   display: inline-flex;
   align-items: center;
@@ -441,9 +459,10 @@ html:not(.dark):not([data-theme="dark"]) .text-ink-3 {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  border-radius: 1rem;
+  border-radius: var(--radius-panel);
   border: 1px solid var(--border-default);
-  background: linear-gradient(135deg, var(--accent-wash), var(--signal-wash));
+  border-left: 3px solid var(--action-primary);
+  background: var(--bg-surface-subtle);
   padding: var(--space-5) var(--space-6);
 }
 
@@ -493,6 +512,13 @@ html:not(.dark):not([data-theme="dark"]) .text-ink-3 {
     width: min(100% - 5rem, 80rem);
     padding-block-start: var(--space-14, 3.5rem);
     padding-block-end: var(--space-24, 6rem);
+  }
+
+  .product-page > header,
+  .editorial-page-header {
+    grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
+    align-items: end;
+    padding-left: 1.75rem;
   }
 }
 
@@ -877,23 +903,19 @@ html:not(.dark):not([data-theme="dark"]) .text-ink-3 {
 .premium-card {
   border: 1px solid var(--border-default);
   background: var(--bg-surface);
-  border-radius: 1rem;
-  box-shadow: var(--elevation-1);
+  border-radius: var(--radius-panel);
+  box-shadow: none;
   transition:
-    transform var(--duration-base) var(--ease-standard),
-    box-shadow var(--duration-base) var(--ease-standard),
     border-color var(--duration-base) var(--ease-standard);
 }
 
 .premium-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--elevation-2);
-  border-color: color-mix(in srgb, var(--action-primary) 28%, var(--border-default));
+  border-color: var(--border-strong);
 }
 
 .progress-fill {
   transform-origin: left center;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #f97316);
+  background: var(--action-primary);
 }
 
 .skeleton-shimmer {
@@ -956,18 +978,17 @@ html:not(.dark):not([data-theme="dark"]) .text-ink-3 {
 }
 
 .filter-chip[data-active="true"] {
-  border-color: transparent;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  color: white;
-  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.3);
+  border-color: var(--fg-primary);
+  background: var(--fg-primary);
+  color: var(--bg-canvas);
+  box-shadow: none;
 }
 
 .motivation-banner {
-  border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, #f97316 25%, var(--border-default));
-  background:
-    linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(249, 115, 22, 0.08)),
-    var(--bg-surface);
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--action-secondary);
+  background: var(--bg-surface);
 }
 
 .a4-paper-shell {

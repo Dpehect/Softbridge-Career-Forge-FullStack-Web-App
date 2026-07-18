@@ -139,6 +139,16 @@ const matchAnalysisSchema = z.object({
   atsScore: z.number().finite(),
   matchedSkills: z.array(z.string()),
   missingSkills: z.array(z.string()),
+  requiredSkillsCoverage: z.number().finite().optional(),
+  preferredSkillsCoverage: z.number().finite().optional(),
+  experienceAlignment: z.number().finite().optional(),
+  locationCompatibility: z.number().finite().optional(),
+  languageCompatibility: z.number().finite().optional(),
+  evidenceStrength: z.number().finite().optional(),
+  scoreExplanations: z.array(z.string()).optional(),
+  scoreConfidence: z.enum(["low", "medium", "high"]).optional(),
+  rubricVersion: z.literal("match-v2").optional(),
+  missingInputs: z.array(z.string()).optional(),
 });
 
 const coachMessageSchema = z.object({
@@ -416,7 +426,7 @@ function parseAppliedJobs(rawIds: string[]): {
     if (parts[2]) {
       try {
         jobApplicationDetails[id] = JSON.parse(decodeURIComponent(parts[2]));
-      } catch (e) {
+      } catch {
         // fallback
       }
     }
