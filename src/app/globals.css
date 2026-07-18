@@ -542,6 +542,202 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ============================================================
+   CareerForge landing — product-led editorial system
+   ============================================================ */
+
+.landing-page {
+  --ld-bg: #fbfaf7;
+  --ld-surface: #ffffff;
+  --ld-ink: #101418;
+  --ld-ink-2: #4a525a;
+  --ld-border: #d9ddd9;
+  --ld-teal: #006b63;
+  --ld-teal-deep: #004f49;
+  --ld-amber: #ffb800;
+  --ld-amber-hover: #f0ad00;
+  --ld-cobalt: #4f5ceb;
+  --ld-blue-deep: #2927a8;
+  --ld-burgundy: #741b3b;
+  --ld-cream: #f6f0e8;
+  --ld-offwhite: #f4ede4;
+  --ld-mint: #e7f5f2;
+  --ld-shadow: 0 18px 40px rgba(16, 20, 24, 0.08);
+  --ld-shadow-sm: 0 6px 18px rgba(16, 20, 24, 0.06);
+  background: var(--ld-bg);
+  color: var(--ld-ink);
+  overflow-x: hidden;
+}
+
+.dark .landing-page {
+  --ld-bg: #0c1014;
+  --ld-surface: #151a20;
+  --ld-ink: #f1e9df;
+  --ld-ink-2: #c5c0b6;
+  --ld-border: #2a323a;
+  --ld-teal: #1aa89a;
+  --ld-teal-deep: #0d6b62;
+  --ld-amber: #ffb800;
+  --ld-amber-hover: #ffc933;
+  --ld-cobalt: #6b75f0;
+  --ld-blue-deep: #3d3bc4;
+  --ld-burgundy: #5c1530;
+  --ld-cream: #1a1518;
+  --ld-offwhite: #f1e9df;
+  --ld-mint: #132422;
+  --ld-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  --ld-shadow-sm: 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+
+.landing-shell {
+  width: min(100% - 1.5rem, 72rem);
+  margin-inline: auto;
+}
+
+@media (min-width: 48rem) {
+  .landing-shell {
+    width: min(100% - 3rem, 72rem);
+  }
+}
+
+.landing-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ld-teal);
+}
+
+.landing-h1 {
+  color: var(--ld-ink);
+  font-size: clamp(2.25rem, 5.5vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.landing-h2 {
+  color: var(--ld-ink);
+  font-size: clamp(1.75rem, 3.4vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.landing-lede {
+  color: var(--ld-ink-2);
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  line-height: 1.7;
+  max-width: 38rem;
+}
+
+.landing-cta-primary {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  background: var(--ld-amber);
+  color: #101418;
+  padding: 0.7rem 1.4rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  box-shadow: 0 8px 22px rgba(255, 184, 0, 0.28);
+  transition: background-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.landing-cta-primary:hover {
+  background: var(--ld-amber-hover);
+  box-shadow: 0 12px 28px rgba(255, 184, 0, 0.35);
+  transform: translateY(-1px);
+}
+
+.landing-cta-primary:focus-visible {
+  outline: 2px solid var(--ld-ink);
+  outline-offset: 3px;
+}
+
+.landing-cta-secondary {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--ld-border);
+  background: transparent;
+  color: var(--ld-ink);
+  padding: 0.65rem 1.2rem;
+  font-size: 0.9375rem;
+  font-weight: 650;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.landing-cta-secondary:hover {
+  border-color: var(--ld-teal);
+  background: color-mix(in srgb, var(--ld-teal) 6%, transparent);
+}
+
+.landing-cta-secondary:focus-visible {
+  outline: 2px solid var(--ld-teal);
+  outline-offset: 3px;
+}
+
+.landing-mock {
+  border: 1px solid var(--ld-border);
+  background: var(--ld-surface);
+  border-radius: 1rem;
+  box-shadow: var(--ld-shadow-sm);
+}
+
+.landing-mock-strong {
+  border: 1px solid color-mix(in srgb, var(--ld-ink) 8%, transparent);
+  background: var(--ld-surface);
+  border-radius: 1.125rem;
+  box-shadow: var(--ld-shadow);
+}
+
+.landing-tab {
+  min-height: 2.5rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 0.45rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: var(--ld-ink-2);
+  background: transparent;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.landing-tab[aria-selected="true"] {
+  background: var(--ld-ink);
+  color: var(--ld-offwhite);
+}
+
+.landing-tab:hover:not([aria-selected="true"]) {
+  background: color-mix(in srgb, var(--ld-ink) 5%, transparent);
+  color: var(--ld-ink);
+}
+
+.landing-tab:focus-visible {
+  outline: 2px solid var(--ld-teal);
+  outline-offset: 2px;
+}
+
+.dark .landing-tab[aria-selected="true"] {
+  background: var(--ld-offwhite);
+  color: #101418;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-cta-primary:hover {
+    transform: none;
+  }
+}
+
+/* ============================================================
    Premium motion / glass / CTA utilities
    ============================================================ */
 

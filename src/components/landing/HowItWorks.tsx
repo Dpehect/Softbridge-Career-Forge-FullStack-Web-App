@@ -1,82 +1,131 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useId, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useReducedMotionPreference } from "@/motion/useReducedMotionPreference";
+import { cn } from "@/lib/utils";
 
 const STEPS = [
   {
-    n: "01",
-    title: "CV’nizi yükleyin veya oluşturun",
-    body: "PDF/TXT yükleyin veya editörde oluşturun. Dosya sunucuya gitmez; okuma tarayıcıda yapılır.",
+    id: "1",
+    title: "Hesap oluşturun veya CV’nizi yükleyin",
+    body: "PDF/TXT yükleyin veya demo profille başlayın. Dosya sunucuya gitmez; okuma tarayıcıda yapılır.",
+    panel: "Yükleme paneli · yerel parse · anında çalışma alanı",
   },
   {
-    n: "02",
-    title: "Yapı ve ATS uyumunu analiz edin",
-    body: "Altı kategoride şeffaf skor alın. Eksik sinyaller ve öncelikli aksiyonlar listelenir.",
+    id: "2",
+    title: "Hedef rolünüzü belirleyin",
+    body: "Kariyer hedefinizi seçin. ATS ve eşleştirme, o role göre eksik sinyalleri gösterir.",
+    panel: "Hedef rol seçici · beceri boşlukları · öncelikli aksiyonlar",
   },
   {
-    n: "03",
-    title: "Sorumlulukları kanıta dönüştürün",
-    body: "Genel ifadeleri ölçülebilir sonuçlara çevirin. Önce / sonra önerileriyle ilerleyin.",
+    id: "3",
+    title: "Başvurularınızı yönetin",
+    body: "İlanları kaydedin, aşama güncelleyin, uyum skorunu izleyin — hepsi tek pipeline’da.",
+    panel: "Pipeline · aşama etiketleri · uyum skoru",
   },
   {
-    n: "04",
-    title: "Profilinizi uygun rollerle eşleştirin",
-    body: "Uyum skorunu görün, eksik becerileri tamamlayın ve başvuru pipeline’ınızı takip edin.",
-  },
-  {
-    n: "05",
-    title: "Mülakata hazırlanın",
-    body: "CV’nize özel sorular ve STAR iskeleti ile koçta prova yapın.",
-  },
-  {
-    n: "06",
-    title: "Kariyer planı oluşturun",
-    body: "Hedef role giden yol haritasını adım adım tamamlayın ve ilerlemenizi izleyin.",
+    id: "4",
+    title: "Mülakata hazırlanın ve gelişiminizi takip edin",
+    body: "STAR koçu, yol haritası ve haftalık hedeflerle ilerlemeyi görünür kılın.",
+    panel: "STAR koç · yol haritası · ilerleme çubuğu",
   },
 ] as const;
 
 export function HowItWorks() {
-  const prefersReduced = useReducedMotionPreference();
+  const [active, setActive] = useState(0);
+  const reduced = useReducedMotionPreference();
+  const baseId = useId();
+  const step = STEPS[active]!;
 
   return (
-    <section id="nasil-calisir" className="bg-[#F8FAFC] py-24 sm:py-32">
-      <div className="mx-auto w-[min(100%-1.25rem,75rem)] sm:w-[min(100%-2.5rem,75rem)]">
-        <div className="max-w-2xl">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0F766E]">
-            Nasıl çalışır?
-          </p>
-          <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem]">
-            Başvuru hazırlığı, adım adım
-          </h2>
-          <p className="mt-5 text-lg leading-relaxed text-slate-700">
-            Her adım bir sonrakine bağlanır. Takıldığınız yerde net bir “sıradaki adım”
-            her zaman görünür.
+    <section id="nasil-calisir" className="border-b border-[var(--ld-border)] bg-[var(--ld-bg)] py-16 sm:py-24">
+      <div className="landing-shell">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="landing-h2">Nasıl Çalışır?</h2>
+          <p className="landing-lede mx-auto mt-4 text-center">
+            Dört net adım. Her adım bir sonrakine bağlanır — tıklayarak paneli güncelleyin.
           </p>
         </div>
 
-        <ol className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-7">
-          {STEPS.map((step, index) => (
-            <motion.li
-              key={step.n}
-              initial={prefersReduced ? false : { opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ delay: index * 0.05 }}
-              whileHover={prefersReduced ? undefined : { scale: 1.03, y: -2 }}
-              className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-8 shadow-xl shadow-slate-200/40"
+        <div className="mx-auto mt-12 max-w-5xl overflow-hidden rounded-3xl bg-[#e8a317] p-5 text-[#101418] shadow-[var(--ld-shadow)] sm:p-8">
+          <div className="grid gap-6 lg:grid-cols-2 lg:items-center">
+            <div
+              className="min-h-[14rem] rounded-2xl border border-black/10 bg-[#101418] p-5 text-[var(--ld-offwhite)] sm:p-6"
+              role="tabpanel"
+              id={`${baseId}-panel`}
+              aria-labelledby={`${baseId}-tab-${step.id}`}
             >
-              <span className="block text-4xl font-bold tracking-tight text-[#CCFBF1]">
-                {step.n}
-              </span>
-              <h3 className="mt-4 text-lg font-bold text-slate-900">{step.title}</h3>
-              <p className="mt-3 text-[0.9375rem] leading-relaxed text-slate-700">
-                {step.body}
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#e8a317]">
+                Adım {step.id}
               </p>
-              <span className="absolute right-6 top-6 h-2.5 w-2.5 rounded-full bg-[#FBBF24]" />
-            </motion.li>
-          ))}
-        </ol>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={step.id}
+                  initial={reduced ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={reduced ? undefined : { opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <h3 className="mt-3 text-xl font-bold leading-snug tracking-tight">
+                    {step.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-[#d6cfc4]">{step.body}</p>
+                  <p className="mt-6 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-[#cfc8bc]">
+                    {step.panel}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            <div>
+              <p className="text-sm font-bold text-[#101418]/80">
+                CareerForge akışını adım adım takip edin. Her adım gerçek bir ürün ekranına
+                bağlanır.
+              </p>
+              <ol className="mt-6 space-y-1" role="tablist" aria-label="Çalışma adımları">
+                {STEPS.map((item, index) => {
+                  const isActive = index === active;
+                  return (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        role="tab"
+                        id={`${baseId}-tab-${item.id}`}
+                        aria-selected={isActive}
+                        aria-controls={`${baseId}-panel`}
+                        className={cn(
+                          "flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition",
+                          isActive ? "bg-black/10" : "hover:bg-black/5"
+                        )}
+                        onClick={() => setActive(index)}
+                      >
+                        <span
+                          className={cn(
+                            "mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold",
+                            isActive ? "bg-[#101418] text-[#e8a317]" : "bg-black/10 text-[#101418]"
+                          )}
+                        >
+                          {item.id}
+                        </span>
+                        <span className="min-w-0">
+                          <span
+                            className={cn(
+                              "block text-sm font-bold",
+                              isActive && "underline decoration-2 underline-offset-4"
+                            )}
+                          >
+                            {item.title}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

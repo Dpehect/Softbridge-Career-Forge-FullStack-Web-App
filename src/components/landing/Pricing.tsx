@@ -1,111 +1,90 @@
-"use client";
-
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { Check, Sparkles } from "lucide-react";
-import { useReducedMotionPreference } from "@/motion/useReducedMotionPreference";
+import { Check } from "lucide-react";
 
 const FREE = [
   "Sınırsız yerel ATS analizi",
-  "CV editörü & A4 önizleme",
-  "Demo iş ilanları & uyum skoru",
+  "CV editörü ve A4 önizleme",
+  "Demo iş ilanları ve uyum skoru",
   "Temel mülakat soruları",
-  "Veriler tarayıcıda kalır",
+  "Tarayıcıda kalıcı veri",
 ] as const;
 
-const PREMIUM = [
+const PRO = [
   "Free planın tümü",
-  "Bulut senkronizasyonu (hesap ile)",
+  "Hesap ile bulut senkronizasyonu",
   "Gelişmiş STAR koç akışları",
-  "Sürüm geçmişi & yedekler",
-  "Öncelikli özellik erişimi",
+  "Sürüm geçmişi ve yedekler",
   "Çoklu cihaz çalışma alanı",
 ] as const;
 
 export function Pricing() {
-  const prefersReduced = useReducedMotionPreference();
-
   return (
-    <section id="pricing" className="bg-[#F8FAFC] py-24 sm:py-32">
-      <div className="mx-auto w-[min(100%-1.25rem,75rem)] sm:w-[min(100%-2.5rem,75rem)]">
+    <section id="pricing" className="border-b border-[var(--ld-border)] bg-[var(--ld-bg)] py-16 sm:py-24">
+      <div className="landing-shell">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0F766E]">
-            Fiyatlandırma
-          </p>
-          <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem]">
-            Hangi plan size uygun?
-          </h2>
-          <p className="mt-5 text-lg leading-relaxed text-slate-700">
-            Yerel analiz her zaman ücretsiz. Premium; cihazlar arası senkron ve gelişmiş
-            koçluk için.
+          <p className="landing-eyebrow">Fiyatlandırma</p>
+          <h2 className="landing-h2 mt-3">Hangi plan size uygun?</h2>
+          <p className="landing-lede mx-auto mt-4 text-center">
+            Yerel analiz her zaman ücretsiz. Pro; senkron ve gelişmiş koçluk için erken
+            erişim aşamasındadır.
           </p>
         </div>
 
-        <div className="mx-auto mt-16 grid max-w-4xl gap-8 lg:grid-cols-2">
-          <motion.div
-            initial={prefersReduced ? false : { opacity: 0, y: 18 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex flex-col rounded-3xl border border-slate-200 bg-white p-9 shadow-xl shadow-slate-200/50"
-          >
-            <p className="text-sm font-bold uppercase tracking-wide text-slate-500">Free</p>
-            <p className="mt-3 text-5xl font-bold tracking-tight text-slate-900">
-              ₺0
-              <span className="text-lg font-semibold text-slate-500"> / sonsuza dek</span>
+        <div className="mx-auto mt-12 grid max-w-4xl overflow-hidden rounded-2xl border border-[var(--ld-border)] lg:grid-cols-2">
+          <div className="bg-[var(--ld-surface)] p-7 sm:p-9">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--ld-ink-2)]">
+              CareerForge Free
             </p>
-            <p className="mt-3 text-[0.975rem] text-slate-700">
+            <p className="mt-3 text-4xl font-bold tracking-tight text-[var(--ld-ink)]">
+              ₺0
+              <span className="text-base font-semibold text-[var(--ld-ink-2)]"> / sonsuza dek</span>
+            </p>
+            <p className="mt-2 text-sm text-[var(--ld-ink-2)]">
               Bireysel iş arayanlar için tam yerel çalışma alanı.
             </p>
-            <ul className="mt-10 space-y-3.5">
+            <ul className="mt-8 space-y-3">
               {FREE.map((item) => (
-                <li key={item} className="flex items-start gap-3 text-[0.975rem] font-medium text-slate-800">
-                  <Check className="mt-0.5 h-5 w-5 shrink-0 text-[#14B8A6]" />
+                <li key={item} className="flex items-start gap-2.5 text-sm font-medium text-[var(--ld-ink)]">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--ld-teal)]" aria-hidden />
                   {item}
                 </li>
               ))}
             </ul>
-            <Link
-              href="/forge"
-              className="mt-10 inline-flex min-h-12 items-center justify-center rounded-full border-2 border-slate-300 bg-white text-base font-bold text-slate-900 transition hover:scale-[1.02] hover:border-[#0F766E] hover:text-[#0F766E]"
-            >
+            <Link href="/forge" className="landing-cta-secondary mt-8 w-full">
               Ücretsiz başla
             </Link>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={prefersReduced ? false : { opacity: 0, y: 18 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.08 }}
-            className="relative flex flex-col rounded-3xl border-2 border-[#0F766E] bg-gradient-to-b from-[#0F766E] to-[#115E59] p-9 text-white shadow-2xl shadow-teal-900/30"
-          >
-            <span className="absolute -top-3.5 right-7 inline-flex items-center gap-1.5 rounded-full bg-[#FBBF24] px-3.5 py-1.5 text-xs font-extrabold text-slate-900 shadow-lg">
-              <Sparkles className="h-3.5 w-3.5" />
-              Önerilen
-            </span>
-            <p className="text-sm font-bold uppercase tracking-wide text-teal-100">Premium</p>
-            <p className="mt-3 text-5xl font-bold tracking-tight">
-              Yakında
-              <span className="text-lg font-semibold text-teal-200"> · erken erişim</span>
+          <div className="bg-[var(--ld-teal-deep)] p-7 text-[var(--ld-offwhite)] sm:p-9">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#9fd9d2]">
+                CareerForge Pro
+              </p>
+              <span className="rounded-full bg-[var(--ld-amber)] px-2.5 py-1 text-[10px] font-extrabold text-[#101418]">
+                Yakında
+              </span>
+            </div>
+            <p className="mt-3 text-4xl font-bold tracking-tight">
+              Erken erişim
             </p>
-            <p className="mt-3 text-[0.975rem] text-teal-50/95">
-              Senkron, yedek ve gelişmiş koç için hesabınızı bağlayın.
+            <p className="mt-2 text-sm text-[#c5e8e3]">
+              Fiyat henüz yayınlanmadı. Hesap bağlayarak senkronu kullanın.
             </p>
-            <ul className="mt-10 space-y-3.5">
-              {PREMIUM.map((item) => (
-                <li key={item} className="flex items-start gap-3 text-[0.975rem] font-medium text-teal-50">
-                  <Check className="mt-0.5 h-5 w-5 shrink-0 text-[#FBBF24]" />
+            <ul className="mt-8 space-y-3">
+              {PRO.map((item) => (
+                <li key={item} className="flex items-start gap-2.5 text-sm font-medium text-[var(--ld-offwhite)]">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--ld-amber)]" aria-hidden />
                   {item}
                 </li>
               ))}
             </ul>
             <Link
               href="/login"
-              className="mt-10 inline-flex min-h-12 items-center justify-center rounded-full bg-[#FBBF24] text-base font-bold text-slate-900 shadow-lg shadow-amber-400/30 transition hover:scale-[1.02] hover:bg-[#F59E0B]"
+              className="landing-cta-primary mt-8 w-full"
             >
               Hesap oluştur / Giriş yap
             </Link>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

@@ -1,24 +1,28 @@
 import { Navbar } from "@/components/landing/Navbar";
 import { Hero } from "@/components/landing/Hero";
-import { Features } from "@/components/landing/Features";
+import { ProductSwitcher } from "@/components/landing/ProductSwitcher";
+import { ProductShowcases } from "@/components/landing/ProductShowcases";
 import { HowItWorks } from "@/components/landing/HowItWorks";
+import { ResumeExamples } from "@/components/landing/ResumeExamples";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { Pricing } from "@/components/landing/Pricing";
 import { FinalCta } from "@/components/landing/FinalCta";
 import { LandingFooter } from "@/components/landing/Footer";
 
 /**
- * CareerForge landing — TealHQ-inspired premium SaaS homepage.
- * Modular sections live under `@/components/landing/*`.
+ * SoftBridge CareerForge — product-led editorial landing.
+ * Interactive sections are client islands; shell stays simple for performance.
  */
 export default function HomePage() {
   return (
-    <div className="min-h-full bg-white text-slate-900 antialiased">
+    <div className="landing-page min-h-full">
       <Navbar />
       <main>
         <Hero />
-        <Features />
+        <ProductSwitcher />
+        <ProductShowcases />
         <HowItWorks />
+        <ResumeExamples />
         <Testimonials />
         <Pricing />
         <FinalCta />
