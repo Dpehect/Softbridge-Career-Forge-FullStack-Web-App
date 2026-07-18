@@ -328,16 +328,28 @@ export default function ResumePage() {
         )}
 
         {hasContent && (
-          <section className="mt-6 grid gap-px border border-line bg-line sm:grid-cols-[1fr_1fr_1.4fr]">
-            <div className="bg-surface p-4">
+          <section className="mt-6 grid gap-3 sm:grid-cols-[1fr_1fr_1.4fr]">
+            <div className="premium-card p-4">
               <p className="section-label">{copy.atsScore}</p>
-              <p className="metric-number mt-2 text-2xl font-semibold text-brand-strong">{atsResult?.total ?? 0}%</p>
+              <p className="metric-number mt-2 text-2xl font-bold text-brand-strong">{atsResult?.total ?? 0}%</p>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-3">
+                <div
+                  className="h-full rounded-full progress-fill"
+                  style={{ width: `${atsResult?.total ?? 0}%` }}
+                />
+              </div>
             </div>
-            <div className="bg-surface p-4">
+            <div className="premium-card p-4">
               <p className="section-label">{copy.documentStrength}</p>
-              <p className="metric-number mt-2 text-2xl font-semibold text-ink">{feedback?.overallScore || 0}%</p>
+              <p className="metric-number mt-2 text-2xl font-bold text-ink">{feedback?.overallScore || 0}%</p>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-3">
+                <div
+                  className="h-full rounded-full progress-fill"
+                  style={{ width: `${feedback?.overallScore || 0}%` }}
+                />
+              </div>
             </div>
-            <div className="bg-surface p-4">
+            <div className="premium-card p-4">
               <p className="section-label">{copy.nextImprovement}</p>
               <p className="mt-2 text-xs leading-5 text-ink-2">{feedback?.improvements[0] || (isTr ? "Önce temel profil bilgilerini tamamlayın." : "Complete the essential profile details first.")}</p>
             </div>
@@ -345,12 +357,20 @@ export default function ResumePage() {
         )}
 
         <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1.2fr)_minmax(21rem,0.8fr)] xl:items-start">
-          {/* PAPER PREVIEW */}
-          <section className="relative min-h-[52rem] overflow-hidden bg-surface-2 p-3 sm:p-8 rounded-lg border border-line">
+          {/* PAPER PREVIEW — live A4 */}
+          <section className="relative min-h-[52rem] overflow-hidden rounded-2xl border border-line bg-gradient-to-b from-slate-100/80 to-surface-2 p-3 sm:p-8 dark:from-slate-900/40">
+            <div className="mb-3 flex items-center justify-between px-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-ink-3">
+                {isTr ? "Canlı A4 önizleme" : "Live A4 preview"}
+              </p>
+              <span className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-semibold text-ink-3 shadow-sm dark:bg-white/10">
+                210 × 297 mm
+              </span>
+            </div>
             <div
               ref={paperRef}
               className={cn(
-                "mx-auto min-h-[48rem] max-w-[46rem] rounded-[var(--radius-control)] border border-[var(--paper-line)] bg-[var(--paper-bg)] px-8 py-9 text-[var(--paper-ink)] shadow-[var(--elevation-2)] sm:px-12 sm:py-12",
+                "a4-paper-shell mx-auto min-h-[48rem] max-w-[46rem] px-8 py-9 text-[var(--paper-ink)] sm:px-12 sm:py-12",
                 fontStyle
               )}
             >

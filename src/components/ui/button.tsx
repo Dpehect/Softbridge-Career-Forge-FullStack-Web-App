@@ -3,14 +3,15 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-control)] text-sm font-semibold transition-[background-color,color,border-color,transform,box-shadow] duration-200 focus-visible:outline-none focus-visible:shadow-[var(--focus-ring)] disabled:pointer-events-none disabled:opacity-45 cursor-pointer active:translate-y-px",
+  "btn-micro inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-control)] text-sm font-semibold transition-[background-color,color,border-color,transform,box-shadow] duration-200 focus-visible:outline-none focus-visible:shadow-[var(--focus-ring)] disabled:pointer-events-none disabled:opacity-45 cursor-pointer",
   {
     variants: {
       variant: {
-        default: "border border-line-strong bg-surface text-ink hover:bg-surface-2",
-        accent: "border border-transparent bg-signal text-[var(--action-primary-ink)] hover:brightness-95",
-        primary: "border border-transparent bg-brand text-[var(--action-primary-ink)] shadow-sm hover:bg-brand-strong",
-        outline: "border border-line-strong bg-transparent text-ink hover:bg-surface-2",
+        default: "border border-line-strong bg-surface text-ink hover:bg-surface-2 hover:shadow-sm",
+        accent: "border border-transparent bg-signal text-[var(--action-primary-ink)] hover:brightness-95 hover:shadow-md",
+        primary:
+          "border border-transparent bg-brand text-[var(--action-primary-ink)] shadow-sm hover:bg-brand-strong hover:shadow-md hover:shadow-brand/20",
+        outline: "border border-line-strong bg-transparent text-ink hover:bg-surface-2 hover:border-brand/40",
         ghost: "border border-transparent bg-transparent text-ink-2 hover:bg-surface-2 hover:text-ink",
         ghostBorder: "border border-line bg-transparent text-ink-2 hover:border-line-strong hover:bg-surface-2 hover:text-ink",
         soft: "border border-transparent bg-surface-2 text-ink hover:bg-surface-3",

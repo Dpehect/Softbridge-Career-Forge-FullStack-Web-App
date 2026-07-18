@@ -16,6 +16,8 @@ import {
   Target,
   TrendingUp,
   Zap,
+  Shield,
+  Flame,
 } from "lucide-react";
 
 import { useMessages } from "@/i18n/useMessages";
@@ -35,9 +37,19 @@ const float = (y = 12, duration = 4, delay = 0) => ({
 });
 
 const bounceHover = {
-  scale: 1.06,
-  y: -2,
-  transition: { type: "spring" as const, stiffness: 400, damping: 14 },
+  scale: 1.05,
+  y: -3,
+  transition: { type: "spring" as const, stiffness: 420, damping: 16 },
+};
+
+const badgePop = {
+  hidden: { opacity: 0, scale: 0.7, y: 12 },
+  visible: (i: number) => ({
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { delay: 0.45 + i * 0.08, type: "spring" as const, stiffness: 280, damping: 18 },
+  }),
 };
 
 export function HomeHero() {
@@ -46,8 +58,9 @@ export function HomeHero() {
   const isTr = locale === "tr";
   const prefersReduced = useReducedMotionPreference();
   const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 400], [0, prefersReduced ? 0 : -40]);
-  const heroOpacity = useTransform(scrollY, [0, 320], [1, prefersReduced ? 1 : 0.55]);
+  const heroY = useTransform(scrollY, [0, 420], [0, prefersReduced ? 0 : -48]);
+  const heroOpacity = useTransform(scrollY, [0, 360], [1, prefersReduced ? 1 : 0.5]);
+  const cardsY = useTransform(scrollY, [0, 400], [0, prefersReduced ? 0 : 30]);
 
   const {
     loadDemoProfile,
@@ -99,55 +112,121 @@ export function HomeHero() {
   }, [loadDemoProfile, messages, router]);
 
   return (
-    <section className="relative min-h-[min(100vh,920px)] flex items-center overflow-hidden py-20 lg:py-28">
+    <section className="relative min-h-[min(100svh,960px)] flex items-center overflow-hidden py-20 lg:py-28">
       <WebGLBackground />
 
-      {/* Floating playful chips */}
+      {/* Floating badges & mini CV cards */}
       {!prefersReduced && (
         <>
           <motion.div
-            className="absolute left-[6%] top-[18%] z-10 hidden xl:block"
-            animate={float(14, 5, 0)}
+            className="absolute left-[4%] top-[16%] z-10 hidden xl:block"
+            custom={0}
+            initial="hidden"
+            animate="visible"
+            variants={badgePop}
           >
-            <div className="flex items-center gap-2 rounded-2xl border border-white/60 bg-white/80 px-4 py-2.5 text-xs font-bold text-sky-700 shadow-lg shadow-sky-200/50 backdrop-blur-md dark:border-white/10 dark:bg-white/10 dark:text-sky-200">
-              <FileText className="h-4 w-4" />
-              CV · ATS 92%
-            </div>
+            <motion.div animate={float(14, 5, 0)} className="hero-float-card">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-md">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-300">
+                    ATS
+                  </p>
+                  <p className="text-sm font-extrabold text-slate-900 dark:text-white">92%</p>
+                  <div className="mt-1.5 h-1.5 w-24 overflow-hidden rounded-full bg-slate-200/80 dark:bg-white/10">
+                    <motion.div
+                      className="h-full rounded-full bg-gradient-to-r from-sky-500 to-blue-500"
+                      initial={{ width: 0 }}
+                      animate={{ width: "92%" }}
+                      transition={{ duration: 1.2, delay: 0.9 }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
+
           <motion.div
-            className="absolute right-[8%] top-[22%] z-10 hidden xl:block"
-            animate={float(16, 4.5, 0.4)}
+            className="absolute right-[5%] top-[18%] z-10 hidden xl:block"
+            custom={1}
+            initial="hidden"
+            animate="visible"
+            variants={badgePop}
           >
-            <div className="flex items-center gap-2 rounded-2xl border border-white/60 bg-white/80 px-4 py-2.5 text-xs font-bold text-orange-600 shadow-lg shadow-orange-200/50 backdrop-blur-md dark:border-white/10 dark:bg-white/10 dark:text-orange-300">
-              <Briefcase className="h-4 w-4" />
-              {isTr ? "İş eşleşmesi" : "Job match"}
-            </div>
+            <motion.div animate={float(16, 4.6, 0.3)} className="hero-float-card">
+              <div className="flex items-center gap-2.5">
+                <Briefcase className="h-4 w-4 text-orange-500" />
+                <div>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">
+                    {isTr ? "İş eşleşmesi" : "Job match"}
+                  </p>
+                  <p className="text-[11px] font-semibold text-orange-600 dark:text-orange-300">
+                    Senior FE · 89%
+                  </p>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
+
           <motion.div
-            className="absolute left-[12%] bottom-[22%] z-10 hidden xl:block"
-            animate={float(12, 5.5, 0.8)}
+            className="absolute left-[8%] bottom-[18%] z-10 hidden xl:block"
+            custom={2}
+            initial="hidden"
+            animate="visible"
+            variants={badgePop}
           >
-            <div className="flex items-center gap-2 rounded-2xl border border-white/60 bg-white/80 px-4 py-2.5 text-xs font-bold text-emerald-700 shadow-lg shadow-emerald-200/50 backdrop-blur-md dark:border-white/10 dark:bg-white/10 dark:text-emerald-300">
-              <TrendingUp className="h-4 w-4" />
-              React · TypeScript
-            </div>
+            <motion.div animate={float(12, 5.4, 0.6)} className="hero-float-card max-w-[200px]">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">
+                {isTr ? "Güçlü sinyaller" : "Strong signals"}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {["React", "TypeScript", "Next.js"].map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
           </motion.div>
+
           <motion.div
-            className="absolute right-[14%] bottom-[18%] z-10 hidden xl:block"
-            animate={float(18, 4.2, 1.1)}
+            className="absolute right-[10%] bottom-[16%] z-10 hidden xl:block"
+            custom={3}
+            initial="hidden"
+            animate="visible"
+            variants={badgePop}
           >
-            <div className="flex items-center gap-2 rounded-2xl border border-white/60 bg-white/80 px-4 py-2.5 text-xs font-bold text-violet-700 shadow-lg shadow-violet-200/50 backdrop-blur-md dark:border-white/10 dark:bg-white/10 dark:text-violet-300">
+            <motion.div
+              animate={float(18, 4.2, 0.9)}
+              className="flex items-center gap-2 rounded-2xl border border-white/70 bg-white/85 px-4 py-2.5 text-xs font-bold text-violet-700 shadow-lg shadow-violet-200/40 backdrop-blur-md dark:border-white/10 dark:bg-white/10 dark:text-violet-300"
+            >
               <Star className="h-4 w-4 fill-violet-500 text-violet-500" />
-              {isTr ? "STAR hazır" : "STAR ready"}
-            </div>
+              {isTr ? "STAR mülakat hazır" : "STAR interview ready"}
+            </motion.div>
           </motion.div>
+
           <motion.div
-            className="absolute left-[42%] top-[12%] z-10 hidden 2xl:block"
-            animate={{ rotate: [0, 8, -8, 0], y: [0, -8, 0] }}
+            className="absolute left-[40%] top-[10%] z-10 hidden 2xl:block"
+            animate={{ rotate: [0, 10, -8, 0], y: [0, -10, 0] }}
             transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-violet-500 text-white shadow-xl shadow-violet-300/40">
-              <Target className="h-6 w-6" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 via-violet-500 to-orange-400 text-white shadow-xl shadow-orange-300/40">
+              <Target className="h-7 w-7" />
+            </div>
+          </motion.div>
+
+          <motion.div
+            className="absolute right-[22%] top-[42%] z-10 hidden 2xl:block"
+            animate={float(10, 3.8, 0.5)}
+          >
+            <div className="flex items-center gap-1.5 rounded-full border border-white/60 bg-white/80 px-3 py-1.5 text-[11px] font-bold text-pink-600 shadow-md backdrop-blur-md dark:border-white/10 dark:bg-white/10 dark:text-pink-300">
+              <Flame className="h-3.5 w-3.5" />
+              {isTr ? "Motivasyon +24" : "Momentum +24"}
             </div>
           </motion.div>
         </>
@@ -162,30 +241,36 @@ export function HomeHero() {
             initial={prefersReduced ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-200/80 bg-white/80 px-4 py-1.5 text-xs font-bold text-orange-700 shadow-sm backdrop-blur-md dark:border-orange-500/30 dark:bg-white/10 dark:text-orange-300"
+            className="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-200/80 bg-white/85 px-4 py-1.5 text-xs font-bold text-orange-700 shadow-sm backdrop-blur-md dark:border-orange-500/30 dark:bg-white/10 dark:text-orange-300"
           >
             <Sparkles className="h-3.5 w-3.5" />
             SoftBridge · CareerForge
+            <span className="ml-1 rounded-full bg-gradient-to-r from-sky-500 to-orange-400 px-2 py-0.5 text-[10px] font-extrabold text-white">
+              {isTr ? "Yerel AI" : "Local AI"}
+            </span>
           </motion.div>
 
           <motion.h1
-            initial={prefersReduced ? false : { opacity: 0, y: 24 }}
+            initial={prefersReduced ? false : { opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.05 }}
-            className="text-balance text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl md:text-6xl lg:text-[3.75rem] lg:leading-[1.05] dark:text-white"
+            transition={{ duration: 0.6, delay: 0.05 }}
+            className="text-balance text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl md:text-6xl lg:text-[4.1rem] lg:leading-[1.02] dark:text-white"
           >
             {isTr ? (
               <>
                 Kariyerini{" "}
-                <span className="bg-gradient-to-r from-sky-500 via-violet-500 to-orange-500 bg-clip-text text-transparent">
-                  Forge
+                <span className="relative inline-block">
+                  <span className="bg-gradient-to-r from-[#3b82f6] via-violet-500 to-orange-500 bg-clip-text text-transparent">
+                    Forge
+                  </span>
+                  <span className="absolute -bottom-1 left-0 h-1 w-full rounded-full bg-gradient-to-r from-[#3b82f6]/40 via-violet-400/40 to-orange-400/40" />
                 </span>{" "}
-                Et! ✨
+                Et ✨
               </>
             ) : (
               <>
-                Forge your career!{" "}
-                <span className="bg-gradient-to-r from-sky-500 via-violet-500 to-orange-500 bg-clip-text text-transparent">
+                Forge your career{" "}
+                <span className="bg-gradient-to-r from-[#3b82f6] via-violet-500 to-orange-500 bg-clip-text text-transparent">
                   ✨
                 </span>
               </>
@@ -196,38 +281,42 @@ export function HomeHero() {
             initial={prefersReduced ? false : { opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.12 }}
-            className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg dark:text-slate-300"
+            className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg dark:text-slate-300"
           >
             {isTr
-              ? "AI ile CV’ni güçlendir, iş bul, ilerle. Hem de keyifle."
-              : "Level up your CV with AI, land roles, grow — and enjoy the ride."}
+              ? "CV’ni güçlendir, doğru ilanlarla eşleş, mülakata hazırlan — hepsi tarayıcında, güvenli ve motive edici bir akışla."
+              : "Strengthen your CV, match the right roles, prep for interviews — all in your browser, safely and with momentum."}
           </motion.p>
 
           <motion.div
             initial={prefersReduced ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-8 flex flex-wrap items-center justify-center gap-4"
+            className="mt-9 flex flex-wrap items-center justify-center gap-4"
           >
-            <motion.div whileHover={prefersReduced ? undefined : bounceHover} whileTap={{ scale: 0.97 }}>
+            <motion.div
+              whileHover={prefersReduced ? undefined : bounceHover}
+              whileTap={{ scale: 0.97 }}
+            >
               <Link
                 href="/forge"
-                className="group relative inline-flex h-13 min-h-12 items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-sky-500 via-violet-500 to-orange-500 px-7 text-sm font-bold text-white shadow-lg shadow-violet-400/40"
+                className="cta-glow group relative inline-flex min-h-12 items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-[#3b82f6] via-violet-500 to-orange-500 px-8 text-sm font-bold text-white"
               >
-                <span className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100" />
+                <span className="absolute inset-0 bg-white/0 transition-colors group-hover:bg-white/15" />
                 <Zap className="relative h-4 w-4" />
-                <span className="relative">
-                  {isTr ? "Hemen Başla" : "Start now"}
-                </span>
+                <span className="relative">{isTr ? "Hemen Başla" : "Start now"}</span>
                 <ArrowRight className="relative h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </motion.div>
 
-            <motion.div whileHover={prefersReduced ? undefined : bounceHover} whileTap={{ scale: 0.97 }}>
+            <motion.div
+              whileHover={prefersReduced ? undefined : bounceHover}
+              whileTap={{ scale: 0.97 }}
+            >
               <button
                 type="button"
                 onClick={openDemo}
-                className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-slate-200 bg-white/90 px-7 text-sm font-bold text-slate-800 shadow-md backdrop-blur-sm transition-colors hover:border-violet-300 hover:text-violet-700 dark:border-white/15 dark:bg-white/10 dark:text-white dark:hover:border-violet-400"
+                className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-slate-200/90 bg-white/90 px-8 text-sm font-bold text-slate-800 shadow-md backdrop-blur-sm transition-all hover:border-violet-300 hover:shadow-lg hover:shadow-violet-200/40 dark:border-white/15 dark:bg-white/10 dark:text-white dark:hover:border-violet-400"
               >
                 {isTr ? "Demo’yu Dene" : "Try the demo"}
                 <ArrowRight className="h-4 w-4" />
@@ -238,7 +327,7 @@ export function HomeHero() {
           <motion.div
             initial={prefersReduced ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.35 }}
+            transition={{ delay: 0.32 }}
             className="mt-6 flex flex-wrap items-center justify-center gap-3"
           >
             <FilePickButton
@@ -248,38 +337,57 @@ export function HomeHero() {
               silentSuccess
               onText={handleResumeText}
             />
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-              <CheckCircle2 className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+              <Shield className="h-3.5 w-3.5" />
               {isTr
-                ? "Verilerin cihazında kalır · %100 yerel"
-                : "Data stays on device · 100% local"}
+                ? "Verilerin cihazında · %100 yerel AI"
+                : "On-device data · 100% local AI"}
             </span>
           </motion.div>
 
-          {/* Mini progress tease */}
+          {/* Progress tease card with parallax */}
           <motion.div
-            initial={prefersReduced ? false : { opacity: 0, y: 12 }}
+            style={{ y: cardsY }}
+            initial={prefersReduced ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45 }}
-            className="mx-auto mt-10 max-w-md rounded-2xl border border-white/70 bg-white/75 p-4 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/10"
+            transition={{ delay: 0.42 }}
+            className="mx-auto mt-11 max-w-lg rounded-3xl border border-white/80 bg-white/80 p-5 shadow-xl shadow-slate-200/50 backdrop-blur-md dark:border-white/10 dark:bg-white/10 dark:shadow-none"
           >
-            <div className="mb-2 flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300">
-              <span>{isTr ? "Kariyer ilerlemesi" : "Career progress"}</span>
-              <span className="text-violet-600 dark:text-violet-300">78%</span>
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-violet-500" />
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                  {isTr ? "Kariyer ilerlemesi" : "Career progress"}
+                </span>
+              </div>
+              <span className="rounded-full bg-gradient-to-r from-sky-500/10 to-orange-500/10 px-2.5 py-0.5 text-xs font-extrabold text-violet-600 dark:text-violet-300">
+                78%
+              </span>
             </div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-slate-200/80 dark:bg-white/10">
+            <div className="h-3 overflow-hidden rounded-full bg-slate-200/80 dark:bg-white/10">
               <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-sky-500 via-violet-500 to-orange-400"
+                className="h-full rounded-full bg-gradient-to-r from-[#3b82f6] via-violet-500 to-orange-400"
                 initial={{ width: prefersReduced ? "78%" : "0%" }}
                 animate={{ width: "78%" }}
-                transition={{ duration: 1.4, delay: 0.6, ease: "easeOut" }}
+                transition={{ duration: 1.5, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
               />
             </div>
-            <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-              {isTr
-                ? "CV güçlendi · 3 ilan eşleşti · Mülakat hazırlığı açık"
-                : "CV stronger · 3 job matches · Interview prep unlocked"}
-            </p>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-between">
+              {[
+                isTr ? "CV güçlendi" : "CV stronger",
+                isTr ? "3 ilan eşleşti" : "3 job matches",
+                isTr ? "Mülakat açık" : "Interview unlocked",
+              ].map((label, i) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400"
+                >
+                  <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                  {label}
+                  {i < 2 && <span className="ml-1 hidden text-slate-300 sm:inline">·</span>}
+                </span>
+              ))}
+            </div>
           </motion.div>
         </div>
       </motion.div>

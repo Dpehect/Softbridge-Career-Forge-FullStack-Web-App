@@ -4,7 +4,7 @@ import { useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useInView } from "framer-motion";
-import { ArrowRight, Rocket, Sparkles } from "lucide-react";
+import { ArrowRight, Rocket, Sparkles, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 import { useMessages } from "@/i18n/useMessages";
@@ -74,57 +74,73 @@ export function HomeFinalCta() {
   return (
     <section className="relative overflow-hidden py-20 md:py-28">
       <div className="absolute inset-0 bg-gradient-to-br from-sky-100 via-violet-50 to-orange-100 dark:from-slate-950 dark:via-violet-950/50 dark:to-slate-900" />
-      <div className="absolute -left-20 top-10 h-64 w-64 rounded-full bg-sky-300/30 blur-3xl" />
-      <div className="absolute -right-16 bottom-0 h-72 w-72 rounded-full bg-orange-300/25 blur-3xl" />
+      <div className="absolute -left-20 top-10 h-64 w-64 rounded-full bg-sky-300/35 blur-3xl" />
+      <div className="absolute -right-16 bottom-0 h-72 w-72 rounded-full bg-orange-300/30 blur-3xl" />
+      <div className="absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-300/20 blur-3xl" />
 
       <div className="relative mx-auto max-w-4xl px-4 sm:px-8">
         <motion.div
           ref={containerRef}
-          initial={prefersReduced ? false : { opacity: 0, y: 28 }}
-          animate={prefersReduced || isInView ? { opacity: 1, y: 0 } : undefined}
-          transition={{ duration: 0.55 }}
-          className="rounded-3xl border border-white/70 bg-white/80 p-8 text-center shadow-xl backdrop-blur-md sm:p-12 dark:border-white/10 dark:bg-white/5"
+          initial={prefersReduced ? false : { opacity: 0, y: 28, scale: 0.98 }}
+          animate={
+            prefersReduced || isInView
+              ? { opacity: 1, y: 0, scale: 1 }
+              : undefined
+          }
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          className="rounded-3xl border border-white/80 bg-white/85 p-8 text-center shadow-2xl shadow-violet-200/30 backdrop-blur-md sm:p-12 dark:border-white/10 dark:bg-white/5 dark:shadow-none"
         >
           <motion.div
-            animate={prefersReduced ? undefined : { y: [0, -8, 0], rotate: [0, 6, -6, 0] }}
+            animate={
+              prefersReduced
+                ? undefined
+                : { y: [0, -8, 0], rotate: [0, 6, -6, 0] }
+            }
             transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 via-violet-500 to-orange-400 text-white shadow-lg shadow-violet-300/40"
+            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#3b82f6] via-violet-500 to-orange-400 text-white shadow-lg shadow-violet-300/50"
           >
             <Rocket className="h-7 w-7" />
           </motion.div>
 
           <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
-            {copy.ctaTitle || (isTr ? "Hazır mısın? Haydi başlayalım 🚀" : "Ready? Let's go 🚀")}
+            {copy.ctaTitle ||
+              (isTr ? "Hazır mısın? Haydi başlayalım 🚀" : "Ready? Let's go 🚀")}
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-600 dark:text-slate-300">
             {isTr
-              ? "CV yükle, analiz al, iyileştir — hepsi tarayıcında, keyifle."
-              : "Upload, analyze, improve — all in your browser, and fun to use."}
+              ? "CV yükle, analiz al, iyileştir — hepsi tarayıcında, güvenli ve keyifli."
+              : "Upload, analyze, improve — all in your browser, safely and enjoyably."}
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }}>
+            <motion.div
+              whileHover={prefersReduced ? undefined : { scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.97 }}
+            >
               <Link
                 href="/forge"
-                className="inline-flex min-h-12 items-center gap-2 rounded-full bg-gradient-to-r from-sky-500 via-violet-500 to-orange-500 px-7 text-sm font-bold text-white shadow-lg shadow-violet-400/40"
+                className="cta-glow inline-flex min-h-12 items-center gap-2 rounded-full bg-gradient-to-r from-[#3b82f6] via-violet-500 to-orange-500 px-8 text-sm font-bold text-white"
               >
                 <Sparkles className="h-4 w-4" />
                 {isTr ? "Hemen Başla" : "Start now"}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </motion.div>
-            <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }}>
+            <motion.div
+              whileHover={prefersReduced ? undefined : { scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.97 }}
+            >
               <button
                 type="button"
                 onClick={openDemo}
-                className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-slate-200 bg-white px-7 text-sm font-bold text-slate-800 shadow-md dark:border-white/15 dark:bg-white/10 dark:text-white"
+                className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-slate-200 bg-white px-8 text-sm font-bold text-slate-800 shadow-md transition-colors hover:border-violet-300 dark:border-white/15 dark:bg-white/10 dark:text-white"
               >
                 {isTr ? "Demo’yu Dene" : "Try demo"}
               </button>
             </motion.div>
           </div>
 
-          <div className="mt-5">
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
             <FilePickButton
               label={isTr ? "CV yükle" : "Upload CV"}
               variant="outline"
@@ -132,6 +148,10 @@ export function HomeFinalCta() {
               silentSuccess
               onText={handleResumeText}
             />
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+              <Shield className="h-3.5 w-3.5" />
+              {isTr ? "Gizlilik odaklı · yerel işlem" : "Privacy-first · on-device"}
+            </span>
           </div>
         </motion.div>
       </div>

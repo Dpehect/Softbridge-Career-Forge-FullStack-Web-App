@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import {
   ArrowRight,
   Bookmark,
@@ -14,8 +15,8 @@ import {
   Target,
   CheckSquare,
   Square,
-  TrendingUp,
-  Award,
+  Sparkles,
+  Flame,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCareerStore, resumeToParsed } from "@/store/useCareerStore";
@@ -25,8 +26,8 @@ import { useMessages } from "@/i18n/useMessages";
 import { getLocalizedCompany, getLocalizedJobs, getLocalizedPaths } from "@/i18n/content";
 import { calculateAtsScore } from "@/features/analysis/atsScore";
 import { AtsScoreBreakdown } from "@/components/AtsScoreBreakdown";
-import { ActionableRecommendations } from "@/components/ActionableRecommendations";
 import { CloudSyncStatus } from "@/components/sync/CloudSyncStatus";
+import { AnimatedNumber } from "@/motion/AnimatedNumber";
 import { cn } from "@/lib/utils";
 
 function jobFit(userSkills: string[], tags: string[]) {
@@ -168,11 +169,11 @@ export default function DashboardPage() {
   const renderContent = () => {
     if (!mounted) {
       return (
-        <div className="space-y-8 mt-6">
-          <div className="h-40 w-full animate-pulse rounded bg-surface-2 border border-line" />
+        <div className="mt-6 space-y-8">
+          <div className="h-40 w-full rounded-2xl border border-line skeleton-shimmer" />
           <div className="grid gap-8 md:grid-cols-2">
-            <div className="h-64 animate-pulse rounded bg-surface-2 border border-line" />
-            <div className="h-64 animate-pulse rounded bg-surface-2 border border-line" />
+            <div className="h-64 rounded-2xl border border-line skeleton-shimmer" />
+            <div className="h-64 rounded-2xl border border-line skeleton-shimmer" />
           </div>
         </div>
       );
@@ -180,12 +181,20 @@ export default function DashboardPage() {
 
     if (!hasResume) {
       return (
-        <div className="mt-5 grid gap-10 border-t border-line pt-10 lg:grid-cols-[1fr_0.8fr] lg:items-end">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 grid gap-8 rounded-2xl border border-line bg-surface p-8 lg:grid-cols-[1fr_0.85fr] lg:items-center"
+        >
           <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
+              <Sparkles className="h-3.5 w-3.5" />
+              {isTr ? "İlk adım" : "First step"}
+            </div>
             <h1 className="page-title-compact max-w-xl">{copy.emptyTitle}</h1>
             <p className="page-lede mt-4">{copy.emptyBody}</p>
           </div>
-          <div className="surface-subtle p-6 rounded-lg border border-line">
+          <div className="premium-card p-6">
             <p className="section-label">{copy.firstStep}</p>
             <p className="mt-3 text-sm font-semibold text-ink">{copy.localAnalyze}</p>
             <p className="mt-2 text-xs leading-5 text-ink-3">{copy.localAnalyzeBody}</p>
@@ -198,7 +207,7 @@ export default function DashboardPage() {
               <Button variant="outline" onClick={loadDemoProfile}>{messages.demo.open}</Button>
             </div>
           </div>
-        </div>
+        </motion.div>
       );
     }
 
@@ -225,22 +234,59 @@ export default function DashboardPage() {
       },
     ];
 
+    const motivationLine = journey.progressPct >= 70
+      ? (isTr ? "Harika gidiyorsun — tempo yüksek, odak net 🔥" : "You're on a roll — keep the momentum 🔥")
+      : journey.progressPct >= 40
+        ? (isTr ? "İyi ilerleme! Bu hafta bir adım daha 💪" : "Solid progress — one more win this week 💪")
+        : (isTr ? "Her büyük kariyer küçük bir adımla başlar ✨" : "Every strong career starts with one clear step ✨");
+
     return (
       <>
+        {/* Motivational banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="motivation-banner mt-6 flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-orange-400 text-white shadow-md">
+              <Flame className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-ink">{motivationLine}</p>
+              <p className="mt-0.5 text-xs text-ink-3">
+                {isTr
+                  ? `${weeklyGoals.filter((g) => g.done).length}/3 haftalık hedef tamamlandı`
+                  : `${weeklyGoals.filter((g) => g.done).length}/3 weekly goals done`}
+              </p>
+            </div>
+          </div>
+          <Link href="/forge">
+            <Button variant="primary" size="sm">
+              {isTr ? "Analiz et" : "Analyze"} <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </Link>
+        </motion.div>
+
         {/* Cockpit / Goal Section */}
-        <section className="grid border border-line bg-surface md:grid-cols-[1.15fr_0.85fr] mt-6 rounded-lg overflow-hidden shadow-sm">
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="mt-6 grid overflow-hidden rounded-2xl border border-line bg-surface shadow-sm md:grid-cols-[1.15fr_0.85fr]"
+        >
           <div className="border-b border-line p-6 md:border-b-0 md:border-r md:p-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="section-label">{copy.targetRole}</p>
-                <h2 className="mt-2 text-lg font-semibold text-ink">{(isTr ? goal?.labelTr : goal?.labelEn) || copy.noRole}</h2>
+                <h2 className="mt-2 text-lg font-bold text-ink">{(isTr ? goal?.labelTr : goal?.labelEn) || copy.noRole}</h2>
               </div>
               <label>
                 <span className="sr-only">{copy.changeRole}</span>
                 <select
                   value={careerGoalId ?? ""}
                   onChange={(event) => setCareerGoalId(event.target.value || null)}
-                  className="min-h-11 rounded-[var(--radius-control)] border border-line bg-surface px-3 text-xs font-medium text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]"
+                  className="min-h-11 rounded-xl border border-line bg-surface px-3 text-xs font-medium text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]"
                 >
                   {CAREER_GOALS.map((item) => <option key={item.id} value={item.id}>{isTr ? item.labelTr : item.labelEn}</option>)}
                 </select>
@@ -248,8 +294,13 @@ export default function DashboardPage() {
             </div>
             <div className="mt-7 flex items-end justify-between gap-6">
               <div className="flex-1">
-                <div className="h-2 overflow-hidden rounded-full bg-surface-3">
-                  <div className="h-full rounded-full bg-brand transition-all duration-500" style={{ width: `${journey.progressPct}%` }} />
+                <div className="h-3 overflow-hidden rounded-full bg-surface-3">
+                  <motion.div
+                    className="h-full rounded-full progress-fill"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${journey.progressPct}%` }}
+                    transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+                  />
                 </div>
                 <p className="mt-3 text-xs leading-5 text-ink-3">
                   {journey.missingSkills.length
@@ -259,23 +310,27 @@ export default function DashboardPage() {
                     : copy.readySignals}
                 </p>
               </div>
-              <strong className="metric-number text-4xl font-semibold text-brand-strong">{journey.progressPct}%</strong>
+              <strong className="metric-number text-4xl font-bold text-brand-strong">
+                <AnimatedNumber value={journey.progressPct} suffix="%" />
+              </strong>
             </div>
           </div>
 
           <dl className="grid grid-cols-3 divide-x divide-line">
             {[
-              ["ATS", atsResult?.total ?? 0],
-              [copy.roadmap, pathProgress],
-              [copy.applications, appliedJobIds.length],
-            ].map(([label, value]) => (
-              <div key={label} className="flex min-h-36 flex-col justify-end p-4 sm:p-6">
-                <dt className="text-[0.6875rem] text-ink-3 font-semibold uppercase tracking-wider">{label}</dt>
-                <dd className="metric-number mt-2 text-2xl font-semibold text-ink">{label === copy.applications ? value : `${value}%`}</dd>
+              ["ATS", atsResult?.total ?? 0, true],
+              [copy.roadmap, pathProgress, true],
+              [copy.applications, appliedJobIds.length, false],
+            ].map(([label, value, isPct]) => (
+              <div key={String(label)} className="flex min-h-36 flex-col justify-end p-4 sm:p-6">
+                <dt className="text-[0.6875rem] font-semibold uppercase tracking-wider text-ink-3">{label}</dt>
+                <dd className="metric-number mt-2 text-2xl font-bold text-ink">
+                  <AnimatedNumber value={Number(value)} suffix={isPct ? "%" : ""} />
+                </dd>
               </div>
             ))}
           </dl>
-        </section>
+        </motion.section>
 
         {/* ATS score overview if active */}
         {atsResult && <div className="mt-8"><AtsScoreBreakdown result={atsResult} /></div>}
@@ -293,24 +348,46 @@ export default function DashboardPage() {
                 <span className="font-mono text-xs text-ink-3">{weeklyGoals.filter((g) => g.done).length}/3</span>
               </div>
               <div className="mt-5 space-y-3">
-                {weeklyGoals.map((goal) => (
-                  <div key={goal.id} className={cn("flex items-start gap-4 p-4 border rounded-lg bg-surface transition-all", goal.done ? "border-positive/20 bg-[var(--positive-wash)]/30" : "border-line")}>
-                    <div className="shrink-0 mt-0.5">
+                {weeklyGoals.map((goal, i) => (
+                  <motion.div
+                    key={goal.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.06 }}
+                    whileHover={{ scale: 1.01 }}
+                    className={cn(
+                      "flex items-start gap-4 rounded-xl border bg-surface p-4 transition-all",
+                      goal.done ? "border-positive/25 bg-[var(--positive-wash)]/40 shadow-sm" : "border-line hover:border-brand/25"
+                    )}
+                  >
+                    <div className="mt-0.5 shrink-0">
                       {goal.done ? (
                         <CheckSquare className="h-5 w-5 text-positive" />
                       ) : (
                         <Square className="h-5 w-5 text-ink-3" />
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <h3 className="text-sm font-semibold text-ink">{goal.label}</h3>
-                      <p className="text-xs text-ink-3 mt-0.5 leading-relaxed">{goal.description}</p>
+                      <p className="mt-0.5 text-xs leading-relaxed text-ink-3">{goal.description}</p>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-3">
+                        <motion.div
+                          className="h-full rounded-full progress-fill"
+                          initial={{ width: 0 }}
+                          whileInView={{
+                            width: `${Math.min(100, Math.round((goal.current / goal.target) * 100))}%`,
+                          }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.8, delay: 0.15 + i * 0.05 }}
+                        />
+                      </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <span className="text-xs font-semibold text-ink">{goal.current}{goal.unit}</span>
-                      <span className="text-[10px] text-ink-3 block mt-0.5">/ {goal.target}{goal.unit}</span>
+                    <div className="shrink-0 text-right">
+                      <span className="text-xs font-bold text-ink">{goal.current}{goal.unit}</span>
+                      <span className="mt-0.5 block text-[10px] text-ink-3">/ {goal.target}{goal.unit}</span>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -321,18 +398,28 @@ export default function DashboardPage() {
                 <p className="section-label">{isTr ? "Süreç Durumu" : "Pipeline Tracker"}</p>
                 <h2 className="mt-2 text-xl font-semibold text-ink">{isTr ? "Başvuru Süreç Takipçisi" : "Job Application Pipeline"}</h2>
               </div>
-              <div className="mt-5 grid grid-cols-5 gap-2.5 text-center">
+              <div className="mt-5 grid grid-cols-2 gap-2.5 text-center sm:grid-cols-5">
                 {[
                   { label: isTr ? "Başvuruldu" : "Applied", count: pipelineStats.applied, color: "text-ink border-line bg-surface" },
                   { label: isTr ? "Mülakat" : "Interview", count: pipelineStats.interviewing, color: "text-brand-strong border-brand/20 bg-[var(--accent-wash)]" },
-                  { label: isTr ? "Teknik Değ." : "Technical", count: pipelineStats.technical, color: "text-indigo-600 border-indigo-200 bg-indigo-50/30" },
+                  { label: isTr ? "Teknik Değ." : "Technical", count: pipelineStats.technical, color: "text-indigo-600 border-indigo-200 bg-indigo-50/40 dark:bg-indigo-500/10 dark:border-indigo-500/30 dark:text-indigo-300" },
                   { label: isTr ? "Teklif" : "Offer", count: pipelineStats.offer, color: "text-positive border-positive/20 bg-[var(--positive-wash)]" },
                   { label: isTr ? "Reddedildi" : "Rejected", count: pipelineStats.rejected, color: "text-negative border-negative/20 bg-[var(--negative-wash)]" }
-                ].map((item) => (
-                  <div key={item.label} className={cn("flex flex-col items-center p-3.5 border rounded-lg shadow-sm", item.color)}>
-                    <span className="text-xl font-bold font-mono">{item.count}</span>
-                    <span className="text-[10px] mt-1.5 font-semibold uppercase tracking-wider truncate w-full">{item.label}</span>
-                  </div>
+                ].map((item, i) => (
+                  <motion.div
+                    key={item.label}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.05 }}
+                    whileHover={{ y: -3 }}
+                    className={cn("flex flex-col items-center rounded-xl border p-3.5 shadow-sm", item.color)}
+                  >
+                    <span className="font-mono text-xl font-bold">
+                      <AnimatedNumber value={item.count} />
+                    </span>
+                    <span className="mt-1.5 w-full truncate text-[10px] font-semibold uppercase tracking-wider">{item.label}</span>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -461,18 +548,35 @@ export default function DashboardPage() {
     <main className="product-page">
       <header className="grid gap-6 border-b border-line pb-8 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
-          <p className="page-kicker"><Flag className="h-3.5 w-3.5" /> {copy?.today || "Bugün"}</p>
+          <p className="page-kicker">
+            <Flag className="h-3.5 w-3.5" /> {copy?.today || "Bugün"}
+          </p>
           <h1 className="page-title-compact mt-4">
-            {mounted && firstName ? `${firstName}, ${copy.nextMoveNamed}` : (copy?.nextMove || "Kariyer Hedefiniz")}
+            {mounted && firstName
+              ? `${firstName}, ${copy.nextMoveNamed}`
+              : copy?.nextMove || "Kariyer Hedefiniz"}
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-2">
             {copy?.lede || "Çalışma alanınız yükleniyor..."}
           </p>
+          {mounted && (
+            <div className="mt-4">
+              <CloudSyncStatus />
+            </div>
+          )}
         </div>
         {mounted && (
           <div className="flex flex-wrap gap-2">
-            <Link href="/forge"><Button variant="outline"><FileSearch className="h-4 w-4" /> {copy.newAnalysis}</Button></Link>
-            <Link href="/resume"><Button variant="primary"><FileText className="h-4 w-4" /> {copy.editResume}</Button></Link>
+            <Link href="/forge">
+              <Button variant="outline">
+                <FileSearch className="h-4 w-4" /> {copy.newAnalysis}
+              </Button>
+            </Link>
+            <Link href="/resume">
+              <Button variant="primary">
+                <FileText className="h-4 w-4" /> {copy.editResume}
+              </Button>
+            </Link>
           </div>
         )}
       </header>

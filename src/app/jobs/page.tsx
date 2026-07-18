@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Bookmark, BriefcaseBusiness, Search, SlidersHorizontal } from "lucide-react";
+import { motion } from "framer-motion";
+import { Bookmark, BriefcaseBusiness, Search, Sparkles } from "lucide-react";
 import { JobCard, computeJobMatch } from "@/components/JobCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useMessages } from "@/i18n/useMessages";
 import { getLocalizedCompany, getLocalizedJobs } from "@/i18n/content";
+import { AnimatedNumber } from "@/motion/AnimatedNumber";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -128,15 +130,15 @@ export default function JobsPage() {
   const renderContent = () => {
     if (!mounted) {
       return (
-        <div className="space-y-6 mt-6 animate-pulse">
-          <div className="h-12 w-full rounded bg-surface-2 border border-line" />
+        <div className="mt-6 space-y-6">
+          <div className="h-28 w-full rounded-2xl border border-line skeleton-shimmer" />
           <div className="grid gap-6 lg:grid-cols-[1fr_minmax(18rem,0.45fr)]">
             <div className="space-y-4">
-              <div className="h-28 rounded bg-surface-2 border border-line" />
-              <div className="h-28 rounded bg-surface-2 border border-line" />
-              <div className="h-28 rounded bg-surface-2 border border-line" />
+              <div className="h-28 rounded-2xl border border-line skeleton-shimmer" />
+              <div className="h-28 rounded-2xl border border-line skeleton-shimmer" />
+              <div className="h-28 rounded-2xl border border-line skeleton-shimmer" />
             </div>
-            <div className="h-80 rounded bg-surface-2 border border-line" />
+            <div className="h-80 rounded-2xl border border-line skeleton-shimmer" />
           </div>
         </div>
       );
@@ -145,61 +147,111 @@ export default function JobsPage() {
     return (
       <>
         {!hasResume && (
-          <section className="mt-6 grid gap-4 border border-info/25 bg-[var(--info-wash)] p-5 sm:grid-cols-[1fr_auto] sm:items-center">
-            <div><h2 className="text-sm font-semibold text-ink">{messages.empty.jobsTitle}</h2><p className="mt-1 text-xs leading-5 text-ink-2">{messages.empty.jobsBody}</p></div>
-            <div className="flex flex-wrap gap-2"><Link href="/forge"><Button variant="primary">{messages.empty.upload}</Button></Link><Button variant="outline" onClick={loadDemoProfile}>{messages.demo.open}</Button></div>
-          </section>
+          <motion.section
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6 grid gap-4 rounded-2xl border border-sky-200/60 bg-gradient-to-r from-sky-50 to-violet-50 p-5 sm:grid-cols-[1fr_auto] sm:items-center dark:border-sky-500/20 dark:from-sky-950/30 dark:to-violet-950/30"
+          >
+            <div>
+              <h2 className="text-sm font-bold text-ink">{messages.empty.jobsTitle}</h2>
+              <p className="mt-1 text-xs leading-5 text-ink-2">{messages.empty.jobsBody}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/forge"><Button variant="primary">{messages.empty.upload}</Button></Link>
+              <Button variant="outline" onClick={loadDemoProfile}>{messages.demo.open}</Button>
+            </div>
+          </motion.section>
         )}
 
-        <section className="mt-6 surface-panel p-3">
-          <div className="grid gap-2 lg:grid-cols-[minmax(15rem,1fr)_repeat(3,minmax(9rem,auto))]">
+        <section className="premium-card mt-6 p-4 sm:p-5">
+          <div className="grid gap-3 lg:grid-cols-[minmax(15rem,1fr)_repeat(3,minmax(9rem,auto))]">
             <label className="relative">
               <span className="sr-only">{copy.searchLabel}</span>
               <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-ink-3" />
-              <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.search} className="pl-9" />
+              <Input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={copy.search}
+                className="rounded-xl pl-9"
+              />
             </label>
             <label>
               <span className="sr-only">{copy.workMode}</span>
-              <select value={mode} onChange={(event) => setMode(event.target.value as WorkMode | "All")} className="h-10 w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]">
-                {modes.map((item) => <option key={item} value={item}>{copy.work} · {labels[item]}</option>)}
+              <select
+                value={mode}
+                onChange={(event) => setMode(event.target.value as WorkMode | "All")}
+                className="h-10 w-full rounded-xl border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]"
+              >
+                {modes.map((item) => (
+                  <option key={item} value={item}>{copy.work} · {labels[item]}</option>
+                ))}
               </select>
             </label>
             <label>
               <span className="sr-only">{copy.seniority}</span>
-              <select value={level} onChange={(event) => setLevel(event.target.value as Seniority | "All")} className="h-10 w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]">
-                {levels.map((item) => <option key={item} value={item}>{copy.level} · {labels[item]}</option>)}
+              <select
+                value={level}
+                onChange={(event) => setLevel(event.target.value as Seniority | "All")}
+                className="h-10 w-full rounded-xl border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]"
+              >
+                {levels.map((item) => (
+                  <option key={item} value={item}>{copy.level} · {labels[item]}</option>
+                ))}
               </select>
             </label>
             <label>
               <span className="sr-only">{copy.type}</span>
-              <select value={type} onChange={(event) => setType(event.target.value as JobType | "All")} className="h-10 w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]">
-                {types.map((item) => <option key={item} value={item}>{copy.contract} · {labels[item]}</option>)}
+              <select
+                value={type}
+                onChange={(event) => setType(event.target.value as JobType | "All")}
+                className="h-10 w-full rounded-xl border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]"
+              >
+                {types.map((item) => (
+                  <option key={item} value={item}>{copy.contract} · {labels[item]}</option>
+                ))}
               </select>
             </label>
           </div>
 
-          {/* Saved Searches Row */}
+          {/* Quick mode chips */}
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-ink-3">
+              {locale === "tr" ? "Hızlı filtre" : "Quick filter"}
+            </span>
+            {modes.map((item) => (
+              <button
+                key={item}
+                type="button"
+                data-active={mode === item}
+                className="filter-chip"
+                onClick={() => setMode(item)}
+              >
+                {labels[item]}
+              </button>
+            ))}
+          </div>
+
           {savedFilters.length > 0 && (
-            <div className="mt-3 border-t border-line pt-3 flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] font-semibold text-ink-3 uppercase mr-1">
+            <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-line pt-3">
+              <span className="mr-1 text-[10px] font-semibold uppercase text-ink-3">
                 {locale === "tr" ? "Kayıtlı Aramalar:" : "Saved Searches:"}
               </span>
               {savedFilters.map((filter) => (
                 <div
                   key={filter.id}
-                  className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-0.5 text-xs text-ink font-medium"
+                  className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-medium text-ink"
                 >
                   <button
                     type="button"
                     onClick={() => applyFilter(filter)}
-                    className="hover:text-brand-strong transition-colors"
+                    className="transition-colors hover:text-brand-strong"
                   >
                     {filter.label}
                   </button>
                   <button
                     type="button"
                     onClick={(e) => deleteFilter(e, filter.id)}
-                    className="ml-1 text-ink-3 hover:text-negative font-bold"
+                    className="ml-1 font-bold text-ink-3 hover:text-negative"
                     aria-label="Delete filter"
                   >
                     &times;
@@ -208,54 +260,112 @@ export default function JobsPage() {
               ))}
             </div>
           )}
-          <div className="mt-2.5 flex justify-end">
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <p className="text-xs text-ink-3">
+              <span className="font-bold text-ink">{filtered.length}</span>{" "}
+              {locale === "tr" ? "ilan" : "listings"}
+            </p>
             <button
               type="button"
               onClick={saveCurrentFilter}
               className="inline-flex items-center gap-1 text-[10px] font-semibold text-brand-strong hover:underline"
             >
-              + {locale === "tr" ? "Mevcut Aramayı Filtre Olarak Kaydet" : "Save Current Search as Filter"}
+              + {locale === "tr" ? "Filtreyi kaydet" : "Save filter"}
             </button>
           </div>
         </section>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_minmax(18rem,0.45fr)]">
-          <section aria-label={copy.title}>
+          <section aria-label={copy.title} className="space-y-3">
             {filtered.length ? (
-              <div>{filtered.map((job) => <JobCard key={job.id} job={job} />)}</div>
+              filtered.map((job, index) => <JobCard key={job.id} job={job} index={index} />)
             ) : (
-              <div className="py-16 text-center">
-                <Search className="mx-auto h-5 w-5 text-ink-3" />
+              <div className="rounded-2xl border border-dashed border-line py-16 text-center">
+                <Search className="mx-auto h-6 w-6 text-ink-3" />
                 <p className="mt-3 text-sm font-semibold text-ink">{copy.noResult}</p>
-                <button type="button" onClick={() => { setQuery(""); setMode("All"); setLevel("All"); setType("All"); setSavedOnly(false); }} className="mt-2 min-h-11 text-xs font-semibold text-brand-strong hover:underline">{copy.clearFilters}</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery("");
+                    setMode("All");
+                    setLevel("All");
+                    setType("All");
+                    setSavedOnly(false);
+                  }}
+                  className="mt-2 min-h-11 text-xs font-semibold text-brand-strong hover:underline"
+                >
+                  {copy.clearFilters}
+                </button>
               </div>
             )}
           </section>
 
           <aside className="xl:sticky xl:top-32 xl:self-start">
-            <div className="surface-subtle p-6">
-              <div className="flex items-center justify-between"><p className="section-label">{copy.strongest}</p><span className="text-[0.625rem] text-ink-3">{copy.sourceDemo}</span></div>
-              {topMatch ? (
-                <>
-                  <div className="mt-4 flex items-end justify-between gap-4">
-                    <div>
-                      <h2 className="text-base font-semibold text-ink">{topMatch.title}</h2>
-                      <p className="mt-1 text-xs text-ink-3">{topMatch.location} · {topMatch.workMode}</p>
+            <div className="premium-card overflow-hidden p-0">
+              <div className="bg-gradient-to-r from-sky-500/10 via-violet-500/10 to-orange-500/10 px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <p className="section-label">{copy.strongest}</p>
+                  <Sparkles className="h-4 w-4 text-orange-500" />
+                </div>
+              </div>
+              <div className="p-6 pt-4">
+                {topMatch ? (
+                  <>
+                    <div className="flex items-end justify-between gap-4">
+                      <div>
+                        <h2 className="text-base font-bold text-ink">{topMatch.title}</h2>
+                        <p className="mt-1 text-xs text-ink-3">
+                          {topMatch.location} · {topMatch.workMode}
+                        </p>
+                      </div>
+                      <strong className="metric-number text-3xl font-bold text-brand-strong">
+                        <AnimatedNumber value={topFit} suffix="%" />
+                      </strong>
                     </div>
-                    <strong className="metric-number text-3xl font-semibold text-brand-strong">{topFit}%</strong>
-                  </div>
-                  <div className="mt-6 border-t border-line pt-5">
-                    <p className="text-[0.6875rem] font-semibold text-positive">{copy.matched}</p>
-                    <p className="mt-2 text-xs leading-5 text-ink-2">{skillCoverage.join(" · ") || copy.noSkills}</p>
-                  </div>
-                  <div className="mt-5 border-t border-line pt-5">
-                    <p className="text-[0.6875rem] font-semibold text-caution">{copy.missing}</p>
-                    <p className="mt-2 text-xs leading-5 text-ink-2">{missing.join(" · ") || copy.noCriticalGap}</p>
-                  </div>
-                </>
-              ) : (
-                <p className="mt-4 text-sm text-ink-3">{copy.filterHint}</p>
-              )}
+                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-3">
+                      <motion.div
+                        className="h-full rounded-full progress-fill"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${topFit}%` }}
+                        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                      />
+                    </div>
+                    <div className="mt-6 border-t border-line pt-5">
+                      <p className="text-[0.6875rem] font-bold text-positive">{copy.matched}</p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {(skillCoverage.length ? skillCoverage : [copy.noSkills]).map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded-full bg-[var(--positive-wash)] px-2 py-0.5 text-[10px] font-semibold text-positive"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mt-5 border-t border-line pt-5">
+                      <p className="text-[0.6875rem] font-bold text-caution">{copy.missing}</p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {(missing.length ? missing : [copy.noCriticalGap]).map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded-full bg-[var(--caution-wash)] px-2 py-0.5 text-[10px] font-semibold text-caution"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <Link href={`/jobs/${topMatch.id}`} className="mt-5 inline-flex">
+                      <Button variant="primary" size="sm">
+                        {locale === "tr" ? "İlanı aç" : "Open role"}
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <p className="text-sm text-ink-3">{copy.filterHint}</p>
+                )}
+              </div>
             </div>
             <p className="mt-4 text-[0.6875rem] leading-5 text-ink-3">{copy.scoreNote}</p>
           </aside>

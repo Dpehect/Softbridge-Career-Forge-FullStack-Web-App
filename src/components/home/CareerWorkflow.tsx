@@ -173,13 +173,23 @@ export function CareerWorkflow() {
 
   /* ── Animated layout ── */
   return (
-    <section className="py-24 bg-[var(--bg-canvas)] home-section">
-      <div className="max-w-[80rem] mx-auto px-4 sm:px-8">
+    <section className="home-section bg-[var(--bg-canvas)] py-24">
+      <div className="mx-auto max-w-[80rem] px-4 sm:px-8">
         {/* Section header */}
-        <div className="mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-[var(--fg-primary)] text-balance">{copy.workflowTitle}</h2>
-          <p className="mt-4 text-[var(--fg-secondary)] max-w-2xl leading-relaxed">{copy.workflowSub}</p>
-        </div>
+        <motion.div
+          className="mb-16"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <div className="mb-4 h-1 w-12 rounded-full bg-gradient-to-r from-[#3b82f6] to-orange-400" />
+          <h2 className="text-balance text-3xl font-extrabold text-[var(--fg-primary)] sm:text-4xl">
+            {copy.workflowTitle}
+          </h2>
+          <p className="mt-4 max-w-2xl leading-relaxed text-[var(--fg-secondary)]">
+            {copy.workflowSub}
+          </p>
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
           {/* ── Left: scrollable steps ── */}
@@ -247,7 +257,7 @@ export function CareerWorkflow() {
 
           {/* ── Right: sticky preview panel ── */}
           <div className="hidden lg:block">
-            <div className="sticky top-24 h-[560px] rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] overflow-hidden shadow-sm">
+            <div className="sticky top-24 h-[560px] overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg shadow-slate-200/40 dark:shadow-none">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeStep}
