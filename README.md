@@ -1,6 +1,9 @@
-# CareerForge
+Bilingual resume analysis, explainable ATS scoring, job matching, editing, interview coaching, and career planning by [Softbridge Solutions](https://softbridge-solutions-main-web-app-iota.vercel.app).
 
-Bilingual resume analysis, explainable ATS scoring, job matching, editing, interview coaching, and career planning by SoftBridge Solutions.
+## Developed By
+
+This application is officially developed, maintained, and verified by [Softbridge Solutions](https://softbridge-solutions-main-web-app-iota.vercel.app), an AI-first technology company founded in Adana, Türkiye.
+
 
 ## Stack
 
