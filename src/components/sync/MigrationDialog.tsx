@@ -36,11 +36,11 @@ const OPTIONS: Option[] = [
     id: "keep",
     emoji: "💻",
     Icon: Laptop,
-    titleTr: "Yerel Verileri Koru",
-    titleEn: "Keep Local Data",
-    descTr: "Cihazındaki güncel verileri buluta yükler. Buluttaki eski veriler silinir.",
-    descEn: "Uploads your device data to the cloud. Older cloud data will be replaced.",
-    tipTr: "Cihazındaki özgeçmiş ve başvurular en güncel olanlarsa bunu seç.",
+    titleTr: "Bu cihazdaki verileri kullan",
+    titleEn: "Use data from this device",
+    descTr: "Bu cihazdaki verileri hesabına kaydeder ve bulut sürümünü günceller.",
+    descEn: "Saves the data from this device to your account and updates the cloud version.",
+    tipTr: "Özgeçmişin ve başvuruların bu cihazda daha güncelse bunu seç.",
     tipEn: "Choose this if your device has the newest resume and applications.",
     tone: "blue",
   },
@@ -48,11 +48,11 @@ const OPTIONS: Option[] = [
     id: "replace",
     emoji: "☁️",
     Icon: Cloud,
-    titleTr: "Buluttaki Verileri Yükle",
-    titleEn: "Load Cloud Data",
-    descTr: "Buluttaki en son verileri cihazına indirir. Cihazındaki veriler silinir.",
-    descEn: "Downloads the latest cloud workspace. Local data on this device will be replaced.",
-    tipTr: "Başka bir cihazdaki hesabın daha güncel olduğundan eminsen bunu seç.",
+    titleTr: "Hesaptaki verileri kullan",
+    titleEn: "Use data from your account",
+    descTr: "Hesabındaki son kayıtlı verileri bu cihaza getirir ve cihaz sürümünü günceller.",
+    descEn: "Brings the latest saved account data to this device and updates its local version.",
+    tipTr: "Başka bir cihazda yaptığın çalışmalar daha güncelse bunu seç.",
     tipEn: "Choose this if another signed-in device has the fresher account data.",
     tone: "slate",
   },
@@ -60,14 +60,14 @@ const OPTIONS: Option[] = [
     id: "merge",
     emoji: "✨",
     Icon: Sparkles,
-    titleTr: "Verileri Akıllıca Birleştir",
-    titleEn: "Smart Merge",
+    titleTr: "Verileri birleştir",
+    titleEn: "Combine data",
     descTr:
-      "Yerel ve buluttaki beceri, deneyim ve iş takiplerini en iyi şekilde birleştirir. Çakışmaları otomatik çözer.",
+      "Bu cihazdaki ve hesabındaki beceri, deneyim ve iş takibi kayıtlarını tek yerde bir araya getirir.",
     descEn:
-      "Merges skills, experience, and job tracking from both sides. Conflicts are resolved automatically.",
-    tipTr: "En güvenli seçenek. İki taraftaki değerli kayıtları kaybetmeden birleştirir.",
-    tipEn: "Safest option. Keeps valuable records from both sides without data loss.",
+      "Combines skills, experience, and job tracking from this device and your account in one place.",
+    tipTr: "İki taraftaki kayıtları korumak istiyorsan önerilen seçenek budur.",
+    tipEn: "Recommended when you want to keep records from both places.",
     recommended: true,
     tone: "violet",
   },
@@ -171,25 +171,27 @@ export function MigrationDialog() {
                     className="text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-[1.35rem]"
                   >
                     {isTr
-                      ? "Bulut ile Cihazın Arasında Çakışma Tespit Edildi"
-                      : "A conflict was found between cloud and this device"}
+                      ? "Verilerini nasıl güncelleyelim?"
+                      : "How would you like to update your data?"}
                   </h2>
                   <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                     {isTr ? (
                       <>
-                        Kariyer Forge hesabına giriş yaptın. Cihazında ve bulutta farklı
-                        özgeçmiş, deneyim ve başvuru verileri var.
+                        Bu cihazda ve hesabında farklı kayıtlar bulunuyor. Sana uygun olan
+                        seçeneği belirleyerek kaldığın yerden devam edebilirsin.
                         <br />
                         <span className="font-medium text-slate-800 dark:text-slate-100">
-                          Hangisini kullanmak istersin?
+                          Önerilen seçenek, iki taraftaki kayıtları bir araya getirir.
                         </span>
                       </>
                     ) : (
                       <>
-                        You signed into CareerForge. This device and the cloud have different
-                        resume, experience, and application data.
+                        This device and your account contain different records. Choose the
+                        option that suits you best to continue where you left off.
                         <br />
-                        <span className="font-medium text-slate-100">Which should we use?</span>
+                        <span className="font-medium text-slate-100">
+                          The recommended option combines records from both places.
+                        </span>
                       </>
                     )}
                   </p>
