@@ -1,0 +1,46 @@
+import AxeBuilder from "@axe-core/playwright";
+import { expect, test } from "@playwright/test";
+
+const routes = [
+  "/",
+  "/dashboard",
+  "/forge",
+  "/resume",
+  "/jobs",
+  "/coach",
+  "/paths",
+  "/contact",
+] as const;
+
+for (const route of routes) {
+  test(`${route} has a stable, accessible shell`, async ({ page }) => {
+    const consoleErrors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") consoleErrors.push(message.text());
+    });
+
+    await page.goto(route, { waitUntil: "networkidle" });
+    await expect(page.locator("h1")).toHaveCount(1);
+    await expect(page.locator("h1")).toBeVisible();
+
+    const horizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(horizontalOverflow).toBeLessThanOrEqual(1);
+    expect(consoleErrors).toEqual([]);
+
+    const accessibility = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze();
+    expect(accessibility.violations).toEqual([]);
+  });
+}
+
+test("skip link moves keyboard focus to the main content", async ({ page }) => {
+  await page.goto("/dashboard");
+  await page.keyboard.press("Tab");
+  const skipLink = page.getByRole("link", { name: "Ana içeriğe geç" });
+  await expect(skipLink).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#main-content")).toBeFocused();
+});

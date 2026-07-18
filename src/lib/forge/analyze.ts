@@ -166,14 +166,29 @@ export function analyzeMatch(cv: ParsedCV, jd: string, locale: Locale = "tr"): M
     matchedSkills.length > 0 && { score: evidenceStrength, weight: 5 },
   ].filter((value): value is { score: number; weight: number } => Boolean(value));
   const totalWeight = dimensions.reduce((sum, item) => sum + item.weight, 0);
-  const matchScore = totalWeight
+  const rawMatchScore = totalWeight
     ? Math.min(96, Math.round(dimensions.reduce((sum, item) => sum + item.score * item.weight, 0) / totalWeight))
     : 0;
-  const scoreConfidence = totalWeight >= 80 && jdSkills.length >= 5
+  const scoreConfidence = totalWeight >= 80 && jdSkills.length >= 4 && jd.trim().length >= 180
     ? "high"
     : totalWeight >= 45 && jdSkills.length >= 2
       ? "medium"
       : "low";
+  const confidenceCap = scoreConfidence === "high" ? 93 : scoreConfidence === "medium" ? 82 : 65;
+  const matchScore = Math.min(confidenceCap, rawMatchScore);
+  const margin = scoreConfidence === "high" ? 4 : scoreConfidence === "medium" ? 8 : 12;
+  const scoreRange = {
+    min: Math.max(0, matchScore - margin),
+    max: Math.min(confidenceCap, matchScore + margin),
+  };
+  const evaluatedDimensions: NonNullable<MatchAnalysis["evaluatedDimensions"]> = [
+    requiredSkills.length > 0 && "requiredSkills",
+    preferredSkills.length > 0 && "preferredSkills",
+    jdYearsTarget !== null && cvYearsTotal > 0 && "experience",
+    (isJdRemote || isJdOnsite) && "location",
+    (requiresEnglish || requiresTurkish) && "language",
+    matchedSkills.length > 0 && "evidence",
+  ].filter((value): value is NonNullable<MatchAnalysis["evaluatedDimensions"]>[number] => Boolean(value));
   const missingInputs = [
     jdSkills.length === 0 && (isTr ? "İlandan güvenilir beceri çıkarılamadı" : "No reliable skills could be extracted from the listing"),
     jdYearsTarget === null && (isTr ? "Deneyim yılı belirtilmemiş" : "Required years of experience were not specified"),
@@ -271,11 +286,13 @@ export function analyzeMatch(cv: ParsedCV, jd: string, locale: Locale = "tr"): M
     scoreConfidence,
     rubricVersion: "match-v2",
     missingInputs,
+    scoreRange,
+    evaluatedDimensions,
   };
 }
 
 export function analyzeAts(cv: ParsedCV, jd = "", locale: Locale = "tr") {
-  const analysis = analyzeMatch(cv, jd || cv.skills.join(" "), locale);
+  const analysis = jd.trim() ? analyzeMatch(cv, jd, locale) : null;
   const score = calculateAtsScore(cv, locale);
   const issues: string[] = [];
   const fixes: string[] = [];
@@ -296,7 +313,7 @@ export function analyzeAts(cv: ParsedCV, jd = "", locale: Locale = "tr") {
     issues.push(locale === "tr" ? "Deneyim bölümü bulunamadı veya yapılandırılmadı." : "The experience section is missing or unstructured.");
     fixes.push(locale === "tr" ? "Şirket, pozisyon, tarih ve 3–5 sonuç maddesi ekleyin." : "Add company, role, dates, and 3–5 outcome bullets.");
   }
-  if (analysis.missingSkills.length > 5) {
+  if (analysis && analysis.missingSkills.length > 5) {
     issues.push(locale === "tr" ? "Hedef ilan terminolojisiyle düşük örtüşme var." : "Alignment with target-job terminology is low.");
     fixes.push(locale === "tr" ? "Eksik terimleri yalnızca gerçek deneyimle eşleştiğinde ekleyin; deneyim uydurmayın." : "Add missing terms only when supported by real experience; never invent evidence.");
   }
@@ -305,13 +322,16 @@ export function analyzeAts(cv: ParsedCV, jd = "", locale: Locale = "tr") {
     fixes.push(locale === "tr" ? "Hedef rol terminolojisini ve ölçülebilir sonuçları geliştirin." : "Refine target-role terminology and measurable outcomes.");
   }
 
-  const keywordCoverage = analysis.matchedSkills.length + analysis.missingSkills.length
+  const keywordCategory = score.categories.find((category) => category.id === "keywords");
+  const keywordCoverage = analysis && analysis.matchedSkills.length + analysis.missingSkills.length
     ? Math.round(
         (analysis.matchedSkills.length /
           Math.max(1, analysis.matchedSkills.length + analysis.missingSkills.length)) *
           100
       )
-    : 50;
+    : keywordCategory
+      ? Math.round((keywordCategory.score / keywordCategory.maxScore) * 100)
+      : 0;
 
   return {
     atsScore: score.total,
@@ -324,5 +344,6 @@ export function analyzeAts(cv: ParsedCV, jd = "", locale: Locale = "tr") {
     confidence: score.confidence,
     rubricVersion: score.rubricVersion,
     missingInputs: score.missingInputs,
+    scoreRange: score.scoreRange,
   };
 }

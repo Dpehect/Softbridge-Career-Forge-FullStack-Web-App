@@ -63,14 +63,14 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
     back: "İş eşleştirmeye dön", applicants: "başvuru", save: "Kaydet", saved: "Kaydedildi", applied: "Başvuruldu", apply: "Başvuru takipçisine ekle",
     removedToast: "Kayıt kaldırıldı.", savedToast: "İlan kaydedildi.", appliedToast: "Başvuru takipçisine eklendi.",
     salary: "Maaş", model: "Çalışma modeli", contract: "Sözleşme", role: "Rol", responsibilities: "Sorumluluklar", evidence: "Aranan kanıtlar", company: "Şirket",
-    match: "CV eşleşmesi", strong: "Güçlü aday sinyali", gap: "Kanıt açığı görünür", missingResume: "CV becerileri eksik", matched: "Örtüşen beceriler", noMatch: "Henüz eşleşme yok.", missing: "Eksik sinyaller", add: "Ekle", already: "zaten mevcut.", added: "CV'ye eklendi.", noGap: "İlan etiketlerinde kritik eksik görünmüyor.",
+    match: "Tahmini rol uyumu", strong: "Güçlü aday sinyali", gap: "Kanıt açığı görünür", missingResume: "CV becerileri eksik", matched: "Örtüşen beceriler", noMatch: "Henüz eşleşme yok.", missing: "Eksik sinyaller", add: "Ekle", already: "zaten mevcut.", added: "CV'ye eklendi.", noGap: "İlan etiketlerinde kritik eksik görünmüyor.",
     trust: "Bir beceriyi yalnızca gerçek deneyiminiz varsa ekleyin. Sonraki adımda bu beceriyi somut bir sonuçla kanıtlayın.", sample: "Bu, ürün deneyimini göstermek için hazırlanmış örnek bir ilandır.",
     mode: { Remote: "Uzaktan", Hybrid: "Hibrit", "On-site": "Ofiste" }, type: { "Full-time": "Tam zamanlı", "Part-time": "Yarı zamanlı", Contract: "Sözleşmeli", Internship: "Staj" }, seniority: { Intern: "Stajyer", Junior: "Başlangıç", Mid: "Orta", Senior: "Kıdemli", Lead: "Lider", Principal: "Uzman" },
   } : {
     back: "Back to job matching", applicants: "applicants", save: "Save", saved: "Saved", applied: "Applied", apply: "Add to application tracker",
     removedToast: "Bookmark removed.", savedToast: "Listing saved.", appliedToast: "Added to application tracker.",
     salary: "Salary", model: "Work model", contract: "Contract", role: "Role", responsibilities: "Responsibilities", evidence: "Required evidence", company: "Company",
-    match: "Resume match", strong: "Strong candidate signal", gap: "Evidence gap visible", missingResume: "Resume skills are missing", matched: "Matched skills", noMatch: "No matches yet.", missing: "Missing signals", add: "Add", already: "is already present.", added: "added to resume.", noGap: "No critical gap appears in the listing tags.",
+    match: "Estimated role fit", strong: "Strong candidate signal", gap: "Evidence gap visible", missingResume: "Resume skills are missing", matched: "Matched skills", noMatch: "No matches yet.", missing: "Missing signals", add: "Add", already: "is already present.", added: "added to resume.", noGap: "No critical gap appears in the listing tags.",
     trust: "Add a skill only when you have real experience with it. Then support it with a concrete outcome.", sample: "This is a sample listing created to demonstrate the product experience.",
     mode: { Remote: "Remote", Hybrid: "Hybrid", "On-site": "On-site" }, type: { "Full-time": "Full-time", "Part-time": "Part-time", Contract: "Contract", Internship: "Internship" }, seniority: { Intern: "Intern", Junior: "Junior", Mid: "Mid", Senior: "Senior", Lead: "Lead", Principal: "Principal" },
   };
@@ -80,6 +80,8 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
     const jdText = `${job.title} ${job.description} ${job.requirements.join(" ")} ${job.tags.join(" ")}`;
     return analyzeMatch(cvParsed, jdText, locale);
   }, [job, resume, locale]);
+  const scoreValue = (dimension: NonNullable<typeof match.evaluatedDimensions>[number], value?: number) =>
+    match.evaluatedDimensions?.includes(dimension) ? `${value ?? 0}%` : (isTr ? "Veri yok" : "No data");
 
   const saved = savedJobIds.includes(job.id);
   const applied = appliedJobIds.includes(job.id);
@@ -229,6 +231,11 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
               <strong className="metric-number text-3xl font-semibold text-brand-strong">{match.matchScore}%</strong>
             </div>
 
+            <div className="flex flex-wrap gap-x-4 gap-y-1 border-l-2 border-line-strong pl-3 text-xs text-ink-3">
+              <span>{isTr ? "Tahmini aralık" : "Estimated range"}: {match.scoreRange?.min ?? match.matchScore}–{match.scoreRange?.max ?? match.matchScore}</span>
+              <span>{isTr ? "Güven" : "Confidence"}: {match.scoreConfidence === "high" ? (isTr ? "yüksek" : "high") : match.scoreConfidence === "medium" ? (isTr ? "orta" : "medium") : (isTr ? "düşük" : "low")}</span>
+            </div>
+
             <div className="h-1.5 overflow-hidden rounded-full bg-surface-3">
               <div className="h-full rounded-full bg-brand transition-all duration-500" style={{ width: `${match.matchScore}%` }} />
             </div>
@@ -250,35 +257,35 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-ink-3">{isTr ? "Zorunlu Beceri Uyumu" : "Required Skills"}</span>
-                      <span className="font-semibold text-ink">{match.requiredSkillsCoverage}%</span>
+                      <span className="font-semibold text-ink">{scoreValue("requiredSkills", match.requiredSkillsCoverage)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-ink-3">{isTr ? "Tercih Edilen Beceri Uyumu" : "Preferred Skills"}</span>
-                      <span className="font-semibold text-ink">{match.preferredSkillsCoverage}%</span>
+                      <span className="font-semibold text-ink">{scoreValue("preferredSkills", match.preferredSkillsCoverage)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-ink-3">{isTr ? "Deneyim Süresi Uyumu" : "Experience Length"}</span>
-                      <span className="font-semibold text-ink">{match.experienceAlignment}%</span>
+                      <span className="font-semibold text-ink">{scoreValue("experience", match.experienceAlignment)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-ink-3">{isTr ? "Konum/Çalışma Modu" : "Location/Mode"}</span>
-                      <span className="font-semibold text-ink">{match.locationCompatibility}%</span>
+                      <span className="font-semibold text-ink">{scoreValue("location", match.locationCompatibility)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-ink-3">{isTr ? "Dil Gereksinimi" : "Languages"}</span>
-                      <span className="font-semibold text-ink">{match.languageCompatibility}%</span>
+                      <span className="font-semibold text-ink">{scoreValue("language", match.languageCompatibility)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-ink-3">{isTr ? "Deneyim Kanıtı Gücü" : "Evidence Strength"}</span>
-                      <span className="font-semibold text-ink">{match.evidenceStrength}%</span>
+                      <span className="font-semibold text-ink">{scoreValue("evidence", match.evidenceStrength)}</span>
                     </div>
                   </div>
 
                   {/* Impact Explanations */}
                   <div className="border-t border-line pt-3 space-y-1.5">
-                    <p className="font-semibold text-[10px] text-ink uppercase tracking-wider">{isTr ? "Puan Etkileri" : "Score Adjustments"}</p>
+                    <p className="text-xs font-semibold text-ink uppercase tracking-wider">{isTr ? "Puan Etkileri" : "Score Adjustments"}</p>
                     {match.scoreExplanations?.map((exp, i) => (
-                      <p key={i} className={cn("leading-relaxed text-[11px]", exp.startsWith("+") ? "text-positive" : "text-caution")}>
+                      <p key={i} className={cn("text-xs leading-relaxed", exp.startsWith("+") ? "text-positive" : "text-caution")}>
                         {exp}
                       </p>
                     ))}

@@ -192,7 +192,7 @@ export default function DashboardPage() {
               <Sparkles className="h-3.5 w-3.5" />
               {isTr ? "İlk adım" : "First step"}
             </div>
-            <h1 className="page-title-compact max-w-xl">{copy.emptyTitle}</h1>
+            <h2 className="page-title-compact max-w-xl">{copy.emptyTitle}</h2>
             <p className="page-lede mt-4">{copy.emptyBody}</p>
           </div>
           <div className="premium-card p-6">

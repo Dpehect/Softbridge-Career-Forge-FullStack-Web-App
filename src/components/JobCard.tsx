@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Bookmark, MapPin, Sparkles } from "lucide-react";
+import { Bookmark, MapPin, Star } from "lucide-react";
 import type { Job } from "@/types";
 import { formatRelativeDate, formatSalary, cn } from "@/lib/utils";
 import { useCareerStore } from "@/store/useCareerStore";
@@ -56,7 +56,7 @@ export function JobCard({ job, index = 0 }: { job: Job; index?: number }) {
   const copy = locale === "tr" ? {
     featured: "Öne çıkan",
     applied: "Başvuruldu",
-    match: "rol uyumu",
+    match: "beceri kapsamı",
     save: "İlanı kaydet",
     remove: "İlanı kaydedilenlerden çıkar",
     savedTitle: "Kaydı kaldır",
@@ -67,7 +67,7 @@ export function JobCard({ job, index = 0 }: { job: Job; index?: number }) {
   } : {
     featured: "Featured",
     applied: "Applied",
-    match: "role match",
+    match: "skill coverage",
     save: "Save listing",
     remove: "Remove saved listing",
     savedTitle: "Remove bookmark",
@@ -118,7 +118,7 @@ export function JobCard({ job, index = 0 }: { job: Job; index?: number }) {
           )}
           {job.featured && (
             <span className="inline-flex min-h-6 items-center gap-1 border border-caution/30 bg-[var(--caution-wash)] px-2.5 py-1 text-xs font-bold text-caution">
-              <Sparkles className="h-3 w-3" />
+              <Star className="h-3 w-3" />
               {copy.featured}
             </span>
           )}

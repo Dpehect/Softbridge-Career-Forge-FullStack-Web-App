@@ -96,6 +96,9 @@ export function AtsScoreBreakdown({ result, compact = false }: AtsScoreBreakdown
           <p className="mt-2 text-xs font-semibold text-ink-3">
             {isTr ? "Model güveni" : "Model confidence"}: {result.confidence === "high" ? (isTr ? "yüksek" : "high") : result.confidence === "medium" ? (isTr ? "orta" : "medium") : (isTr ? "düşük" : "low")}
           </p>
+          <p className="mt-1 text-xs text-ink-3">
+            {isTr ? "Tahmini aralık" : "Estimated range"}: {result.scoreRange.min}–{result.scoreRange.max}
+          </p>
         </div>
         <div>
           <div className="flex items-center gap-2">
@@ -244,8 +247,8 @@ export function AtsScoreBreakdown({ result, compact = false }: AtsScoreBreakdown
           <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-caution" />
           <p>
             {isTr
-              ? "Açıklama: Kural tabanlı, şeffaf tahmin. Gerçek bir ATS satıcısını veya işe alım kararını temsil etmez — ama hangi sinyallerin eksik olduğunu gösterir."
-              : "Disclaimer: Transparent, rule-based estimate. Not a real ATS vendor or hiring decision — but it shows which signals are missing."}
+              ? "Açıklama: Bu değer bir geçme olasılığı değil; kural tabanlı belge kalite tahminidir. Gerçek bir ATS satıcısını veya işe alım kararını temsil etmez."
+              : "Disclaimer: This is not a pass probability; it is a rule-based document-quality estimate. It does not represent an ATS vendor or hiring decision."}
           </p>
         </div>
         {result.missingInputs.length > 0 && (

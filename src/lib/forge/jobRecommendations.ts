@@ -29,8 +29,8 @@ export function buildWebSearchLinks(cv: ParsedCV) {
       title: `${cv.title || "Jobs"} on LinkedIn`,
       company: "LinkedIn Jobs",
       location: cv.location || "Worldwide",
-      matchScore: 70,
-      reason: "Search on LinkedIn using your title and top skills.",
+      matchScore: 0,
+      reason: "Search link only; no listing was available to calculate a score.",
       source: "Web search" as const,
       url: `https://www.linkedin.com/jobs/search/?keywords=${q}&location=${loc}`,
       tags: cv.skills.slice(0, 4),
@@ -40,8 +40,8 @@ export function buildWebSearchLinks(cv: ParsedCV) {
       title: `${cv.title || "Jobs"} on Indeed`,
       company: "Indeed",
       location: cv.location || "Worldwide",
-      matchScore: 68,
-      reason: "Open Indeed with a query built from your CV.",
+      matchScore: 0,
+      reason: "Search link only; no listing was available to calculate a score.",
       source: "Web search" as const,
       url: `https://www.indeed.com/jobs?q=${q}&l=${loc}`,
       tags: cv.skills.slice(0, 4),
@@ -51,8 +51,8 @@ export function buildWebSearchLinks(cv: ParsedCV) {
       title: "Remote roles matching your stack",
       company: "RemoteOK",
       location: "Remote",
-      matchScore: 66,
-      reason: "Browse remote postings filtered by your keywords.",
+      matchScore: 0,
+      reason: "Search link only; no listing was available to calculate a score.",
       source: "Web search" as const,
       url: `https://remoteok.com/remote-${encodeURIComponent((cv.skills[0] || "dev").toLowerCase())}-jobs`,
       tags: cv.skills.slice(0, 4),
@@ -68,7 +68,7 @@ export function recommendLocalJobs(cv: ParsedCV): JobRecommendation[] {
       cv.title && job.title.toLowerCase().includes(cv.title.toLowerCase().split(" ")[0] || "")
         ? 0.15
         : 0;
-    const score = Math.round(Math.min(96, (ratio * 70 + titleHit * 100 + (job.featured ? 8 : 0))));
+    const score = Math.round(Math.min(90, ratio * 80 + titleHit * 100));
     return {
       id: `local-${job.id}`,
       title: job.title,
@@ -105,18 +105,19 @@ export async function fetchRemoteOkJobs(cv: ParsedCV): Promise<JobRecommendation
       const company = String(p.company || "Remote company");
       const tags = Array.isArray(p.tags) ? p.tags.map(String) : [];
       const blob = `${title} ${tags.join(" ")} ${String(p.description || "")}`.toLowerCase();
-      let score = 20;
       const hit: string[] = [];
       for (const s of cvSkills) {
         if (blob.includes(s.toLowerCase())) {
-          score += 12;
           hit.push(s);
         }
       }
-      for (const t of titleBits) {
-        if (title.toLowerCase().includes(t)) score += 8;
-      }
-      if (score < 32) continue;
+      const uniqueHits = Array.from(new Set(hit));
+      const skillCoverage = cvSkills.length ? uniqueHits.length / cvSkills.length : 0;
+      const titleCoverage = titleBits.length
+        ? titleBits.filter((term) => title.toLowerCase().includes(term)).length / titleBits.length
+        : 0;
+      const score = Math.round(Math.min(90, skillCoverage * 75 + titleCoverage * 15));
+      if (score < 20) continue;
       const slug = p.slug ? String(p.slug) : "";
       const id = String(p.id);
       scored.push({
@@ -124,8 +125,8 @@ export async function fetchRemoteOkJobs(cv: ParsedCV): Promise<JobRecommendation
         title,
         company,
         location: "Remote",
-        matchScore: Math.min(95, score),
-        reason: hit.length ? `Skills fit: ${hit.slice(0, 4).join(", ")}` : "Remote role related to your profile.",
+        matchScore: score,
+        reason: uniqueHits.length ? `Explicit skill overlap: ${uniqueHits.slice(0, 4).join(", ")}` : "Role-title overlap only; inspect the full listing.",
         source: "RemoteOK",
         url: slug ? `https://remoteok.com/remote-jobs/${slug}` : `https://remoteok.com/l/${id}`,
         tags: tags.slice(0, 6),

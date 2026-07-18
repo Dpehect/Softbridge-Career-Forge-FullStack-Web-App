@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  transform: translateY(-160%);
+  border: 2px solid var(--brand);
+  background: var(--bg-surface);
+  color: var(--ink);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 /*
   Class / data-theme dark mode (Tailwind v4 ≡ darkMode: 'class').
   Requires html.dark OR html[data-theme="dark"] — never media-query only.
@@ -87,7 +105,7 @@
 
   /* TealHQ-inspired brand (also used by product chrome) */
   --action-primary: #0f766e; /* teal-700 */
-  --action-primary-hover: #0d9488; /* teal-600 */
+  --action-primary-hover: #115e59; /* teal-800: AA-safe for small text on light surfaces */
   --action-primary-ink: #ffffff;
   --action-secondary: #d97706; /* amber-600 accent */
   --status-info: #0f766e;

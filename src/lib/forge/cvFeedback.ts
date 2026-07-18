@@ -85,7 +85,7 @@ export function generateCvFeedback(
       : "The resume provides a starting structure that can improve with focused edits.");
   }
 
-  const overallScore = Math.round(ats.atsScore * 0.75 + Math.min(25, strengths.length * 4));
+  const overallScore = ats.atsScore;
   const summaryLine = ats.summary;
   const careerAdvice = locale === "tr" ? [
     "Her hafta yüksek uyumlu 8–12 başvuru, iki hedefli iletişim ve bir prova mülakatından oluşan sürdürülebilir bir ritim kurun.",

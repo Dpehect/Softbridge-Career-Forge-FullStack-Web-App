@@ -35,7 +35,7 @@ describe("analyzeMatch", () => {
       "en",
     );
     expect(result.matchScore).toBeGreaterThan(60);
-    expect(result.matchScore).toBeLessThanOrEqual(96);
+    expect(result.matchScore).toBeLessThanOrEqual(82);
     expect(result.rubricVersion).toBe("match-v2");
   });
 
@@ -43,5 +43,8 @@ describe("analyzeMatch", () => {
     const result = analyzeMatch(cv, "React is required for this role.", "en");
     expect(result.experienceAlignment).toBe(0);
     expect(result.missingInputs).toContain("Required years of experience were not specified");
+    expect(result.matchScore).toBeLessThanOrEqual(65);
+    expect(result.scoreRange?.max).toBeLessThanOrEqual(65);
+    expect(result.evaluatedDimensions).not.toContain("experience");
   });
 });

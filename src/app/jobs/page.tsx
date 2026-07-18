@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Bookmark, BriefcaseBusiness, Search, Sparkles } from "lucide-react";
+import { Bookmark, BriefcaseBusiness, Search, BarChart3 } from "lucide-react";
 import { JobCard, computeJobMatch } from "@/components/JobCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -309,7 +309,7 @@ export default function JobsPage() {
               <div className="border-b border-line bg-surface-2 px-6 py-4">
                 <div className="flex items-center justify-between">
                   <p className="section-label">{copy.strongest}</p>
-                  <Sparkles className="h-4 w-4 text-orange-500" />
+                  <BarChart3 className="h-4 w-4 text-caution" />
                 </div>
               </div>
               <div className="p-6 pt-4">

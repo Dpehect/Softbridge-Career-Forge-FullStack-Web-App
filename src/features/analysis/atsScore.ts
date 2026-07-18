@@ -26,6 +26,7 @@ export interface AtsScoreResult {
   confidence: "low" | "medium" | "high";
   rubricVersion: "ats-v2";
   missingInputs: string[];
+  scoreRange: { min: number; max: number };
 }
 
 const METRIC_PATTERN = /\d+\s*%|\d+[kKmM]?\+?\s*(users?|kullanıcı|ms|seconds?|saniye|hours?|saat|days?|gün|requests?|istek)|[$€£₺]\s*\d+|\b\d{2,}\+?\b/i;
@@ -345,7 +346,7 @@ export function calculateAtsScore(cv: ParsedCV, locale: Locale = "en"): AtsScore
   };
 
   const categories = [structCat, compCat, expCat, kwCat, impactCat, contactCat];
-  const total = categories.reduce((sum, category) => sum + category.score, 0);
+  const rawTotal = categories.reduce((sum, category) => sum + category.score, 0);
   const missingInputs = [
     !cv.email && (isTr ? "e-posta" : "email"),
     !cv.summary && (isTr ? "profesyonel özet" : "professional summary"),
@@ -353,12 +354,17 @@ export function calculateAtsScore(cv: ParsedCV, locale: Locale = "en"): AtsScore
     skills.length === 0 && (isTr ? "beceriler" : "skills"),
     education.length === 0 && (isTr ? "eğitim" : "education"),
   ].filter((value): value is string => Boolean(value));
-  const evidenceSignals = bullets.length + experience.length + skills.length + education.length;
-  const confidence = evidenceSignals >= 14 && missingInputs.length === 0
+  const evidenceSignals = bullets.length + experience.length + uniqueSkills.length + education.length;
+  const hasStableDocumentEvidence = cv.rawLength >= 600 && bullets.length >= 3 && uniqueSkills.length >= 5;
+  const confidence = evidenceSignals >= 12 && missingInputs.length === 0 && hasStableDocumentEvidence
     ? "high"
-    : evidenceSignals >= 6
+    : evidenceSignals >= 6 && experience.length > 0
       ? "medium"
       : "low";
+  const confidenceCap = confidence === "high" ? 92 : confidence === "medium" ? 76 : 48;
+  const calibratedTotal = Math.round(rawTotal * 0.9);
+  const total = Math.min(confidenceCap, calibratedTotal);
+  const margin = confidence === "high" ? 4 : confidence === "medium" ? 7 : 11;
 
   return {
     total,
@@ -367,5 +373,9 @@ export function calculateAtsScore(cv: ParsedCV, locale: Locale = "en"): AtsScore
     confidence,
     rubricVersion: "ats-v2",
     missingInputs,
+    scoreRange: {
+      min: Math.max(0, total - margin),
+      max: Math.min(confidenceCap, total + margin),
+    },
   };
 }

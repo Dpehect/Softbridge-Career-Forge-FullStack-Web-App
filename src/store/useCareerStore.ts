@@ -12,6 +12,7 @@ import type {
   MatchAnalysis,
   ParsedCV,
 } from "@/lib/forge/types";
+import { analyzeMatch } from "@/lib/forge/analyze";
 
 const emptyResume = createEmptyResume;
 
@@ -830,6 +831,10 @@ export const useCareerStore = create<CareerState>()(
           ],
           rawLength: 500
         };
+        const demoJdText = isTr
+          ? "Senior Frontend Engineer\nGereksinimler: TypeScript, Next.js, React, test otomasyonu, CI/CD ve temel sistem tasarımı."
+          : "Senior Frontend Engineer\nRequirements: TypeScript, Next.js, React, testing, CI/CD, and system design fundamentals.";
+        const demoAnalysis = analyzeMatch(demoParsedCV, demoJdText, lang);
 
         set({
           isDemoMode: true,
@@ -843,18 +848,8 @@ export const useCareerStore = create<CareerState>()(
           forgeCvText: isTr
             ? "Yusuf Demir — Senior Frontend Engineer\nİstanbul | yusuf@demir.dev\n\nÖZET\nNext.js ve TypeScript ile ölçeklenebilir ürün arayüzleri geliştiren frontend mühendisi.\n\nDENEYİM\nSoftBridge — Senior Frontend Developer (2022–Devam Ediyor)\n- 12 bin aylık kullanıcıya hizmet veren analitik paneli geliştirdi\n- Sayfa açılış süresini %35 azalttı\n\nBECERİLER\nJavaScript, React, CSS, Git, REST API, TypeScript, Next.js"
             : "Yusuf Demir — Senior Frontend Engineer\nIstanbul | yusuf@demir.dev\n\nSUMMARY\nFrontend engineer building scalable product interfaces with Next.js and TypeScript.\n\nEXPERIENCE\nSoftBridge — Senior Frontend Developer (2022–Present)\n- Built an analytics workspace serving 12,000 monthly users\n- Reduced page load time by 35%\n\nSKILLS\nJavaScript, React, CSS, Git, REST API, TypeScript, Next.js",
-          forgeJdText: isTr
-            ? "Senior Frontend Engineer\nGereksinimler: TypeScript, Next.js, React, test otomasyonu, CI/CD ve temel sistem tasarımı."
-            : "Senior Frontend Engineer\nRequirements: TypeScript, Next.js, React, testing, CI/CD, and system design fundamentals.",
-          forgeAnalysis: {
-            matchScore: 78,
-            atsScore: 87,
-            strengths: isTr ? ["React, Next.js ve TypeScript gereksinimleriyle güçlü eşleşme."] : ["Strong alignment with React, Next.js, and TypeScript requirements."],
-            gaps: isTr ? ["Test otomasyonu ve CI/CD kanıtı güçlendirilmeli."] : ["Testing and CI/CD evidence should be strengthened."],
-            suggestions: isTr ? ["Son deneyime doğrulanabilir bir test otomasyonu örneği ekleyin."] : ["Add a verifiable testing automation example to the latest role."],
-            matchedSkills: ["React", "Next.js", "TypeScript"],
-            missingSkills: ["Testing", "CI/CD"],
-          },
+          forgeJdText: demoJdText,
+          forgeAnalysis: demoAnalysis,
           careerGoalId: "frontend",
           enrolledPathIds: ["path-frontend"],
           completedModuleIds: ["fe-1", "fe-2"],
@@ -875,9 +870,9 @@ export const useCareerStore = create<CareerState>()(
             {
               id: "demo-history-1",
               action: "ats",
-              summary: isTr ? "ATS analizi tamamlandı · 87/100" : "ATS analysis completed · 87/100",
+              summary: isTr ? `ATS analizi tamamlandı · ${demoAnalysis.atsScore}/100` : `ATS analysis completed · ${demoAnalysis.atsScore}/100`,
               createdAt: new Date().toISOString(),
-              payload: { atsScore: 87 },
+              payload: { atsScore: demoAnalysis.atsScore },
             },
           ],
           lastAnalysisMeta: {

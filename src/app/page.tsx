@@ -17,7 +17,7 @@ export default function HomePage() {
   return (
     <div className="landing-page min-h-full">
       <Navbar />
-      <main>
+      <main id="main-content" tabIndex={-1} className="outline-none">
         <Hero />
         <ProductSwitcher />
         <ProductShowcases />

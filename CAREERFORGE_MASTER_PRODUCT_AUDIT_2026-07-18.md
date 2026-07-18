@@ -20,7 +20,7 @@ Doğrulanan iyileştirmeler:
 1. **AI endpoint korumaları eklendi.** Supabase oturumu, same-origin kontrolü, Zod şeması, gerçek byte sınırı, saatlik kullanıcı kotası, provider timeout’u, yapılandırılmış hata modeli ve provenance mevcut.
 2. **ATS ve rol eşleştirme v2’ye geçirildi.** Bilinmeyen veri artık otomatik 100 puan almıyor; skorlar kanıt bulunan boyutlara göre yeniden ağırlıklandırılıyor, 96’da sınırlandırılıyor ve güven/eksik girdi bilgisi gösteriliyor.
 3. **Sahte başarı kaldırıldı.** İletişim ekranı mesaj gönderilmiş gibi davranmıyor; doğrulanabilir e-posta akışı ve gerçekçi iki iş günü hedefi sunuyor. Sahte sosyal kanıt niteliğindeki testimonial bölümü de kaldırıldı.
-4. **Kalite kapısı yeşil.** ESLint 0 hata/0 uyarı, strict TypeScript, 6 kritik skorlayıcı unit testi ve production build geçiyor. GitHub Actions bunları her push/PR için zorunlu çalıştırıyor.
+4. **Kalite kapısı yeşil.** ESLint 0 hata/0 uyarı, strict TypeScript, 7 skorlayıcı unit testi, 18 Playwright/axe masaüstü-mobil testi ve production build geçiyor. GitHub Actions bunları her push/PR için zorunlu çalıştırıyor.
 5. **Supabase şeması ve RLS repository’ye eklendi.** Owner-only profile/workspace politikaları ve AI kota RPC’si migration olarak sürümlendi. Bu denetimde migration’ın uzak production projesine uygulanması ayrıca doğrulanmadı.
 6. **UI tek tasarım diline yaklaştırıldı.** Kullanılmayan 19 eski WebGL/gradient bileşeni temizlendi; yüzen mobil AI düğmesi, sahte yorumlar, aşırı gradient ve kart gölgeleri azaltıldı. Metodoloji ve ürün sınırları arayüzün parçası oldu.
 7. **Temel web güvenlik başlıkları ve dosya sınırları eklendi.** HSTS, frame denial, nosniff, referrer/permissions politikaları ve 10 MB yükleme sınırı mevcut.
@@ -29,7 +29,7 @@ Kalan temel gerçekler:
 
 - İş, şirket, maaş ve yol haritası içeriği hâlâ demo/static veri; gerçek veri tedariki ve güncellik SLA’sı yok.
 - ATS v2 daha dürüst, fakat etiketli gerçek CV–ilan corpus’u ve recruiter benchmark’ı olmadan “kalibre edilmiş tahmin” sayılamaz.
-- 6 unit test iyi bir başlangıçtır; E2E, axe, visual regression, Supabase cross-user integration ve AI eval henüz yoktur.
+- 7 skorlayıcı unit testi ve 18 Playwright/axe masaüstü-mobil kalite testi geçiyor. Supabase cross-user integration, AI eval ve pixel-level visual snapshot hâlâ yoktur.
 - Observability, error tracking, analytics, notification delivery, billing ve destek ticket backend’i yoktur.
 - Workspace hâlâ büyük ölçüde tek JSON aggregate olarak saklanıyor; application event/version domain modeli kurulmadı.
 
@@ -673,25 +673,37 @@ Her skor şu metadata’yı göstermeli: `rubricVersion`, `parserConfidence`, `j
 
 | Kategori | Skor | Gerekçe |
 |---|---:|---|
-| UI | **8.2/10** | Editorial renk dili, daha düz yüzeyler ve özgün metodoloji bölümü tutarlı. 19 eski template/WebGL bileşeni kaldırıldı; bazı küçük metadata metinleri hâlâ borç. |
-| UX | **6.8/10** | Ana modüller, next-action ve skor sınırları anlaşılır; ancak tek activation akışı ve hesap değer döngüsü tamamlanmış değil. |
-| Readability | **7.6/10** | Hero mockup kontrastı, dashboard yüzeyleri ve skor açıklamaları okunur. Bazı 10–11 px etiketler hâlâ büyütülmeli. |
-| Accessibility | **6.2/10** | ARIA/focus/reduced-motion temeli ve 44 px ana hedefler var; axe, klavye E2E ve görsel regresyon kapısı yok. |
+| UI | **8.8/10** | Editorial renk dili, düz yüzeyler ve özgün metodoloji bölümü tutarlı. Eski template/WebGL ailesi kaldırıldı; aktif rotalarda taşma ve ciddi kontrast ihlali yok. Pixel-level visual snapshot henüz yok. |
+| UX | **7.8/10** | Ana modüller, next-action, skor aralığı ve “veri yok” durumları anlaşılır. Tek activation akışı ve hesap değer döngüsü tamamlanmış değil. |
+| Readability | **8.7/10** | Hero mockup, dashboard ve skor panelleri okunur; AA kontrast sorunu otomatik testle yakalanıp düzeltildi. Bazı ikincil metadata metinleri hâlâ kompakt. |
+| Accessibility | **9.2/10** | Sekiz ana rota iki viewport’ta axe WCAG A/AA, tek H1, yatay taşma, konsol ve skip-link testlerinden geçiyor: 18/18. Screen-reader cihaz matrisi ve modal focus-trap testi eksik. |
 | Performance | **7.8/10** | Production build temiz, ölü WebGL/animation kodu kaldırıldı ve local parsing korunuyor; bundle budget ve field telemetry yok. |
-| Architecture | **6.7/10** | App Router, strict TS, doğrulanmış API boundary, versioned migration ve typed mapper iyi temel; monolitik resume/store ve JSON aggregate sürüyor. |
-| Engineering | **7.6/10** | Lint 0/0, typecheck, 6 unit test, CI, build ve migration mevcut. E2E/integration/coverage/observability eksikleri nedeniyle 8+ değil. |
+| Architecture | **7/10** | App Router, strict TS, doğrulanmış API boundary, versioned migration ve typed mapper iyi temel; monolitik resume/store ve JSON aggregate sürüyor. |
+| Engineering | **8.6/10** | Lint 0/0, typecheck, 7 unit test, 18 Playwright/axe test, CI, build ve migration mevcut. Supabase integration, coverage budget ve observability eksikleri nedeniyle 9+ değil. |
 | Product Thinking | **7/10** | Explainability, confidence ve product-truth iyileşti; gerçek outcome loop ve scope discipline hâlâ eksik. |
 | Business Value | **4/10** | Gerçek problem var; ödeme gerekçesi, gerçek job supply ve ölçülmüş outcome yok. |
 | Originality | **5.8/10** | Görsel dil ve kanıt/confidence sunumu daha özgün; çekirdek özellik seti hâlâ bilinen kategori birleşimi. |
 | AI Features | **6.3/10** | Auth, quota, validation, timeout, prompt boundary ve provenance var; streaming, eval, memory ve structured action yok. |
-| ATS Credibility | **6.6/10** | Pozitif varsayımlar kaldırıldı, güven/eksik girdi ve v2 testleri eklendi. Gerçek corpus kalibrasyonu olmadığı için 7+ değil. |
-| Trustworthiness | **7.3/10** | Fake success/social proof kaldırıldı, skor disclaimer’ı, RLS migration ve dürüst veri dili eklendi. Production RLS deployment kanıtı ve audit log eksik. |
-| Portfolio Value | **8/10** | UI, product truth, CI, güvenlik sınırı ve migration birlikte senior product-engineering tartışması için güçlü kanıt oluşturuyor. |
-| Production Readiness | **6/10** | Güvenli beta için anlamlı temel var; gerçek job supply, E2E/integration, monitoring, incident ve delivery sistemleri olmadan genel kullanıma hazır değil. |
+| ATS Credibility | **7.4/10** | Güven seviyesine göre 48/76/92 tavanları, tahmini aralıklar ve rol uyumunda 65/82/93 tavanları var; demo sabitleri kaldırıldı. Gerçek corpus kalibrasyonu olmadığı için 8+ değil. |
+| Trustworthiness | **7.8/10** | Fake success/social proof ve sabit demo skorları kaldırıldı; RLS migration, score range ve dürüst veri dili mevcut. Production RLS deployment kanıtı ve audit log eksik. |
+| Portfolio Value | **8.6/10** | UI, product truth, CI, güvenlik sınırı, E2E accessibility ve migration birlikte senior product-engineering tartışması için güçlü kanıt oluşturuyor. |
+| Production Readiness | **6.8/10** | Güvenli beta için güçlü temel var; gerçek job supply, Supabase integration, monitoring, incident ve delivery sistemleri olmadan genel kullanıma hazır değil. |
 
-## Genel skor: **6.8 / 10**
+## Genel skor: **7.5 / 10**
 
 Bu skor görsel kaliteyi değil, ürünün “binlerce gerçek kullanıcıya hizmet eden premium SaaS” olma iddiasını ölçer.
+
+## 10/10 kabul kriteri
+
+`10/10` pazarlama etiketi olarak değil, aşağıdaki kanıtların tamamı sağlandığında verilecektir:
+
+- UI/UX: pixel-level visual regression, gerçek cihaz screen-reader matrisi ve ölçülmüş görev tamamlama başarısı.
+- ATS: etiketli gerçek CV–ilan corpus’u, recruiter benchmark’ı, precision/recall ve periyodik drift raporu.
+- Engineering: Supabase cross-user integration, API contract, coverage budget, dependency SLA ve zero-downtime migration provası.
+- Production: error tracking, SLO/alerting, backup restore provası, incident runbook ve production RLS doğrulaması.
+- Product/business: gerçek ilan kaynağı, doğrulanmış başvuru sonucu döngüsü, retention ve ödeme isteği kanıtı.
+
+Bu maddeler olmadan bütün hücrelere `10/10` yazmak ürünün özellikle düzeltilen “abartısız ve gerçekçi” ilkesine aykırı olur.
 
 ---
 

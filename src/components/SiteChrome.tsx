@@ -14,13 +14,19 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   const isLanding = pathname === "/";
 
   if (isLanding) {
-    return <div className="flex min-h-full flex-1 flex-col">{children}</div>;
+    return (
+      <>
+        <a href="#main-content" className="skip-link">Ana içeriğe geç</a>
+        <div className="flex min-h-full flex-1 flex-col">{children}</div>
+      </>
+    );
   }
 
   return (
     <>
+      <a href="#main-content" className="skip-link">Ana içeriğe geç</a>
       <Header />
-      <div className="flex-1 pt-16 pb-20 md:pt-[6.5rem] md:pb-0">
+      <div id="main-content" tabIndex={-1} className="flex-1 pt-16 pb-20 outline-none md:pt-[6.5rem] md:pb-0">
         <DemoNotice />
         {children}
       </div>

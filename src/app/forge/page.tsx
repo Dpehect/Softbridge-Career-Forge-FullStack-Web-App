@@ -65,6 +65,7 @@ export default function ForgePage() {
         confidence: ats.confidence,
         rubricVersion: ats.rubricVersion,
         missingInputs: ats.missingInputs,
+        scoreRange: ats.scoreRange,
       }
     : null;
   const recommendations = useMemo(() => forgeParsedCv ? buildActionableRecommendations(forgeParsedCv, locale) : [], [forgeParsedCv, locale]);

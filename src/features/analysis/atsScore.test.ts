@@ -20,6 +20,7 @@ describe("calculateAtsScore", () => {
     const result = calculateAtsScore(emptyCv);
     expect(result.total).toBeLessThan(15);
     expect(result.confidence).toBe("low");
+    expect(result.scoreRange.max).toBeLessThanOrEqual(48);
     expect(result.missingInputs.length).toBeGreaterThan(2);
   });
 
@@ -50,5 +51,34 @@ describe("calculateAtsScore", () => {
     });
     expect(result.total).toBeLessThan(60);
     expect(result.status).not.toBe("strong");
+  });
+
+  it("keeps even a complete document below the calibrated exceptional band", () => {
+    const result = calculateAtsScore({
+      ...emptyCv,
+      name: "Ada Lovelace",
+      title: "Senior Software Engineer",
+      email: "ada@example.com",
+      phone: "+90 555 000 00 00",
+      location: "Istanbul",
+      summary: "Senior engineer building reliable React and TypeScript products. https://github.com/ada",
+      skills: ["React", "TypeScript", "Node.js", "SQL", "AWS", "Docker"],
+      experience: [{
+        company: "Example Co",
+        position: "Senior Engineer",
+        duration: "2021 – 2025",
+        description: [
+          "Built a React checkout used by 20,000 customers.",
+          "Reduced failed payments by 18% with TypeScript validation.",
+          "Led 6 engineers through an AWS migration.",
+          "Improved SQL response time by 35%.",
+        ],
+      }],
+      education: [{ school: "Example University", degree: "Computer Science", year: "2021" }],
+      rawLength: 1_600,
+    });
+    expect(result.confidence).toBe("high");
+    expect(result.total).toBeLessThanOrEqual(92);
+    expect(result.scoreRange.max).toBeLessThanOrEqual(92);
   });
 });

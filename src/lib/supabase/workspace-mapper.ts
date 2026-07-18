@@ -149,6 +149,8 @@ const matchAnalysisSchema = z.object({
   scoreConfidence: z.enum(["low", "medium", "high"]).optional(),
   rubricVersion: z.literal("match-v2").optional(),
   missingInputs: z.array(z.string()).optional(),
+  scoreRange: z.object({ min: z.number().finite(), max: z.number().finite() }).optional(),
+  evaluatedDimensions: z.array(z.enum(["requiredSkills", "preferredSkills", "experience", "location", "language", "evidence"])).optional(),
 });
 
 const coachMessageSchema = z.object({

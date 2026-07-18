@@ -74,6 +74,8 @@ export interface MatchAnalysis {
   scoreConfidence?: "low" | "medium" | "high";
   rubricVersion?: "match-v2";
   missingInputs?: string[];
+  scoreRange?: { min: number; max: number };
+  evaluatedDimensions?: Array<"requiredSkills" | "preferredSkills" | "experience" | "location" | "language" | "evidence">;
 }
 
 export interface OptimizedCV {
@@ -119,6 +121,7 @@ export interface AtsResult {
   confidence?: "low" | "medium" | "high";
   rubricVersion?: "ats-v2";
   missingInputs?: string[];
+  scoreRange?: { min: number; max: number };
   breakdown: Array<{
     id: "structure" | "completeness" | "experience" | "keywords" | "impact" | "contact";
     score: number;
