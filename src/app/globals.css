@@ -707,17 +707,6 @@ html:not(.dark):not([data-theme="dark"]) .text-ink-3 {
   color: #faf5ee;
 }
 
-.landing-on-cobalt h1,
-.landing-on-cobalt h2,
-.landing-on-cobalt h3,
-.landing-on-cobalt h4 {
-  color: #faf5ee;
-}
-
-.landing-on-cobalt p {
-  color: #f6f0e8;
-}
-
 .landing-cta-primary {
   display: inline-flex;
   min-height: 2.75rem;
