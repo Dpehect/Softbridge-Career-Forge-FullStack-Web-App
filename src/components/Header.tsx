@@ -71,7 +71,11 @@ export function Header() {
   const borderOpacity = useTransform(scrollY, [0, 40], [0.5, 1]);
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
+    const root = document.documentElement;
+    const isDark = theme === "dark";
+    root.classList.toggle("dark", isDark);
+    root.setAttribute("data-theme", isDark ? "dark" : "light");
+    root.style.colorScheme = isDark ? "dark" : "light";
   }, [theme]);
 
   useEffect(() => {
@@ -190,8 +194,8 @@ export function Header() {
                   key={item.path}
                   href={item.path}
                   className={cn(
-                    "relative flex items-center px-2 text-xs font-medium transition-colors duration-150",
-                    active ? "text-ink" : "text-ink-3 hover:text-ink"
+                    "relative flex items-center px-2 text-xs font-semibold transition-colors duration-150",
+                    active ? "text-ink" : "text-ink-2 hover:text-ink"
                   )}
                   aria-current={active ? "page" : undefined}
                 >

@@ -120,10 +120,10 @@ export function TrustSignals() {
                 >
                   <Icon className="h-5 w-5" />
                 </motion.div>
-                <h3 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+                <h3 className="text-sm font-bold tracking-tight text-ink">
                   {signal.title}
                 </h3>
-                <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                <p className="mt-2 text-xs leading-relaxed text-ink-2">
                   {signal.body}
                 </p>
                 <div

@@ -69,45 +69,27 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Blocking theme bootstrap — runs before first paint / React hydrate.
+ * Zustand persist shape: { state: { theme, lang, ... }, version }.
+ * Keep this inline (no external file) so it never races CSS/JS chunks.
+ *
+ * Important: do NOT put React-managed className on <html> (fonts live on
+ * <body>). Hydration would otherwise wipe the `dark` class this script adds.
+ */
+const themeBootstrapScript = `(function(){try{var d=document.documentElement;var raw=localStorage.getItem("softbridge-careerforge-ui-v2")||localStorage.getItem("softbridge-careerforge");var theme="light";var lang=null;if(raw){var p=JSON.parse(raw);var s=p&&p.state?p.state:p;if(s){if(s.theme==="dark"||s.theme==="light")theme=s.theme;if(s.lang==="tr"||s.lang==="en")lang=s.lang;}}d.setAttribute("data-theme",theme);if(theme==="dark"){d.classList.add("dark");d.style.colorScheme="dark";}else{d.classList.remove("dark");d.style.colorScheme="light";}if(lang)d.lang=lang;}catch(e){}})();`;
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // No React-managed className on <html> — hydration must not wipe the
+  // `dark` class applied by the blocking script in <head>.
   return (
-    <html
-      lang="tr"
-      suppressHydrationWarning
-      data-scroll-behavior="smooth"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
-    >
-      {/*
-        Inline script: reads localStorage BEFORE React hydrates.
-        Prevents flash of wrong theme (FOWT).
-        Default = light if no saved preference exists.
-      */}
+    <html lang="tr" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-(function() {
-  try {
-    var stored = localStorage.getItem('softbridge-careerforge-ui-v2') || localStorage.getItem('softbridge-careerforge');
-    if (stored) {
-      var parsed = JSON.parse(stored);
-      var theme = parsed && parsed.state && parsed.state.theme;
-      var lang = parsed && parsed.state && parsed.state.lang;
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-      }
-      if (lang === 'tr' || lang === 'en') {
-        document.documentElement.lang = lang;
-      }
-    }
-    // Default = light — do nothing if no preference saved
-  } catch(e) {}
-})();
-`,
-          }}
-        />
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
       </head>
-      <body className="min-h-full flex flex-col bg-background text-ink font-sans">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full flex flex-col bg-background text-ink font-sans`}
+      >
         <WorkspaceSyncProvider>
           <Header />
           <div className="flex-1 pt-16 pb-20 md:pt-[6.5rem] md:pb-0">

@@ -101,12 +101,12 @@ export function HomeFinalCta() {
             <Rocket className="h-7 w-7" />
           </motion.div>
 
-          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
+          <h2 className="text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
             {isTr
               ? "CV’ni güçlendir, bir sonraki mülakata hazır ol"
               : "Strengthen your resume. Walk into the next interview ready."}
           </h2>
-          <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-ink-2">
             {isTr
               ? "ATS skoru, somut düzeltmeler ve mülakat koçu — verilerin cihazında kalır."
               : "ATS score, concrete fixes, and interview coach — data stays on your device."}
@@ -133,7 +133,7 @@ export function HomeFinalCta() {
               <button
                 type="button"
                 onClick={openDemo}
-                className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-slate-200 bg-white px-8 text-sm font-bold text-slate-800 shadow-md transition-colors hover:border-violet-300 dark:border-white/15 dark:bg-white/10 dark:text-white"
+                className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-slate-300 bg-white px-8 text-sm font-bold text-ink shadow-md transition-colors hover:border-violet-300 dark:border-white/15 dark:bg-white/10 dark:text-white"
               >
                 {isTr ? "Demo’yu Dene" : "Try demo"}
               </button>

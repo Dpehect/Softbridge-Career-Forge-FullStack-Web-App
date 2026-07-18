@@ -134,7 +134,7 @@ export function HomeHero() {
                   <p className="text-[10px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-300">
                     ATS
                   </p>
-                  <p className="text-sm font-extrabold text-slate-900 dark:text-white">92%</p>
+                  <p className="text-sm font-extrabold text-ink">92%</p>
                   <div className="mt-1.5 h-1.5 w-24 overflow-hidden rounded-full bg-slate-200/80 dark:bg-white/10">
                     <motion.div
                       className="h-full rounded-full bg-gradient-to-r from-sky-500 to-blue-500"
@@ -159,7 +159,7 @@ export function HomeHero() {
               <div className="flex items-center gap-2.5">
                 <Briefcase className="h-4 w-4 text-orange-500" />
                 <div>
-                  <p className="text-xs font-bold text-slate-900 dark:text-white">
+                  <p className="text-xs font-bold text-ink">
                     {isTr ? "İş eşleşmesi" : "Job match"}
                   </p>
                   <p className="text-[11px] font-semibold text-orange-600 dark:text-orange-300">
@@ -254,7 +254,7 @@ export function HomeHero() {
             initial={prefersReduced ? false : { opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.05 }}
-            className="text-balance text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl md:text-5xl lg:text-[3.35rem] lg:leading-[1.12] dark:text-white"
+            className="text-balance text-3xl font-extrabold tracking-tight text-ink sm:text-5xl md:text-5xl lg:text-[3.35rem] lg:leading-[1.12]"
           >
             {isTr ? (
               <>
@@ -279,7 +279,7 @@ export function HomeHero() {
             initial={prefersReduced ? false : { opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.12 }}
-            className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-700 sm:text-lg dark:text-slate-200"
+            className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-ink-2 sm:text-lg"
           >
             {isTr
               ? "Şeffaf ATS skoru, aksiyon alınabilir öneriler ve mülakat koçu — analiz tarayıcında çalışır, verilerin cihazından çıkmaz."
@@ -316,7 +316,7 @@ export function HomeHero() {
               <button
                 type="button"
                 onClick={openDemo}
-                className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-slate-300 bg-white px-7 text-sm font-bold text-slate-900 shadow-md transition-all hover:border-blue-400 hover:shadow-lg dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:border-blue-400"
+                className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-slate-300 bg-white px-7 text-sm font-bold text-ink shadow-md transition-all hover:border-blue-400 hover:shadow-lg dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:border-blue-400"
               >
                 {isTr ? "Demo’yu Dene" : "Try the demo"}
                 <ArrowRight className="h-4 w-4" />
@@ -345,7 +345,7 @@ export function HomeHero() {
                   : "Private & Local · no network upload"}
               </span>
             </div>
-            <p className="max-w-md text-center text-[11px] font-medium leading-relaxed text-slate-600 dark:text-slate-400">
+            <p className="max-w-md text-center text-[11px] font-medium leading-relaxed text-ink-2">
               {isTr
                 ? "Tarayıcıyı kapatsan bile verilerin Local Storage’da kalır. Giriş yapmadan da çalışır."
                 : "Your workspace persists in Local Storage even after you close the browser. No login required."}
@@ -363,11 +363,11 @@ export function HomeHero() {
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-violet-500" />
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                <span className="text-xs font-bold text-ink">
                   {isTr ? "Kariyer ilerlemesi" : "Career progress"}
                 </span>
               </div>
-              <span className="rounded-full bg-gradient-to-r from-sky-500/10 to-orange-500/10 px-2.5 py-0.5 text-xs font-extrabold text-violet-600 dark:text-violet-300">
+              <span className="rounded-full bg-gradient-to-r from-sky-500/10 to-orange-500/10 px-2.5 py-0.5 text-xs font-extrabold text-violet-700 dark:text-violet-300">
                 78%
               </span>
             </div>
@@ -387,11 +387,11 @@ export function HomeHero() {
               ].map((label, i) => (
                 <span
                   key={label}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400"
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-ink-2"
                 >
-                  <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                  <CheckCircle2 className="h-3 w-3 text-emerald-600" />
                   {label}
-                  {i < 2 && <span className="ml-1 hidden text-slate-300 sm:inline">·</span>}
+                  {i < 2 && <span className="ml-1 hidden text-ink-3 sm:inline">·</span>}
                 </span>
               ))}
             </div>
