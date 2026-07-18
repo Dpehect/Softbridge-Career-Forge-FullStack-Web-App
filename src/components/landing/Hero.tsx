@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, FileUp, Shield, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, FileUp, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { FilePickButton } from "@/components/FilePickButton";
 import { useCareerStore } from "@/store/useCareerStore";
@@ -56,29 +56,27 @@ export function Hero() {
   }, [loadDemoProfile, router]);
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-teal-50/80 via-white to-white">
-      <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-teal-200/40 blur-3xl" />
-      <div className="pointer-events-none absolute -right-16 top-32 h-80 w-80 rounded-full bg-amber-200/30 blur-3xl" />
+    <section className="relative overflow-hidden bg-gradient-to-b from-[#F0FDFA] via-white to-white">
+      {/* Soft ambient blobs — TealHQ-like airy canvas */}
+      <div className="pointer-events-none absolute -left-32 top-0 h-[28rem] w-[28rem] rounded-full bg-[#99F6E4]/35 blur-3xl" />
+      <div className="pointer-events-none absolute -right-24 top-24 h-[32rem] w-[32rem] rounded-full bg-[#FDE68A]/25 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-[#5EEAD4]/20 blur-3xl" />
 
-      <div className="relative mx-auto grid w-[min(100%-1.5rem,72rem)] gap-12 py-14 sm:w-[min(100%-2rem,72rem)] sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:py-24">
-        <div>
-          <motion.div
-            initial={prefersReduced ? false : { opacity: 0, y: 12 }}
+      <div className="relative mx-auto grid w-[min(100%-1.25rem,75rem)] gap-16 py-16 sm:w-[min(100%-2.5rem,75rem)] sm:py-24 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-20 lg:py-28">
+        <div className="max-w-2xl">
+          <motion.p
+            initial={prefersReduced ? false : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-teal-200 bg-white px-3.5 py-1.5 text-xs font-bold text-teal-800 shadow-sm"
+            className="mb-6 inline-flex items-center gap-2 rounded-full border border-teal-200/80 bg-white/90 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-[#0F766E] shadow-sm"
           >
-            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
             SoftBridge · CareerForge
-            <span className="rounded-full bg-teal-700 px-2 py-0.5 text-[10px] font-extrabold text-white">
-              Yerel AI
-            </span>
-          </motion.div>
+          </motion.p>
 
           <motion.h1
-            initial={prefersReduced ? false : { opacity: 0, y: 18 }}
+            initial={prefersReduced ? false : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="max-w-xl text-balance text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-[3.25rem] lg:leading-[1.08]"
+            transition={{ delay: 0.05, duration: 0.5 }}
+            className="text-balance text-[2.35rem] font-bold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.75rem]"
           >
             CV&apos;nizi eksiksiz bir başvuru sistemine dönüştürün
           </motion.h1>
@@ -86,8 +84,8 @@ export function Hero() {
           <motion.p
             initial={prefersReduced ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mt-5 max-w-xl text-base leading-relaxed text-slate-700 sm:text-lg"
+            transition={{ delay: 0.1, duration: 0.45 }}
+            className="mt-7 max-w-xl text-lg leading-relaxed text-slate-700 sm:text-xl sm:leading-relaxed"
           >
             ATS uyumunu analiz edin, deneyimleri kanıta dönüştürün, uygun rolleri
             eşleştirin ve mülakata tek güvenli çalışma alanında hazırlanın.
@@ -97,20 +95,20 @@ export function Hero() {
             initial={prefersReduced ? false : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.16 }}
-            className="mt-8 flex flex-wrap items-center gap-3"
+            className="mt-10 flex flex-wrap items-center gap-4"
           >
             <Link
               href="/forge"
-              className="inline-flex min-h-12 items-center gap-2 rounded-full bg-teal-700 px-7 text-sm font-bold text-white shadow-lg shadow-teal-700/25 transition hover:bg-teal-800 hover:shadow-xl active:scale-[0.98]"
+              className="inline-flex min-h-[3.25rem] items-center gap-2.5 rounded-full bg-[#0F766E] px-8 text-base font-bold text-white shadow-xl shadow-teal-800/25 transition hover:scale-[1.03] hover:bg-[#0D9488] hover:shadow-2xl active:scale-[0.98]"
             >
-              <FileUp className="h-4 w-4" />
+              <FileUp className="h-5 w-5" />
               CV Yükle
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-5 w-5" />
             </Link>
             <button
               type="button"
               onClick={openDemo}
-              className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-slate-300 bg-white px-7 text-sm font-bold text-slate-900 shadow-sm transition hover:border-amber-400 hover:bg-amber-50 active:scale-[0.98]"
+              className="inline-flex min-h-[3.25rem] items-center gap-2 rounded-full border-2 border-slate-300 bg-white px-8 text-base font-bold text-slate-900 shadow-sm transition hover:scale-[1.03] hover:border-[#FBBF24] hover:bg-amber-50 active:scale-[0.98]"
             >
               Demo Profili İncele
             </button>
@@ -120,110 +118,124 @@ export function Hero() {
             initial={prefersReduced ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.22 }}
-            className="mt-5 flex flex-wrap items-center gap-3"
+            className="mt-6 flex flex-wrap items-center gap-4"
           >
             <FilePickButton
-              label="Dosya seç"
+              label="Dosya seç (PDF / TXT)"
               variant="outline"
               size="sm"
               silentSuccess
               onText={handleResumeText}
             />
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-800">
-              <Shield className="h-3.5 w-3.5" />
-              Private &amp; Local · veriler cihazında kalır
+            <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#0F766E]">
+              <Shield className="h-4 w-4" />
+              Private &amp; Local · veriler cihazınızda kalır
             </span>
           </motion.div>
 
-          <ul className="mt-8 grid gap-2 sm:grid-cols-2">
+          <ul className="mt-12 grid gap-3 sm:grid-cols-2">
             {[
               "Şeffaf ATS skoru (6 kategori)",
               "Aksiyon alınabilir öneriler",
               "İş eşleştirme & pipeline",
               "Mülakat koçu (STAR)",
             ].map((item) => (
-              <li
-                key={item}
-                className="flex items-center gap-2 text-sm font-medium text-slate-700"
-              >
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-teal-600" />
+              <li key={item} className="flex items-center gap-2.5 text-[0.9375rem] font-medium text-slate-700">
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-[#14B8A6]" />
                 {item}
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Product mockup */}
+        {/* Dashboard / CV mockup */}
         <motion.div
-          initial={prefersReduced ? false : { opacity: 0, y: 24, scale: 0.98 }}
+          initial={prefersReduced ? false : { opacity: 0, y: 28, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ delay: 0.12, duration: 0.5 }}
-          className="relative"
+          transition={{ delay: 0.14, duration: 0.55 }}
+          className="relative lg:justify-self-end"
         >
-          <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-teal-200/50 via-white to-amber-100/60 blur-xl" />
-          <div className="relative overflow-hidden rounded-3xl border border-white/80 bg-white shadow-2xl shadow-teal-900/10">
-            <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/80 px-4 py-3">
-              <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-              <span className="ml-2 text-xs font-semibold text-slate-500">
+          <div className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-[#5EEAD4]/40 via-white to-[#FDE68A]/50 blur-2xl" />
+          <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white bg-white shadow-2xl shadow-teal-900/15 ring-1 ring-slate-900/5">
+            <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/90 px-5 py-3.5">
+              <span className="h-3 w-3 rounded-full bg-rose-400" />
+              <span className="h-3 w-3 rounded-full bg-amber-400" />
+              <span className="h-3 w-3 rounded-full bg-emerald-400" />
+              <span className="ml-3 text-xs font-semibold text-slate-500">
                 CareerForge · Çalışma Alanı
               </span>
             </div>
-            <div className="grid gap-4 p-5 sm:grid-cols-[1fr_0.85fr] sm:p-6">
-              <div className="space-y-4">
-                <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-teal-50 to-white p-4">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-teal-700">
-                    ATS skoru
-                  </p>
-                  <div className="mt-2 flex items-end gap-2">
-                    <span className="text-4xl font-bold tracking-tight text-slate-900">86</span>
-                    <span className="pb-1 text-sm font-semibold text-slate-500">/100</span>
+
+            <div className="space-y-4 bg-gradient-to-br from-white via-[#F0FDFA]/40 to-white p-5 sm:p-6">
+              <div className="rounded-3xl border border-teal-100 bg-gradient-to-br from-[#F0FDFA] to-white p-5 shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0F766E]">
+                      ATS skoru
+                    </p>
+                    <div className="mt-2 flex items-end gap-1.5">
+                      <span className="text-5xl font-bold tracking-tight text-slate-900">86</span>
+                      <span className="pb-1.5 text-sm font-semibold text-slate-500">/100</span>
+                    </div>
                   </div>
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-                    <div className="h-full w-[86%] rounded-full bg-gradient-to-r from-teal-600 to-teal-400" />
-                  </div>
-                  <p className="mt-2 text-xs font-medium text-slate-600">
-                    +14 puan için anahtar kelime &amp; metrik ekleyin
-                  </p>
+                  <span className="rounded-full bg-[#FBBF24]/90 px-3 py-1 text-[11px] font-extrabold text-slate-900">
+                    +14 puan
+                  </span>
                 </div>
-                <div className="rounded-2xl border border-slate-100 p-4">
+                <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-slate-200/90">
+                  <motion.div
+                    className="h-full rounded-full bg-gradient-to-r from-[#0F766E] to-[#14B8A6]"
+                    initial={{ width: prefersReduced ? "86%" : "0%" }}
+                    animate={{ width: "86%" }}
+                    transition={{ duration: 1.1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  />
+                </div>
+                <p className="mt-3 text-sm font-medium text-slate-600">
+                  Anahtar kelime ve metrik ekleyerek 100&apos;e yaklaşın
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm">
                   <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     Sonraki adım
                   </p>
-                  <p className="mt-1 text-sm font-bold text-slate-900">
-                    Deneyimi ölçülebilir kanıta çevir
+                  <p className="mt-2 text-sm font-bold text-slate-900">
+                    Deneyimi kanıta çevir
                   </p>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-600">
-                    “Proje yürüttüm” → “Checkout dönüşümünü %18 artırdım”
+                  <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
+                    “Proje yürüttüm” → “Dönüşümü %18 artırdım”
+                  </p>
+                </div>
+                <div className="rounded-3xl bg-gradient-to-br from-[#0F766E] to-[#0D9488] p-4 text-white shadow-lg shadow-teal-800/20">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-teal-100">
+                    Mülakat koçu
+                  </p>
+                  <p className="mt-2 text-sm font-semibold leading-snug">
+                    STAR formatında 3 soru hazır — prova et
                   </p>
                 </div>
               </div>
-              <div className="space-y-3">
+
+              <div className="space-y-2.5">
                 {[
-                  { role: "Senior Frontend", match: 92 },
+                  { role: "Senior Frontend Engineer", match: 92 },
                   { role: "Product Engineer", match: 84 },
-                  { role: "Full-Stack", match: 78 },
+                  { role: "Full-Stack Developer", match: 78 },
                 ].map((job) => (
                   <div
                     key={job.role}
-                    className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/50 px-3.5 py-3"
+                    className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm"
                   >
                     <div>
                       <p className="text-sm font-bold text-slate-900">{job.role}</p>
                       <p className="text-[11px] font-medium text-slate-500">Rol uyumu</p>
                     </div>
-                    <span className="rounded-full bg-teal-100 px-2.5 py-1 text-xs font-bold text-teal-800">
+                    <span className="rounded-full bg-[#CCFBF1] px-3 py-1 text-xs font-bold text-[#0F766E]">
                       %{job.match}
                     </span>
                   </div>
                 ))}
-                <div className="rounded-2xl bg-gradient-to-r from-teal-700 to-teal-600 p-4 text-white shadow-lg shadow-teal-700/20">
-                  <p className="text-xs font-bold text-teal-100">Mülakat koçu</p>
-                  <p className="mt-1 text-sm font-semibold leading-snug">
-                    STAR formatında 3 soru hazır — prova etmeye hazır mısın?
-                  </p>
-                </div>
               </div>
             </div>
           </div>

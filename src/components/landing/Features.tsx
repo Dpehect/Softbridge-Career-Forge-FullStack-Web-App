@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
+  ArrowRight,
   BarChart3,
   BriefcaseBusiness,
   MessageSquareText,
   Sparkles,
-  ArrowRight,
 } from "lucide-react";
 import { useReducedMotionPreference } from "@/motion/useReducedMotionPreference";
 
@@ -15,7 +15,7 @@ const FEATURES = [
   {
     icon: BarChart3,
     title: "ATS Puanlama & Analiz",
-    body: "Altı kategoride şeffaf ATS puanı. Neden 86 aldığınızı ve 100 için ne eklemeniz gerektiğini net görürsünüz.",
+    body: "Altı kategoride şeffaf ATS puanı. Neden bu skoru aldığınızı ve 100 için ne eklemeniz gerektiğini net görün.",
     href: "/forge",
   },
   {
@@ -27,7 +27,7 @@ const FEATURES = [
   {
     icon: BriefcaseBusiness,
     title: "Rol Eşleştirme",
-    body: "CV’nizdeki becerilere göre uygun ilanları sıralayın, uyum skorunu ve eksik sinyalleri görün.",
+    body: "CV’nizdeki becerilere göre uygun ilanları sıralayın; uyum skorunu ve eksik sinyalleri görün.",
     href: "/jobs",
   },
   {
@@ -42,50 +42,55 @@ export function Features() {
   const prefersReduced = useReducedMotionPreference();
 
   return (
-    <section id="ozellikler" className="bg-white py-20 sm:py-24">
-      <div className="mx-auto w-[min(100%-1.5rem,72rem)] sm:w-[min(100%-2rem,72rem)]">
+    <section id="ozellikler" className="bg-white py-24 sm:py-32">
+      <div className="mx-auto w-[min(100%-1.25rem,75rem)] sm:w-[min(100%-2.5rem,75rem)]">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0F766E]">
             Özellikler
           </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem]">
             Başvuru sürecinin tamamı, tek yerde
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-slate-700">
+          <p className="mt-5 text-lg leading-relaxed text-slate-700">
             Analizden mülakata kadar adımlar birbirine bağlı. Gereksiz araç karmaşası yok —
             net çıktılar var.
           </p>
         </div>
 
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-7">
           {FEATURES.map((feature, index) => {
             const Icon = feature.icon;
             return (
-              <motion.div
+              <motion.article
                 key={feature.title}
-                initial={prefersReduced ? false : { opacity: 0, y: 18 }}
+                initial={prefersReduced ? false : { opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ delay: index * 0.06 }}
-                whileHover={prefersReduced ? undefined : { y: -6, scale: 1.03 }}
-                className="group flex flex-col rounded-3xl border border-slate-200/80 bg-white p-6 shadow-lg shadow-slate-200/40 transition-shadow hover:shadow-xl hover:shadow-teal-900/10"
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ delay: index * 0.07, duration: 0.4 }}
+                whileHover={
+                  prefersReduced
+                    ? undefined
+                    : { scale: 1.05, y: -4, transition: { type: "spring", stiffness: 320, damping: 20 } }
+                }
+                className="group flex flex-col rounded-3xl border border-slate-200/70 bg-white p-7 shadow-xl shadow-slate-200/50 transition-shadow hover:shadow-2xl hover:shadow-teal-900/10"
               >
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-50 text-teal-700 ring-1 ring-teal-100 transition group-hover:bg-teal-700 group-hover:text-white">
-                  <Icon className="h-5 w-5" />
+                <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F0FDFA] text-[#0F766E] ring-1 ring-teal-100 transition group-hover:bg-[#0F766E] group-hover:text-white group-hover:ring-teal-700">
+                  <Icon className="h-6 w-6" />
                 </div>
-                <h3 className="text-base font-bold tracking-tight text-slate-900">
+                <h3 className="text-lg font-bold tracking-tight text-slate-900">
                   {feature.title}
                 </h3>
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-700">
+                <p className="mt-3 flex-1 text-[0.9375rem] leading-relaxed text-slate-700">
                   {feature.body}
                 </p>
                 <Link
                   href={feature.href}
-                  className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-teal-700 hover:text-teal-900"
+                  className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-[#0F766E] transition group-hover:gap-2.5"
                 >
-                  Keşfet <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
+                  Keşfet
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
-              </motion.div>
+              </motion.article>
             );
           })}
         </div>
