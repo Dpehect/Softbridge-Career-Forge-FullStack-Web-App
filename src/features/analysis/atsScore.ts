@@ -29,7 +29,9 @@ export interface AtsScoreResult {
   scoreRange: { min: number; max: number };
 }
 
-const METRIC_PATTERN = /\d+\s*%|\d+[kKmM]?\+?\s*(users?|kullanıcı|ms|seconds?|saniye|hours?|saat|days?|gün|requests?|istek)|[$€£₺]\s*\d+|\b\d{2,}\+?\b/i;
+// A number is evidence only when it carries outcome/scope context. Plain years,
+// version numbers and unrelated counts must never inflate the impact score.
+const METRIC_PATTERN = /\d+(?:[.,]\d+)?\s*%|\d+[kKmM]?\+?\s*(users?|customers?|clients?|kullanıcı|müşteri|ms|seconds?|saniye|hours?|saat|days?|gün|requests?|istek|projects?|proje|people|kişilik|team|ekip)|[$€£₺]\s*\d+[kKmM]?/i;
 const ACTION_VERB_PATTERN = /(?:^|\s)(built|led|created|improved|reduced|increased|developed|designed|geliştirdi|yönetti|oluşturdu|iyileştirdi|azalttı|artırdı|başlattı|launched|implemented|engineered|managed)(?:\s|[.,;:]|$)/i;
 
 function clamp(value: number, max: number) {
@@ -272,11 +274,12 @@ export function calculateAtsScore(cv: ParsedCV, locale: Locale = "en"): AtsScore
     expMissing.push(isTr ? "Açıklama maddeleri çok yetersiz" : "Suboptimal experience detail");
   }
 
-  if (experience.length >= 2) {
+  const evidencedRoles = experience.filter((item) => (item.description ?? []).filter(Boolean).length >= 2);
+  if (experience.length > 0 && evidencedRoles.length === experience.length) {
     expScore += 5;
-    expEvidence.push(isTr ? "Çoklu pozisyon geçmişi kanıtlandı" : "Multiple positions listed");
+    expEvidence.push(isTr ? "Her deneyim en az iki açıklama maddesiyle destekleniyor" : "Every role is supported by at least two evidence bullets");
   } else {
-    expMissing.push(isTr ? "Tek bir deneyim listelenmiş, kariyer gelişimi az" : "Only one position listed");
+    expMissing.push(isTr ? "Bazı deneyim kayıtlarında yeterli görev veya sonuç kanıtı yok" : "Some roles lack sufficient responsibility or outcome evidence");
   }
 
   const expCat: AtsCategoryScore = {

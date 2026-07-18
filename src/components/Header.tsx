@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BriefcaseBusiness,
+  Command,
   FileDown,
   FileText,
   LayoutDashboard,
@@ -17,6 +18,7 @@ import {
   Trash2,
   X,
   Home,
+  UserRound,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -27,14 +29,14 @@ import { exportCvAsPdf } from "@/lib/forge";
 import { AuthControl } from "@/components/auth/AuthControl";
 import { PrivateLocalBadge } from "@/components/PrivateLocalBadge";
 import { useMessages } from "@/i18n/useMessages";
+import { openCommandPalette } from "@/components/CommandPalette";
 
 const NAV_ITEMS = [
-  { path: "/dashboard", label: "dashboard", shortLabel: "shortDashboard", icon: LayoutDashboard },
-  { path: "/forge", label: "analysis", shortLabel: "shortAnalysis", icon: ScanLine },
-  { path: "/resume", label: "resume", shortLabel: "shortResume", icon: FileText },
-  { path: "/jobs", label: "jobs", shortLabel: "shortJobs", icon: BriefcaseBusiness },
-  { path: "/coach", label: "coach", shortLabel: "shortCoach", icon: MessagesSquare },
-  { path: "/paths", label: "roadmap", shortLabel: "shortRoadmap", icon: Route },
+  { path: "/dashboard", labelTr: "Ana Sayfa", labelEn: "Home", icon: LayoutDashboard, activePaths: ["/dashboard"] },
+  { path: "/resume", labelTr: "CV Çalışma Alanı", labelEn: "Resume Workspace", icon: FileText, activePaths: ["/resume", "/forge"] },
+  { path: "/jobs", labelTr: "İş Başvuru Hattı", labelEn: "Job Pipeline", icon: BriefcaseBusiness, activePaths: ["/jobs"] },
+  { path: "/coach", labelTr: "Kariyer Asistanı", labelEn: "Career Assistant", icon: MessagesSquare, activePaths: ["/coach", "/paths"] },
+  { path: "/account", labelTr: "Hesap", labelEn: "Account", icon: UserRound, activePaths: ["/account"] },
 ] as const;
 
 const PUBLIC_ROUTES = ["/login", "/privacy", "/terms", "/auth/callback", "/auth"];
@@ -174,7 +176,7 @@ export function Header() {
 
           <nav className="mx-auto hidden items-stretch self-stretch xl:flex" aria-label={messages.nav.primary}>
             {NAV_ITEMS.map((item) => {
-              const active = pathname === item.path || pathname.startsWith(`${item.path}/`);
+              const active = item.activePaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
               return (
                 <Link
                   key={item.path}
@@ -185,7 +187,7 @@ export function Header() {
                   )}
                   aria-current={active ? "page" : undefined}
                 >
-                  {messages.nav[item.label]}
+                  {locale === "tr" ? item.labelTr : item.labelEn}
                   {active && <span className="absolute inset-x-2 bottom-0 h-0.5 bg-brand" />}
                 </Link>
               );
@@ -193,6 +195,17 @@ export function Header() {
           </nav>
 
           <div className="ml-auto flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={openCommandPalette}
+              className="hidden h-10 items-center gap-2 rounded-[var(--radius-control)] border border-line bg-surface px-2.5 text-xs font-semibold text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink lg:inline-flex"
+              aria-label={locale === "tr" ? "Hızlı komutları aç" : "Open quick commands"}
+              title={locale === "tr" ? "Hızlı komutlar" : "Quick commands"}
+            >
+              <Command className="h-4 w-4" />
+              <span>{locale === "tr" ? "Hızlı erişim" : "Quick access"}</span>
+              <kbd className="rounded border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[0.625rem] text-ink-3">⌘K</kbd>
+            </button>
             <button
               type="button"
               onClick={() => setLang(locale === "tr" ? "en" : "tr")}
@@ -288,6 +301,28 @@ export function Header() {
 
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
             <div className="grid gap-2">
+              <p className="section-label px-1">{locale === "tr" ? "Çalışma alanları" : "Workspaces"}</p>
+              {NAV_ITEMS.map((item) => {
+                const active = item.activePaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    onClick={() => setMoreOpen(false)}
+                    className={cn(
+                      "flex min-h-[48px] items-center gap-3 rounded-lg border px-4 text-sm font-medium transition-colors",
+                      active ? "border-brand bg-[var(--accent-wash)] text-brand-strong" : "border-line bg-surface text-ink hover:bg-surface-2"
+                    )}
+                  >
+                    <Icon className="h-5 w-5" /> {locale === "tr" ? item.labelTr : item.labelEn}
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="grid gap-2 border-t border-line pt-5">
+              <p className="section-label px-1">{locale === "tr" ? "Bağlamsal araçlar" : "Contextual tools"}</p>
               <Link
                 href="/forge"
                 onClick={() => setMoreOpen(false)}
@@ -296,17 +331,7 @@ export function Header() {
                   pathname === "/forge" ? "border-brand bg-[var(--accent-wash)] text-brand-strong" : "border-line bg-surface text-ink hover:bg-surface-2"
                 )}
               >
-                <ScanLine className="h-5 w-5" /> {messages.nav.analysis}
-              </Link>
-              <Link
-                href="/coach"
-                onClick={() => setMoreOpen(false)}
-                className={cn(
-                  "flex min-h-[48px] items-center gap-3 rounded-lg border px-4 text-sm font-medium transition-colors",
-                  pathname === "/coach" ? "border-brand bg-[var(--accent-wash)] text-brand-strong" : "border-line bg-surface text-ink hover:bg-surface-2"
-                )}
-              >
-                <MessagesSquare className="h-5 w-5" /> {messages.nav.coach}
+                <ScanLine className="h-5 w-5" /> {locale === "tr" ? "CV'yi analiz et" : "Analyze resume"}
               </Link>
               <Link
                 href="/paths"
@@ -316,7 +341,7 @@ export function Header() {
                   pathname === "/paths" ? "border-brand bg-[var(--accent-wash)] text-brand-strong" : "border-line bg-surface text-ink hover:bg-surface-2"
                 )}
               >
-                <Route className="h-5 w-5" /> {messages.nav.roadmap}
+                <Route className="h-5 w-5" /> {locale === "tr" ? "Gelişim planını aç" : "Open development plan"}
               </Link>
               <Link
                 href="/contact"
@@ -328,6 +353,13 @@ export function Header() {
               >
                 <MessagesSquare className="h-5 w-5" /> {locale === "tr" ? "İletişim & Destek" : "Contact & Support"}
               </Link>
+              <button
+                type="button"
+                onClick={() => { setMoreOpen(false); openCommandPalette(); }}
+                className="flex min-h-[48px] items-center gap-3 rounded-lg border border-line bg-surface px-4 text-left text-sm font-medium text-ink transition-colors hover:bg-surface-2"
+              >
+                <Command className="h-5 w-5" /> {locale === "tr" ? "Hızlı komutları aç" : "Open quick commands"}
+              </button>
             </div>
 
             <div className="border-t border-line pt-5">
@@ -364,7 +396,7 @@ export function Header() {
         className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] xl:hidden"
         aria-label={messages.nav.quick}
       >
-        <div className="grid h-16 grid-cols-4 px-1">
+        <div className="grid h-16 grid-cols-5 px-1">
           <Link
             href="/dashboard"
             className={cn(
@@ -378,30 +410,40 @@ export function Header() {
           </Link>
 
           <Link
-            href="/forge"
+            href="/resume"
             className={cn(
               "relative flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 text-[0.625rem] font-semibold transition-colors",
-              pathname === "/forge" || pathname.startsWith("/forge/") ? "text-brand-strong" : "text-ink-3 hover:text-ink"
+              pathname === "/resume" || pathname.startsWith("/forge") ? "text-brand-strong" : "text-ink-3 hover:text-ink"
             )}
-            aria-current={pathname === "/forge" || pathname.startsWith("/forge/") ? "page" : undefined}
+            aria-current={pathname === "/resume" || pathname.startsWith("/forge") ? "page" : undefined}
           >
-            {(pathname === "/forge" || pathname.startsWith("/forge/")) && <span className="absolute inset-x-5 top-0 h-0.5 bg-brand" />}
-            <ScanLine className="h-5 w-5" />
-            <span className="truncate">
-              {locale === "tr" ? "Analiz Et" : "Analyze"}
-            </span>
+            {(pathname === "/resume" || pathname.startsWith("/forge")) && <span className="absolute inset-x-5 top-0 h-0.5 bg-brand" />}
+            <FileText className="h-5 w-5" />
+            <span className="truncate">{locale === "tr" ? "CV" : "Resume"}</span>
           </Link>
 
           <Link
-            href="/resume"
+            href="/jobs"
             className={cn(
               "flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 text-[0.625rem] font-semibold transition-colors",
-              pathname === "/resume" ? "text-brand-strong" : "text-ink-3 hover:text-ink"
+              pathname.startsWith("/jobs") ? "text-brand-strong" : "text-ink-3 hover:text-ink"
             )}
-            aria-current={pathname === "/resume" ? "page" : undefined}
+            aria-current={pathname.startsWith("/jobs") ? "page" : undefined}
           >
-            <FileText className="h-5 w-5" />
-            <span className="truncate">{locale === "tr" ? "CV" : "Resume"}</span>
+            <BriefcaseBusiness className="h-5 w-5" />
+            <span className="truncate">{locale === "tr" ? "İşler" : "Jobs"}</span>
+          </Link>
+
+          <Link
+            href="/coach"
+            className={cn(
+              "flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 text-[0.625rem] font-semibold transition-colors",
+              pathname.startsWith("/coach") || pathname.startsWith("/paths") ? "text-brand-strong" : "text-ink-3 hover:text-ink"
+            )}
+            aria-current={pathname.startsWith("/coach") || pathname.startsWith("/paths") ? "page" : undefined}
+          >
+            <MessagesSquare className="h-5 w-5" />
+            <span className="truncate">{locale === "tr" ? "Asistan" : "Assistant"}</span>
           </Link>
 
           <button

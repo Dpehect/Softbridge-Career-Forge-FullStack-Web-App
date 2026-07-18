@@ -47,4 +47,17 @@ describe("analyzeMatch", () => {
     expect(result.scoreRange?.max).toBeLessThanOrEqual(65);
     expect(result.evaluatedDimensions).not.toContain("experience");
   });
+
+  it("keeps experience unknown when resume dates cannot be verified", () => {
+    const result = analyzeMatch(
+      {
+        ...cv,
+        experience: [{ ...cv.experience[0]!, duration: "Present", description: cv.experience[0]!.description }],
+      },
+      "React is required. 4+ years experience.",
+      "en",
+    );
+    expect(result.experienceAlignment).toBe(0);
+    expect(result.evaluatedDimensions).not.toContain("experience");
+  });
 });

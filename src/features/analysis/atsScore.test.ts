@@ -81,4 +81,21 @@ describe("calculateAtsScore", () => {
     expect(result.total).toBeLessThanOrEqual(92);
     expect(result.scoreRange.max).toBeLessThanOrEqual(92);
   });
+
+  it("does not count a plain year as measurable impact", () => {
+    const result = calculateAtsScore({
+      ...emptyCv,
+      name: "Ada Lovelace",
+      email: "ada@example.com",
+      experience: [{
+        company: "Example Co",
+        position: "Engineer",
+        duration: "2022 – 2024",
+        description: ["Joined the platform team in 2024."],
+      }],
+      rawLength: 700,
+    });
+    const impact = result.categories.find((category) => category.id === "impact");
+    expect(impact?.score).toBe(0);
+  });
 });

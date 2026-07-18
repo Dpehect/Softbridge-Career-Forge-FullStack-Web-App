@@ -44,3 +44,14 @@ test("skip link moves keyboard focus to the main content", async ({ page }) => {
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
 });
+
+test("command palette supports keyboard-first navigation", async ({ page }) => {
+  await page.goto("/dashboard");
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+K" : "Control+K");
+  const dialog = page.getByRole("dialog", { name: "Hızlı komutlar" });
+  await expect(dialog).toBeVisible();
+  await page.getByRole("textbox", { name: "Komut ara" }).fill("mülakat");
+  await expect(page.getByRole("option", { name: /Mülakat pratiği başlat/ })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+});

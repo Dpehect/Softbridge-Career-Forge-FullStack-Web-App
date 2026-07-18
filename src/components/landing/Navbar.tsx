@@ -7,20 +7,15 @@ import { ChevronDown, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const PRIMARY = [
-  { href: "/forge", label: "CV Analizi" },
-  { href: "/jobs", label: "İş İlanları" },
-  { href: "/#pricing", label: "Fiyatlandırma" },
-] as const;
-
-const TOOLS = [
-  { href: "/resume", label: "CV Editörü" },
-  { href: "/coach", label: "Mülakat Koçu" },
-  { href: "/paths", label: "Kariyer Yol Haritası" },
+  { href: "/resume", label: "CV Çalışma Alanı" },
+  { href: "/jobs", label: "İş Başvuru Hattı" },
+  { href: "/coach", label: "Kariyer Asistanı" },
 ] as const;
 
 const RESOURCES = [
+  { href: "/#nasil-calisir", label: "Ürün Akışı" },
   { href: "/#ornekler", label: "CV Örnekleri" },
-  { href: "/#nasil-calisir", label: "Nasıl Çalışır" },
+  { href: "/#pricing", label: "Fiyatlandırma" },
   { href: "/privacy", label: "Gizlilik" },
   { href: "/contact", label: "İletişim" },
 ] as const;
@@ -136,7 +131,6 @@ export function Navbar() {
               {item.label}
             </Link>
           ))}
-          <Dropdown label="Araçlar" items={TOOLS} />
           <Dropdown label="Kaynaklar" items={RESOURCES} />
         </nav>
 
@@ -163,7 +157,7 @@ export function Navbar() {
       {open && (
         <div className="border-t border-[var(--ld-border)] bg-[var(--ld-surface)] lg:hidden">
           <div className="landing-shell flex flex-col gap-1 py-3">
-            {[...PRIMARY, ...TOOLS, ...RESOURCES].map((item) => (
+            {[...PRIMARY, ...RESOURCES].map((item) => (
               <Link
                 key={item.href + item.label}
                 href={item.href}

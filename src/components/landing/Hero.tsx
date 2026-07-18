@@ -20,18 +20,18 @@ type TabId = "ats" | "jobs" | "match";
 const TABS: { id: TabId; label: string; note: string }[] = [
   {
     id: "ats",
-    label: "CV Analizi",
-    note: "Şeffaf ATS skoru, kategori dökümü ve aksiyon listesi.",
+    label: "CV Çalışma Alanı",
+    note: "Belgeyi doğrulayın, kanıtı güçlendirin ve değişimin tahmini etkisini görün.",
   },
   {
     id: "jobs",
-    label: "İş Takibi",
-    note: "Başvurularınızı kaydet, aşamalandır ve tek panelde izle.",
+    label: "İş Başvuru Hattı",
+    note: "Rol sinyallerini, CV sürümünü ve başvuru aşamasını aynı bağlamda izleyin.",
   },
   {
     id: "match",
-    label: "Rol Eşleştirme",
-    note: "Becerilerinizi rollerle eşleştirin; eksik sinyalleri görün.",
+    label: "Kariyer Asistanı",
+    note: "CV ve hedef role bağlı, kanıt gösteren bir sonraki adımı alın.",
   },
 ];
 
@@ -103,15 +103,17 @@ export function Hero() {
     <section className="border-b border-[var(--ld-border)] bg-[var(--ld-bg)]">
       <div className="landing-shell-wide py-12 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-3xl text-center">
+          <p className="landing-eyebrow">Kariyeriniz için tek çalışma sistemi</p>
           <h1 className="landing-h1">
-            CV&apos;nizi Güçlendirin.
+            <span className="mt-3 block">Deneyiminizi Kanıta Dönüştürün.</span>
             <br />
-            Daha Fazla Mülakata Ulaşın.
+            Bir Sonraki Adımı Netleştirin.
           </h1>
 
           <p className="landing-lede mx-auto mt-5 text-center">
-            ATS uyumunu analiz edin, deneyimleri kanıta dönüştürün, uygun rolleri
-            eşleştirin ve mülakata tek güvenli çalışma alanında hazırlanın.
+            CV&apos;nizi doğrulayın, hedef role göre eksik kanıtları görün ve her
+            başvuruyu aynı güvenli çalışma alanında ilerletin. Skorlar tahmindir;
+            gerekçeleri, güven düzeyi ve eksik bilgiler her zaman görünür.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -181,9 +183,9 @@ export function Hero() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={tab}
-                initial={reduced ? false : { opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={reduced ? undefined : { opacity: 0, y: -6 }}
+                initial={reduced ? false : { y: 10, scale: 0.995 }}
+                animate={{ y: 0, scale: 1 }}
+                exit={reduced ? undefined : { y: -6, scale: 0.995 }}
                 transition={{ duration: 0.25 }}
                 className="mx-auto max-w-3xl origin-top sm:scale-[1.04] lg:scale-110"
               >

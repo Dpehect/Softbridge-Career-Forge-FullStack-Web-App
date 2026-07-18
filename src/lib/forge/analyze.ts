@@ -82,9 +82,9 @@ export function analyzeMatch(cv: ParsedCV, jd: string, locale: Locale = "tr"): M
   });
 
   if (requiredSkills.length === 0) {
-    const mid = Math.ceil(jdSkills.length * 0.6);
-    requiredSkills.push(...jdSkills.slice(0, mid));
-    preferredSkills.push(...jdSkills.slice(mid));
+    // Listing order is not proof that a skill is mandatory. Keep ambiguous
+    // skills preferred and lower confidence instead of inventing requirements.
+    preferredSkills.push(...jdSkills);
   }
 
   const matchedRequired = requiredSkills.filter((s) => {
@@ -109,8 +109,6 @@ export function analyzeMatch(cv: ParsedCV, jd: string, locale: Locale = "tr"): M
     const years = dur.match(/\b(20\d{2})\b/g);
     if (years && years.length >= 2) {
       cvYearsTotal += Math.max(1, parseInt(years[1], 10) - parseInt(years[0], 10));
-    } else {
-      cvYearsTotal += 1.5;
     }
   });
   const experienceAlignment = jdYearsTarget
@@ -119,13 +117,12 @@ export function analyzeMatch(cv: ParsedCV, jd: string, locale: Locale = "tr"): M
 
   // 3. Location Compatibility
   let locationCompatibility = 0;
-  const isJdRemote = /remote|uzaktan|evden/i.test(jd);
   const isJdOnsite = /on-site|onsite|ofiste|ofisten/i.test(jd);
   
-  if (isJdRemote && !isJdOnsite) {
-    locationCompatibility = 100;
-  } else if (isJdOnsite && cv.location) {
-    const cvLocs = cv.location.toLowerCase().split(/[\s,]+/);
+  const cvLocation = cv.location;
+  const locationEvaluated = isJdOnsite && Boolean(cvLocation);
+  if (locationEvaluated && cvLocation) {
+    const cvLocs = cvLocation.toLowerCase().split(/[\s,]+/);
     const jdLocs = jd.toLowerCase().split(/[\s,]+/);
     const match = cvLocs.some((l) => l.length > 3 && jdLocs.includes(l));
     locationCompatibility = match ? 100 : 50;
@@ -161,7 +158,7 @@ export function analyzeMatch(cv: ParsedCV, jd: string, locale: Locale = "tr"): M
     requiredSkills.length > 0 && { score: requiredSkillsCoverage, weight: 35 },
     preferredSkills.length > 0 && { score: preferredSkillsCoverage, weight: 15 },
     jdYearsTarget !== null && cvYearsTotal > 0 && { score: experienceAlignment, weight: 25 },
-    (isJdRemote || isJdOnsite) && { score: locationCompatibility, weight: 10 },
+    locationEvaluated && { score: locationCompatibility, weight: 10 },
     (requiresEnglish || requiresTurkish) && { score: languageCompatibility, weight: 10 },
     matchedSkills.length > 0 && { score: evidenceStrength, weight: 5 },
   ].filter((value): value is { score: number; weight: number } => Boolean(value));
@@ -185,14 +182,15 @@ export function analyzeMatch(cv: ParsedCV, jd: string, locale: Locale = "tr"): M
     requiredSkills.length > 0 && "requiredSkills",
     preferredSkills.length > 0 && "preferredSkills",
     jdYearsTarget !== null && cvYearsTotal > 0 && "experience",
-    (isJdRemote || isJdOnsite) && "location",
+    locationEvaluated && "location",
     (requiresEnglish || requiresTurkish) && "language",
     matchedSkills.length > 0 && "evidence",
   ].filter((value): value is NonNullable<MatchAnalysis["evaluatedDimensions"]>[number] => Boolean(value));
   const missingInputs = [
     jdSkills.length === 0 && (isTr ? "İlandan güvenilir beceri çıkarılamadı" : "No reliable skills could be extracted from the listing"),
+    requiredSkills.length === 0 && jdSkills.length > 0 && (isTr ? "Zorunlu ve tercih edilen beceri ayrımı doğrulanamadı" : "Required versus preferred skill status could not be verified"),
     jdYearsTarget === null && (isTr ? "Deneyim yılı belirtilmemiş" : "Required years of experience were not specified"),
-    !(isJdRemote || isJdOnsite) && (isTr ? "Çalışma modeli belirtilmemiş" : "Work model was not specified"),
+    isJdOnsite && !cv.location && (isTr ? "Aday konumu belirtilmemiş" : "Candidate location was not specified"),
     !(requiresEnglish || requiresTurkish) && (isTr ? "Dil gereksinimi belirtilmemiş" : "Language requirement was not specified"),
   ].filter((value): value is string => Boolean(value));
 
@@ -228,7 +226,7 @@ export function analyzeMatch(cv: ParsedCV, jd: string, locale: Locale = "tr"): M
       : `- Skills are only listed; they lack verifiable evidence in your roles.`);
   }
 
-  if (locationCompatibility < 80) {
+  if (locationEvaluated && locationCompatibility < 80) {
     scoreExplanations.push(isTr
       ? `- Konum ve çalışma şekli uyumu (%${locationCompatibility}) yetersiz.`
       : `- Location and work mode compatibility (%${locationCompatibility}) is suboptimal.`);

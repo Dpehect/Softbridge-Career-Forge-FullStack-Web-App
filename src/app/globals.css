@@ -156,7 +156,13 @@
 
   --duration-fast: 140ms;
   --duration-base: 220ms;
+  --duration-slow: 340ms;
+  --duration-cinematic: 520ms;
   --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --blur-subtle: 4px;
+  --blur-overlay: 12px;
   --opacity-disabled: 0.46;
   --opacity-muted: 0.72;
   --z-navigation: 40;
@@ -499,6 +505,16 @@ html:not(.dark):not([data-theme="dark"]) .text-ink-3 {
   background: var(--bg-surface-subtle);
 }
 
+@keyframes workspace-route-enter {
+  from { transform: translateY(0.375rem) scale(0.998); }
+  to { transform: translateY(0) scale(1); }
+}
+
+.workspace-route-enter {
+  transform-origin: 50% 0;
+  animation: workspace-route-enter var(--duration-slow) var(--ease-enter) both;
+}
+
 .typing-cursor::after {
   content: "▋";
   margin-left: 0.125rem;
@@ -611,9 +627,9 @@ html:not(.dark):not([data-theme="dark"]) .text-ink-3 {
   --ld-bg: #fbfaf7;
   --ld-surface: #ffffff;
   --ld-ink: #101418;
-  --ld-ink-2: #4a525a;
+  --ld-ink-2: #344047;
   --ld-border: #d9ddd9;
-  --ld-teal: #006b63;
+  --ld-teal: #005c55;
   --ld-teal-deep: #004f49;
   --ld-amber: #ffb800;
   --ld-amber-hover: #f0ad00;
