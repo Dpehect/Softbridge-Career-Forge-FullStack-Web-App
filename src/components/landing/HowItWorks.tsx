@@ -120,6 +120,18 @@ export function HowItWorks() {
   const baseId = useId();
   const step = STEPS[active]!;
 
+  const onTabKeyDown = (event: React.KeyboardEvent, index: number) => {
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    let next = index;
+    if (event.key === "ArrowDown") next = (index + 1) % STEPS.length;
+    if (event.key === "ArrowUp") next = (index - 1 + STEPS.length) % STEPS.length;
+    if (event.key === "Home") next = 0;
+    if (event.key === "End") next = STEPS.length - 1;
+    setActive(next);
+    document.getElementById(`${baseId}-tab-${STEPS[next]!.id}`)?.focus();
+  };
+
   return (
     <section id="nasil-calisir" className="border-b border-[var(--ld-border)] bg-[var(--ld-bg)] py-14 sm:py-20">
       <div className="landing-shell">
@@ -166,22 +178,24 @@ export function HowItWorks() {
                 CareerForge akışını adım adım takip edin. Her adım gerçek bir ürün ekranına
                 bağlanır.
               </p>
-              <ol className="mt-5 space-y-1" role="tablist" aria-label="Çalışma adımları">
+              <div className="mt-5 space-y-1" role="tablist" aria-label="Çalışma adımları" aria-orientation="vertical">
                 {STEPS.map((item, index) => {
                   const isActive = index === active;
                   return (
-                    <li key={item.id}>
-                      <button
+                    <button
+                        key={item.id}
                         type="button"
                         role="tab"
                         id={`${baseId}-tab-${item.id}`}
                         aria-selected={isActive}
                         aria-controls={`${baseId}-panel`}
+                        tabIndex={isActive ? 0 : -1}
                         className={cn(
                           "flex w-full min-h-11 items-start gap-3 rounded-xl px-3 py-3 text-left transition",
                           isActive ? "bg-black/10" : "hover:bg-black/5"
                         )}
                         onClick={() => setActive(index)}
+                        onKeyDown={(event) => onTabKeyDown(event, index)}
                       >
                         <span
                           className={cn(
@@ -202,10 +216,9 @@ export function HowItWorks() {
                           </span>
                         </span>
                       </button>
-                    </li>
                   );
                 })}
-              </ol>
+              </div>
             </div>
           </div>
         </div>

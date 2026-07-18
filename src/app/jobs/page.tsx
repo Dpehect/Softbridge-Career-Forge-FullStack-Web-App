@@ -166,22 +166,24 @@ export default function JobsPage() {
 
         <section className="premium-card mt-6 p-4 sm:p-5">
           <div className="grid gap-3 lg:grid-cols-[minmax(15rem,1fr)_repeat(3,minmax(9rem,auto))]">
-            <label className="relative">
-              <span className="sr-only">{copy.searchLabel}</span>
-              <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-ink-3" />
-              <Input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={copy.search}
-                className="rounded-xl pl-9"
-              />
+            <label>
+              <span className="mb-1.5 block text-xs font-semibold text-ink-2">{copy.searchLabel}</span>
+              <span className="relative block">
+                <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-ink-3" />
+                <Input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder={copy.search}
+                  className="rounded-xl pl-9"
+                />
+              </span>
             </label>
             <label>
-              <span className="sr-only">{copy.workMode}</span>
+              <span className="mb-1.5 block text-xs font-semibold text-ink-2">{copy.workMode}</span>
               <select
                 value={mode}
                 onChange={(event) => setMode(event.target.value as WorkMode | "All")}
-                className="h-10 w-full rounded-xl border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]"
+                className="h-11 w-full rounded-xl border border-line bg-surface px-3 text-sm text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]"
               >
                 {modes.map((item) => (
                   <option key={item} value={item}>{copy.work} · {labels[item]}</option>
@@ -189,11 +191,11 @@ export default function JobsPage() {
               </select>
             </label>
             <label>
-              <span className="sr-only">{copy.seniority}</span>
+              <span className="mb-1.5 block text-xs font-semibold text-ink-2">{copy.seniority}</span>
               <select
                 value={level}
                 onChange={(event) => setLevel(event.target.value as Seniority | "All")}
-                className="h-10 w-full rounded-xl border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]"
+                className="h-11 w-full rounded-xl border border-line bg-surface px-3 text-sm text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]"
               >
                 {levels.map((item) => (
                   <option key={item} value={item}>{copy.level} · {labels[item]}</option>
@@ -201,11 +203,11 @@ export default function JobsPage() {
               </select>
             </label>
             <label>
-              <span className="sr-only">{copy.type}</span>
+              <span className="mb-1.5 block text-xs font-semibold text-ink-2">{copy.type}</span>
               <select
                 value={type}
                 onChange={(event) => setType(event.target.value as JobType | "All")}
-                className="h-10 w-full rounded-xl border border-line bg-surface px-3 text-xs text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]"
+                className="h-11 w-full rounded-xl border border-line bg-surface px-3 text-sm text-ink outline-none focus:border-brand focus:shadow-[var(--focus-ring)]"
               >
                 {types.map((item) => (
                   <option key={item} value={item}>{copy.contract} · {labels[item]}</option>
@@ -216,7 +218,7 @@ export default function JobsPage() {
 
           {/* Quick mode chips */}
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-ink-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-ink-3">
               {locale === "tr" ? "Hızlı filtre" : "Quick filter"}
             </span>
             {modes.map((item) => (
@@ -224,6 +226,7 @@ export default function JobsPage() {
                 key={item}
                 type="button"
                 data-active={mode === item}
+                aria-pressed={mode === item}
                 className="filter-chip"
                 onClick={() => setMode(item)}
               >
@@ -234,7 +237,7 @@ export default function JobsPage() {
 
           {savedFilters.length > 0 && (
             <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-line pt-3">
-              <span className="mr-1 text-[10px] font-semibold uppercase text-ink-3">
+              <span className="mr-1 text-xs font-semibold uppercase text-ink-3">
                 {locale === "tr" ? "Kayıtlı Aramalar:" : "Saved Searches:"}
               </span>
               {savedFilters.map((filter) => (
@@ -269,7 +272,7 @@ export default function JobsPage() {
             <button
               type="button"
               onClick={saveCurrentFilter}
-              className="inline-flex items-center gap-1 text-[10px] font-semibold text-brand-strong hover:underline"
+              className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-brand-strong hover:bg-surface-2 hover:underline"
             >
               + {locale === "tr" ? "Filtreyi kaydet" : "Save filter"}
             </button>
@@ -337,7 +340,7 @@ export default function JobsPage() {
                         {(skillCoverage.length ? skillCoverage : [copy.noSkills]).map((tag) => (
                           <span
                             key={tag}
-                            className="rounded-full bg-[var(--positive-wash)] px-2 py-0.5 text-[10px] font-semibold text-positive"
+                            className="min-h-6 rounded-full bg-[var(--positive-wash)] px-2.5 py-1 text-xs font-semibold text-positive"
                           >
                             {tag}
                           </span>
@@ -350,7 +353,7 @@ export default function JobsPage() {
                         {(missing.length ? missing : [copy.noCriticalGap]).map((tag) => (
                           <span
                             key={tag}
-                            className="rounded-full bg-[var(--caution-wash)] px-2 py-0.5 text-[10px] font-semibold text-caution"
+                            className="min-h-6 rounded-full bg-[var(--caution-wash)] px-2.5 py-1 text-xs font-semibold text-caution"
                           >
                             {tag}
                           </span>

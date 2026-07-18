@@ -49,8 +49,13 @@ export function useWorkspaceSync(enabled: boolean) {
     };
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       const state = useCareerStore.getState();
-      if (event === "SIGNED_OUT" || !session?.user) {
+      if (event === "SIGNED_OUT") {
         clearSignedOutWorkspace();
+        useCareerStore.setState({ cloudStatus: "local", cloudUserId: null, cloudHydrated: false });
+        return;
+      }
+      if (!session?.user) {
+        // Initial signed-out hydration must preserve the local-first workspace.
         useCareerStore.setState({ cloudStatus: "local", cloudUserId: null, cloudHydrated: false });
         return;
       }
@@ -68,7 +73,7 @@ export function useWorkspaceSync(enabled: boolean) {
   }, []);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !isSupabaseConfigured) return;
 
     const controller = new AbortController();
     const sequence = ++loadSequence.current;
@@ -163,7 +168,7 @@ export function useWorkspaceSync(enabled: boolean) {
   }, [enabled, reloadVersion]);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !isSupabaseConfigured) return;
 
     let disposed = false;
     let active = false;

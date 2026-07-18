@@ -2,17 +2,17 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const PRIMARY = [
-  { href: "/forge", label: "CV Oluştur" },
-  { href: "/jobs", label: "İş Takibi" },
+  { href: "/forge", label: "CV Analizi" },
+  { href: "/jobs", label: "İş İlanları" },
   { href: "/#pricing", label: "Fiyatlandırma" },
 ] as const;
 
 const TOOLS = [
-  { href: "/forge", label: "CV Analizi" },
   { href: "/resume", label: "CV Editörü" },
   { href: "/coach", label: "Mülakat Koçu" },
   { href: "/paths", label: "Kariyer Yol Haritası" },
@@ -87,6 +87,7 @@ function Dropdown({
 }
 
 export function Navbar() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -126,7 +127,11 @@ export function Navbar() {
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-md px-2.5 py-1.5 text-sm font-semibold text-[var(--ld-ink)] hover:bg-black/5"
+              aria-current={pathname === item.href ? "page" : undefined}
+              className={cn(
+                "rounded-md px-2.5 py-2 text-sm font-semibold text-[var(--ld-ink)] hover:bg-black/5",
+                pathname === item.href && "bg-black/[0.07] underline decoration-2 underline-offset-4"
+              )}
             >
               {item.label}
             </Link>
@@ -162,7 +167,11 @@ export function Navbar() {
               <Link
                 key={item.href + item.label}
                 href={item.href}
-                className="rounded-lg px-3 py-3 text-sm font-semibold text-[var(--ld-ink)] hover:bg-black/5"
+                aria-current={pathname === item.href ? "page" : undefined}
+                className={cn(
+                  "rounded-lg px-3 py-3 text-sm font-semibold text-[var(--ld-ink)] hover:bg-black/5",
+                  pathname === item.href && "bg-black/[0.07]"
+                )}
                 onClick={() => setOpen(false)}
               >
                 {item.label}

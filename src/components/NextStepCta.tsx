@@ -33,7 +33,7 @@ export function NextStepCta({
       <div className="min-w-0">
         <p className="section-label">{isTr ? "Sıradaki adım" : "Next step"}</p>
         <h3 className="mt-1.5 text-base font-bold text-ink">{title}</h3>
-        {body ? <p className="mt-1 max-w-xl text-xs leading-relaxed text-ink-2">{body}</p> : null}
+        {body ? <p className="mt-1 max-w-xl text-sm leading-6 text-ink-2">{body}</p> : null}
       </div>
       <div className="flex flex-wrap gap-2">
         {secondaryHref && secondaryLabel ? (

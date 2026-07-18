@@ -107,17 +107,17 @@ export function JobCard({ job, index = 0 }: { job: Job; index?: number }) {
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <Link
             href={`/jobs/${job.id}`}
-            className="font-bold text-ink before:absolute before:inset-0 hover:text-brand-strong"
+            className="text-base font-bold leading-6 text-ink before:absolute before:inset-0 hover:text-brand-strong"
           >
             {job.title}
           </Link>
           {job.isDemo && (
-            <span className="rounded-full bg-surface-3 px-2 py-0.5 text-[0.625rem] font-mono text-ink-3 uppercase border border-line">
+            <span className="min-h-6 rounded-full border border-line bg-surface-3 px-2.5 py-1 text-xs font-mono uppercase text-ink-3">
               {locale === "tr" ? "Demo" : "Demo"}
             </span>
           )}
           {job.featured && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-orange-100 to-pink-100 px-2 py-0.5 text-[0.625rem] font-bold text-orange-700 dark:from-orange-500/20 dark:to-pink-500/20 dark:text-orange-300">
+            <span className="inline-flex min-h-6 items-center gap-1 rounded-full bg-gradient-to-r from-orange-100 to-pink-100 px-2.5 py-1 text-xs font-bold text-orange-700 dark:from-orange-500/20 dark:to-pink-500/20 dark:text-orange-300">
               <Sparkles className="h-3 w-3" />
               {copy.featured}
             </span>
@@ -125,7 +125,7 @@ export function JobCard({ job, index = 0 }: { job: Job; index?: number }) {
           {applied && (
             <span
               className={cn(
-                "rounded-full px-2 py-0.5 text-[0.625rem] font-semibold",
+                "min-h-6 rounded-full px-2.5 py-1 text-xs font-semibold",
                 stage === "rejected"
                   ? "bg-[var(--negative-wash)] text-negative"
                   : stage === "offer"
@@ -137,10 +137,10 @@ export function JobCard({ job, index = 0 }: { job: Job; index?: number }) {
             </span>
           )}
         </div>
-        <p className="mt-1 text-xs font-medium text-ink-3">
+        <p className="mt-1 text-sm font-medium text-ink-3">
           {company?.name} · {copy.type[job.type]}
         </p>
-        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.6875rem] text-ink-3">
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs leading-5 text-ink-3">
           <span className="inline-flex items-center gap-1">
             <MapPin className="h-3 w-3" /> {job.location}
           </span>
@@ -152,7 +152,7 @@ export function JobCard({ job, index = 0 }: { job: Job; index?: number }) {
           {job.tags.slice(0, 4).map((tag) => (
             <span
               key={tag}
-              className="rounded-full border border-line bg-surface-2/60 px-2.5 py-0.5 text-[0.625rem] font-semibold text-ink-2 transition-colors group-hover:border-sky-200 group-hover:bg-sky-50/50 dark:group-hover:border-sky-500/30 dark:group-hover:bg-sky-500/10"
+              className="min-h-6 rounded-full border border-line bg-surface-2/60 px-2.5 py-1 text-xs font-semibold text-ink-2 transition-colors group-hover:border-sky-200 group-hover:bg-sky-50/50 dark:group-hover:border-sky-500/30 dark:group-hover:bg-sky-500/10"
             >
               {tag}
             </span>
@@ -173,8 +173,8 @@ export function JobCard({ job, index = 0 }: { job: Job; index?: number }) {
               {match ? "%" : ""}
             </p>
           </div>
-          <p className="mt-1.5 text-[0.625rem] font-semibold text-ink-3">{copy.match}</p>
-          <p className="mt-2 whitespace-nowrap text-[0.6875rem] font-semibold text-ink-2">
+          <p className="mt-1.5 text-xs font-semibold text-ink-3">{copy.match}</p>
+          <p className="mt-2 whitespace-nowrap text-xs font-semibold text-ink-2">
             {formatSalary(job.salaryMin, job.salaryMax, job.currency)}
           </p>
         </div>

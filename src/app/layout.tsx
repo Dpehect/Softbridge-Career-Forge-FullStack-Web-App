@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
-import { OnboardingModal } from "@/components/OnboardingModal";
 import { SiteChrome } from "@/components/SiteChrome";
 import { WorkspaceSyncProvider } from "@/components/providers/WorkspaceSyncProvider";
 import "./globals.css";
@@ -90,7 +89,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       >
         <WorkspaceSyncProvider>
           <SiteChrome>{children}</SiteChrome>
-          <OnboardingModal />
           <Toaster
             theme="system"
             position="bottom-right"

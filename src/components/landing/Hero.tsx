@@ -103,40 +103,25 @@ export function Hero() {
     <section className="border-b border-[var(--ld-border)] bg-[var(--ld-bg)]">
       <div className="landing-shell-wide py-12 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-3xl text-center">
-          <motion.h1
-            className="landing-h1"
-            initial={reduced ? false : { opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
+          <h1 className="landing-h1">
             CV&apos;nizi Güçlendirin.
             <br />
             Daha Fazla Mülakata Ulaşın.
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            className="landing-lede mx-auto mt-5 text-center"
-            initial={reduced ? false : { opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05, duration: 0.35 }}
-          >
+          <p className="landing-lede mx-auto mt-5 text-center">
             ATS uyumunu analiz edin, deneyimleri kanıta dönüştürün, uygun rolleri
             eşleştirin ve mülakata tek güvenli çalışma alanında hazırlanın.
-          </motion.p>
+          </p>
 
-          <motion.div
-            className="mt-8 flex flex-wrap items-center justify-center gap-3"
-            initial={reduced ? false : { opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.35 }}
-          >
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link href="/forge" className="landing-cta-primary">
               Ücretsiz Başla — %100 Ücretsiz
             </Link>
             <button type="button" onClick={openDemo} className="landing-cta-secondary">
               Demo Profili İncele
             </button>
-          </motion.div>
+          </div>
 
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
             <FilePickButton

@@ -108,7 +108,7 @@ export default function ForgePage() {
           <section className="surface-panel p-6 sm:p-8" aria-labelledby="empty-analysis-title">
             <h2 id="empty-analysis-title" className="text-xl font-semibold text-ink">{copy.emptyTitle}</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-ink-2">{copy.emptyBody}</p>
             <div className="mt-6 flex flex-wrap gap-2"><FilePickButton label={copy.choose} size="default" variant="primary" accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" silentSuccess onText={(text, fileName) => parseResume(text, fileName)} /><Button variant="outline" onClick={() => { loadDemoProfile(); setParseError(null); }}>{copy.demo}</Button></div>
-            <div className="my-6 flex items-center gap-3 text-[0.6875rem] text-ink-3"><span className="h-px flex-1 bg-line" />{locale === "tr" ? "veya" : "or"}<span className="h-px flex-1 bg-line" /></div>
+            <div className="my-6 flex items-center gap-3 text-xs font-medium text-ink-3"><span className="h-px flex-1 bg-line" />{locale === "tr" ? "veya" : "or"}<span className="h-px flex-1 bg-line" /></div>
             <label htmlFor="resume-paste" className="section-label">{copy.paste}</label><Textarea id="resume-paste" value={forgeCvText} onChange={(event) => setForgeCvText(event.target.value)} className="mt-3 min-h-56 font-mono text-xs" placeholder={copy.paste} />
             {parseError && <div className="mt-4 flex gap-2 border border-danger/25 bg-[var(--danger-wash)] p-3 text-xs leading-5 text-danger" role="alert"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{parseError}</div>}
             <Button className="mt-4 w-full" variant="primary" disabled={!forgeCvText.trim()} onClick={() => parseResume(forgeCvText)}>{copy.analyze}</Button>
@@ -129,7 +129,7 @@ export default function ForgePage() {
 
           {view === "analysis" && atsResult && (
             <div className="mt-8 grid gap-10 xl:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)]">
-              <div><AtsScoreBreakdown result={atsResult} /><p className="mt-4 text-[0.6875rem] leading-5 text-ink-3">{copy.scoreNote}</p></div>
+              <div><AtsScoreBreakdown result={atsResult} /><p className="mt-4 text-xs leading-5 text-ink-3">{copy.scoreNote}</p></div>
               <div><ActionableRecommendations items={recommendations} /><Link href="/resume" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] bg-brand px-4 text-sm font-semibold text-[var(--action-primary-ink)]">{copy.actionCta} <ArrowRight className="h-4 w-4" /></Link></div>
             </div>
           )}
@@ -148,7 +148,7 @@ export default function ForgePage() {
             </div>
           )}
 
-          <p className="mt-10 border-t border-line pt-5 text-[0.6875rem] leading-5 text-ink-3">{copy.privacy}</p>
+          <p className="mt-10 border-t border-line pt-5 text-xs leading-5 text-ink-3">{copy.privacy}</p>
       </>
     );
   };

@@ -16,7 +16,7 @@ export function JobTrackerMockup() {
           {["Kaydedildi", "Başvuruldu", "Mülakat", "Teklif"].map((s) => (
             <span
               key={s}
-              className="hidden rounded-full border border-[var(--ld-border)] px-2 py-0.5 text-[10px] font-semibold text-[var(--ld-ink-2)] sm:inline"
+              className="hidden rounded-full border border-[var(--ld-border)] px-2.5 py-1 text-xs font-semibold text-[var(--ld-ink-2)] sm:inline"
             >
               {s}
             </span>
@@ -34,7 +34,7 @@ export function JobTrackerMockup() {
               <p className="text-xs text-[var(--ld-ink-2)] sm:hidden">{row.role}</p>
             </div>
             <p className="hidden text-sm text-[var(--ld-ink-2)] sm:block">{row.role}</p>
-            <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${row.tone}`}>
+            <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${row.tone}`}>
               {row.stage}
             </span>
           </div>

@@ -38,7 +38,7 @@ export function ResumeExamples() {
               <li key={chip}>
                 <Link
                   href="/forge"
-                  className="inline-flex min-h-11 items-center rounded-full border border-[rgba(250,245,238,0.38)] bg-[rgba(250,245,238,0.08)] px-3.5 text-sm font-bold text-[#FAF5EE] transition hover:bg-[rgba(250,245,238,0.18)]"
+                  className="inline-flex min-h-11 items-center rounded-full border border-[rgba(250,245,238,0.5)] bg-[rgba(16,20,24,0.2)] px-3.5 text-sm font-bold text-white transition-colors hover:bg-[rgba(16,20,24,0.32)]"
                 >
                   {chip}
                 </Link>
